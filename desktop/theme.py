@@ -142,6 +142,71 @@ def _rounded_buttons(root, style, p):
     root._droidbridge_button_signature = signature
 
 
+def _rounded_scrollbars(root, style, p):
+    """Skin real ttk scrollbars; retain native thumb hit-testing and bindings.
+
+    Eight root-owned images are refreshed in place, independently of buttons.
+    Opaque corners and explicit clam maps keep every state on the page surface.
+    The 27px nine-slice center avoids a per-pixel native photo tiling hot path.
+    """
+    images = getattr(root, '_droidbridge_scrollbar_images', None)
+    if images is None:
+        images = root._droidbridge_scrollbar_images = {}
+    density = float(root.tk.call('tk', 'scaling')) / (4 / 3)
+    width = max(10, round(11 * density))
+    signature = (tuple(sorted(p.items())), width)
+    refresh = getattr(root, '_droidbridge_scrollbar_signature', None) != signature
+    colors = (('normal', p['line']), ('active', p['outline']),
+              ('pressed', p['muted']), ('disabled', p['surface_alt']))
+    existing = set(style.element_names())
+    for orient in ('Vertical', 'Horizontal'):
+        vertical = orient == 'Vertical'
+        for state, fill in colors:
+            key = orient, state
+            if key not in images or refresh:
+                size = (width, 51) if vertical else (51, width)
+                scale = 4
+                tile = Image.new('RGB', tuple(n * scale for n in size), p['background'])
+                draw = ImageDraw.Draw(tile)
+                inset = max(2, round(2 * density))
+                draw.rounded_rectangle((inset * scale, inset * scale,
+                                        (size[0] - inset) * scale - 1,
+                                        (size[1] - inset) * scale - 1),
+                                       radius=max(1, (width - 2 * inset) / 2) * scale,
+                                       fill=fill)
+                tile = tile.resize(size, Image.Resampling.LANCZOS)
+                encoded = BytesIO()
+                tile.save(encoded, format='PNG')
+                if key not in images:
+                    images[key] = tk.PhotoImage(master=root, data=encoded.getvalue())
+                else:
+                    images[key].configure(data=encoded.getvalue())
+        element = 'DB.' + orient + '.Scrollbar.thumb'
+        if element not in existing:
+            style.element_create(element, 'image', images[orient, 'normal'],
+                                 ('disabled', images[orient, 'disabled']),
+                                 ('pressed', images[orient, 'pressed']),
+                                 ('active', images[orient, 'active']),
+                                 border=(0, 12, 0, 12) if vertical else (12, 0, 12, 0),
+                                 sticky='nsew')
+        name = orient + '.TScrollbar'
+        style.layout(name, [(orient + '.Scrollbar.trough', {
+            'sticky': 'nsew', 'children': [(element, {'sticky': 'nsew'})]})])
+        style.configure(name, background=p['line'], troughcolor=p['background'],
+                        bordercolor=p['background'], lightcolor=p['background'],
+                        darkcolor=p['background'], arrowcolor=p['background'],
+                        borderwidth=0, relief='flat', troughrelief='flat',
+                        arrowsize=0, width=width)
+        # Override inherited clam maps, including its pressed/active light edges.
+        style.map(name, background=[('disabled', p['surface_alt']),
+                                    ('pressed', p['muted']), ('active', p['outline']),
+                                    ('!disabled', p['line'])],
+                  **{option: [('disabled', p['background']), ('!disabled', p['background'])]
+                     for option in ('troughcolor', 'bordercolor', 'lightcolor',
+                                    'darkcolor', 'arrowcolor')})
+    root._droidbridge_scrollbar_signature = signature
+
+
 def _apply_styles(window, p):
     style = ttk.Style(window)
     if style.theme_use() != 'clam':
@@ -226,9 +291,7 @@ def _apply_styles(window, p):
     style.map('Treeview.Heading', background=[('pressed', p['pressed']), ('active', p['active'])],
               foreground=[('disabled', p['disabled_text']), ('!disabled', p['text'])])
     style.configure('TSeparator', background=p['line'])
-    for name in ('Vertical.TScrollbar', 'Horizontal.TScrollbar'):
-        style.configure(name, background=p['line'], borderwidth=0,
-                        arrowcolor=p['muted'], troughcolor=p['background'])
+    _rounded_scrollbars(root, style, p)
     # Combobox popup is a native Tk listbox, not a ttk widget.
     for option, value in (('background', p['surface_alt']), ('foreground', p['text']),
                           ('selectBackground', p['primary']), ('selectForeground', p['button_text'])):

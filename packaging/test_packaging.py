@@ -142,11 +142,15 @@ class PackagingTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'Unexpected private runtime file in payload:'):
                     p.audit(output, Path(tmp) / 'source')
 
+    def test_single_instance_module_is_allowlisted(self):
+        p = load('build_support', ROOT / 'packaging' / 'build_support.py')
+        self.assertIn('desktop/single_instance.py', p.SOURCE_FILES)
+
     def test_update_modules_are_allowlisted_without_private_update_state(self):
         p = load('build_support', ROOT / 'packaging' / 'build_support.py')
         modules = {'desktop/update_protocol.py', 'desktop/update_manager.py', 'desktop/update_helper.py'}
         self.assertTrue(modules <= set(p.SOURCE_FILES))
-        self.assertEqual(len(p.SOURCE_FILES), 31)
+        self.assertEqual(len(p.SOURCE_FILES), 32)
         with tempfile.TemporaryDirectory() as tmp:
             source, target = Path(tmp) / 'source', Path(tmp) / 'staged'
             for relative in p.SOURCE_FILES:

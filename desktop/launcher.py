@@ -75,12 +75,25 @@ def main():
         return run_component(args.component, remaining)
     if remaining:
         parser.error('Unexpected arguments')
-    from runtime import create_update_signal
-    update_signal = create_update_signal()
-    if update_signal is not None and update_signal.is_set():
-        update_signal.close()
+    from desktop.single_instance import SingleInstance
+    guard = SingleInstance(data_directory())
+    if not guard.is_primary:
+        guard.close()
         return 0
-    return run_launcher(update_signal)
+    from runtime import create_update_signal
+    update_signal = None
+    try:
+        update_signal = create_update_signal()
+        if update_signal is not None and update_signal.is_set():
+            update_signal.close()
+            return 0
+        return run_launcher(update_signal, guard)
+    except BaseException:
+        if update_signal is not None:
+            update_signal.close()
+        raise
+    finally:
+        guard.close()
 
 
 class _SidebarViewport(ttk.Frame):
@@ -201,11 +214,13 @@ class _SidebarViewport(ttk.Frame):
             self.winfo_toplevel().unbind(sequence, identifier)
 
 
-def run_launcher(update_signal=None):
+def run_launcher(update_signal=None, single_instance=None):
     """Own all pages, timers and children for the lifetime of the root."""
     from desktop.navigation import PageHost
     from desktop.theme import scrollable_card
     root = tk.Tk()
+    if single_instance is not None:
+        single_instance.attach(root)
     root.title('DroidBridge')
     data = data_directory()
     from desktop.theme import ThemeController
