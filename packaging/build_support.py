@@ -5,7 +5,7 @@ import shutil
 
 SOURCE_FILES = (
     'assets/droidbridge.ico',
-    'desktop/launcher.py', 'desktop/runtime.py', 'desktop/theme.py', 'desktop/navigation.py', 'desktop/mirror_handoff.py',
+    'desktop/launcher.py', 'desktop/runtime.py', 'desktop/theme.py', 'desktop/theme_settings.py', 'desktop/appearance_page.py', 'desktop/window_chrome.py', 'desktop/navigation.py', 'desktop/mirror_handoff.py',
     'desktop/pairing_panel.py', 'desktop/apps_panel.py',
     'desktop/upload_panel.py', 'listener/upload_settings.py',
     'desktop/media_setup.py', 'listener/media_tools.py', 'desktop/wol_setup.py', 'desktop/wol_onboarding.py',

@@ -11,6 +11,8 @@ import tempfile
 import threading
 import time
 import unittest
+import uuid
+import shutil
 from unittest.mock import patch
 
 from PIL import Image
@@ -51,6 +53,78 @@ class IconTests(unittest.TestCase):
 
     def put(self, path, aid='demo'):
         self.catalog.write_text(json.dumps({'apps': [dict(id=aid, name='Synthetic', path=str(path))]}), encoding='utf-8')
+
+    def test_new_arbitrary_ids_unicode_names_and_paths_have_no_predefined_app_dependency(self):
+        from app_catalog import public_catalog, save_catalog
+        apps = []
+        colors = {}
+        for number, name in enumerate(('Новый редактор 🧩', 'User tool 漢字', 'Unnamed vendor utility')):
+            directory = self.root / ('fresh vendor %d' % number)
+            directory.mkdir()
+            path = directory / ('unlisted-' + uuid.uuid4().hex + '.EXE')
+            path.write_bytes(b'synthetic executable fixture')
+            aid = 'user-' + uuid.uuid4().hex
+            apps.append(dict(id=aid, name=name, path=str(path)))
+            colors[str(path)] = ('red', 'green', 'blue')[number]
+        save_catalog(self.catalog, {'apps': apps})
+        store = app_icons.IconCache(extractor=lambda source: png(colors[str(source)]))
+        for number, entry in enumerate(public_catalog(self.catalog)):
+            data = store.get(self.catalog, entry['id'])
+            with Image.open(io.BytesIO(data)) as image:
+                self.assertEqual(((255, 0, 0, 255), (0, 128, 0, 255), (0, 0, 255, 255))[number], image.getpixel((32, 32)))
+            self.assertEqual(apps[number]['name'], entry['name'])
+
+    def test_new_catalog_item_and_existing_path_edit_refresh_without_restarting_cache(self):
+        from app_catalog import save_catalog
+        aid = 'first-' + uuid.uuid4().hex
+        new_id = 'later-' + uuid.uuid4().hex
+        replacement = self.root / ('replacement-' + uuid.uuid4().hex + '.exe')
+        replacement.write_bytes(b'replacement fixture')
+        store = app_icons.IconCache(extractor=lambda source: png('blue' if source == str(replacement) else 'red'))
+        save_catalog(self.catalog, {'apps': [dict(id=aid, name='First user entry', path=str(self.exe))]})
+        self.assertIsNotNone(store.get(self.catalog, aid))
+        self.assertIsNone(store.get(self.catalog, new_id))
+        save_catalog(self.catalog, {'apps': [dict(id=aid, name='Renamed user entry', path=str(replacement)), dict(id=new_id, name='New user entry', path=str(self.exe))]})
+        with Image.open(io.BytesIO(store.get(self.catalog, aid))) as image:
+            self.assertEqual((0, 0, 255, 255), image.getpixel((32, 32)))
+        with Image.open(io.BytesIO(store.get(self.catalog, new_id))) as image:
+            self.assertEqual((255, 0, 0, 255), image.getpixel((32, 32)))
+
+    @unittest.skipUnless(os.name == 'nt', 'Windows shell only')
+    def test_native_new_user_exe_and_generated_custom_shortcut_catalog(self):
+        from app_catalog import save_catalog
+        # Copy a known system binary under a random user-supplied filename.
+        # It is inspected for its icon only: never launched or resolved by COM.
+        user_exe = self.root / ('new-user-tool-' + uuid.uuid4().hex + '.exe')
+        shutil.copyfile(Path(os.environ['SystemRoot']) / 'System32' / 'notepad.exe', user_exe)
+        custom = self.root / ('user-art-' + uuid.uuid4().hex + '.ico')
+        Image.new('RGBA', (64, 64), (19, 173, 81, 255)).save(custom, format='ICO', sizes=[(64, 64)])
+        link = self.root / ('my-custom-entry-' + uuid.uuid4().hex + '.lnk')
+        link.write_bytes(shortcut(user_exe, custom))
+        exe_id, link_id = 'exe-' + uuid.uuid4().hex, 'link-' + uuid.uuid4().hex
+        save_catalog(self.catalog, {'apps': [dict(id=exe_id, name='Произвольная программа', path=str(user_exe)), dict(id=link_id, name='Свой ярлык 🎨', path=str(link))]})
+        store = app_icons.IconCache()
+        with patch('subprocess.Popen', side_effect=AssertionError('Icon lookup must not execute programs')), patch.object(os, 'startfile', side_effect=AssertionError('Icon lookup must not open files')):
+            exe_png = store.get(self.catalog, exe_id)
+            link_png = store.get(self.catalog, link_id)
+        self.assertIsNotNone(exe_png)
+        self.assertIsNotNone(link_png)
+        self.assertLessEqual(len(exe_png), 65536)
+        self.assertLessEqual(len(link_png), 65536)
+        with Image.open(io.BytesIO(link_png)) as image:
+            self.assertEqual((64, 64), image.size)
+            self.assertEqual((19, 173, 81, 255), image.getpixel((32, 32)))
+
+    def test_missing_icon_does_not_remove_user_entry_or_change_launch_metadata(self):
+        from app_catalog import load_catalog, public_catalog, save_catalog
+        aid = 'no-icon-' + uuid.uuid4().hex
+        entry = dict(id=aid, name='User entry without icon', path=str(self.exe), args=['--synthetic'], cwd=str(self.root))
+        save_catalog(self.catalog, {'apps': [entry]})
+        before = self.catalog.read_bytes()
+        self.assertIsNone(app_icons.IconCache(extractor=lambda source: None).get(self.catalog, aid))
+        self.assertEqual([dict(id=aid, name='User entry without icon', can_close=False)], public_catalog(self.catalog))
+        self.assertEqual(entry, load_catalog(self.catalog)['apps'][0])
+        self.assertEqual(before, self.catalog.read_bytes())
 
     def test_id_only_missing_invalid_and_unknown_never_extract(self):
         for aid in ('', 'unknown', str(self.exe), '../sample.exe', 'a' * 129):

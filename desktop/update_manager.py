@@ -125,7 +125,22 @@ def start_startup_check(root, directory, shutdown_signal):
     if _started:
         return None
     _started = True
+    return _start_check(root, directory, shutdown_signal, manual=False)
+
+
+def start_manual_check(root, directory, shutdown_signal):
+    """Explicit GUI check; unlike startup this can be retried after completion."""
+    return _start_check(root, directory, shutdown_signal, manual=True)
+
+
+def _start_check(root, directory, shutdown_signal, *, manual):
+    controller = getattr(root, '_update_controller', None)
+    if controller is not None and controller.alive:
+        controller.manual = controller.manual or manual
+        return controller
     controller = UpdateController(root, directory, shutdown_signal)
+    root._update_controller = controller
+    controller.manual = manual
     controller.start()
     return controller
 
@@ -138,29 +153,50 @@ class UpdateController:
         self.alive = True
         self.window = None
         self.timer = None
-        self.root.bind('<Destroy>', self._destroy, add='+')
+        self.manual = False
+        self.busy = True
+        self.binding = self.root.bind('<Destroy>', self._destroy, add='+')
+
+    def _retire(self):
+        self.alive = False
+        if self.timer is not None:
+            self.root.after_cancel(self.timer)
+            self.timer = None
+        if self.binding:
+            self.root.unbind('<Destroy>', self.binding)
+            self.binding = None
+        if getattr(self.root, '_update_controller', None) is self:
+            self.root._update_controller = None
 
     def _destroy(self, event):
         if event.widget is self.root:
-            self.alive = False
             self.cancel.set()
-            if self.timer is not None:
-                self.root.after_cancel(self.timer)
-                self.timer = None
+            self._retire()
+
+    def _schedule(self):
+        if self.alive and self.timer is None:
+            self.timer = self.root.after(100, self._drain)
 
     def start(self):
+        self.busy = True
         def worker():
             try:
                 manifest = check_manifest(self.directory)
-                if is_newer(manifest['windows']['version']):
-                    self.events.put(('available', manifest))
+                newer = is_newer(manifest['windows']['version'])
+                self.events.put(('available' if newer else 'latest', manifest))
+            except (OSError, http.client.HTTPException):
+                self.events.put(('check_failed', 'Не удалось проверить обновления. Проверь соединение с интернетом и попробуй ещё раз.'))
             except Exception:
-                # Offline, bad signatures, corrupt local state: normal GUI continues.
-                pass
+                self.events.put(('check_failed', 'Не удалось безопасно проверить обновление. Попробуй ещё раз позже.'))
+            finally:
+                self.events.put(('done', None))
         threading.Thread(target=worker, name='update-check', daemon=True).start()
-        self.timer = self.root.after(100, self._drain)
+        self._schedule()
 
     def _drain(self):
+        if self.timer is not None:
+            self.root.after_cancel(self.timer)
+            self.timer = None
         if not self.alive:
             return
         try:
@@ -168,16 +204,34 @@ class UpdateController:
                 kind, value = self.events.get_nowait()
                 if kind == 'available':
                     self._offer(value)
+                elif kind == 'latest' and self.manual:
+                    from tkinter import messagebox
+                    messagebox.showinfo('Проверка обновлений', 'Установлена актуальная версия DroidBridge.', parent=self.root)
+                elif kind == 'check_failed' and self.manual:
+                    from tkinter import messagebox
+                    messagebox.showerror('Проверка обновлений', value, parent=self.root)
                 elif kind == 'progress' and self.window:
                     self.progress['value'] = value
                 elif kind == 'downloaded':
                     self._ready(value)
                 elif kind == 'failed':
                     self._finish_error(value)
+                elif kind == 'done':
+                    self.busy = False
         except queue.Empty:
             pass
         if self.alive:
-            self.timer = self.root.after(100, self._drain)
+            if self.busy:
+                self._schedule()
+            elif self.window is None:
+                self._retire()
+
+    def _dismiss_offer(self):
+        if self.window is not None:
+            dialog, self.window = self.window, None
+            dialog.destroy()
+        if not self.busy:
+            self._retire()
 
     def _offer(self, manifest):
         import tkinter as tk
@@ -191,6 +245,7 @@ class UpdateController:
         dialog.title('DroidBridge update')
         dialog.transient(self.root)
         self.window = dialog
+        dialog.protocol('WM_DELETE_WINDOW', self._dismiss_offer)
         ttk.Label(dialog, style='DB.TLabel', text='Доступна версия ' + manifest['windows']['version'] +
                   '.\nОбновление добровольное. Настройки и ключи сохранятся.', padding=16).pack()
         row = ttk.Frame(dialog, padding=20, style='DB.Card.TFrame')
@@ -201,8 +256,7 @@ class UpdateController:
                 # Source checkout has no trustworthy installed binary to replace.
                 # Explicit click opens only this fixed public releases page.
                 webbrowser.open('https://github.com/' + REPOSITORY + '/releases/latest')
-                dialog.destroy()
-                self.window = None
+                self._dismiss_offer()
                 return
             from tkinter import messagebox
             if not messagebox.askyesno('Остановить DroidBridge для обновления?',
@@ -226,9 +280,13 @@ class UpdateController:
                     self.events.put(('downloaded', (path, manifest)))
                 except Exception as error:
                     self.events.put(('failed', str(error)))
+                finally:
+                    self.events.put(('done', None))
+            self.busy = True
             threading.Thread(target=worker, name='update-download', daemon=True).start()
+            self._schedule()
         ttk.Button(row, style='DB.Primary.TButton', text='Update', command=accept).pack(side='left')
-        ttk.Button(row, text='Not now', command=dialog.destroy).pack(side='left', padx=8)
+        ttk.Button(row, text='Not now', command=self._dismiss_offer).pack(side='left', padx=8)
 
     def _ready(self, value):
         from update_helper import launch_helper

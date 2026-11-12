@@ -86,6 +86,243 @@ class ControllerTests(unittest.TestCase):
         self.assertTrue(controller.cancel.is_set())
 
 
+class ManualCheckTests(unittest.TestCase):
+    class Root:
+        def __init__(self):
+            self.callbacks = {}
+            self.bindings = {}
+            self.serial = 0
+        def bind(self, event, callback, add=None):
+            self.bindings['destroy'] = callback
+            return 'destroy'
+        def unbind(self, event, token):
+            self.bindings.pop(token, None)
+        def after(self, delay, callback):
+            self.serial += 1
+            self.callbacks[self.serial] = callback
+            return self.serial
+        def after_cancel(self, token):
+            self.callbacks.pop(token, None)
+        def pump(self):
+            for token, callback in list(self.callbacks.items()):
+                self.callbacks.pop(token, None)
+                callback()
+
+    def setUp(self):
+        from unittest.mock import patch
+        import update_manager as m
+        self.m = m
+        self.root = self.Root()
+        self.threads = []
+        class Thread:
+            def __init__(thread, *, target, **kwargs):
+                self.threads.append(target)
+            def start(thread):
+                pass
+        self.patch = patch.object(m.threading, 'Thread', Thread)
+        self.patch.start()
+        self.addCleanup(self.patch.stop)
+
+    def test_direct_drain_cancels_previous_timer_instead_of_orphaning_it(self):
+        from unittest.mock import patch
+        with patch.object(self.m, 'check_manifest', return_value={'windows': {'version': '1.0.0'}}), \
+                patch.object(self.m, 'is_newer', return_value=False), \
+                patch('tkinter.messagebox.showinfo'):
+            controller = self.m.start_manual_check(self.root, '.', None)
+            self.threads.pop()()
+            controller._drain()
+            self.assertFalse(self.root.callbacks)
+
+    def test_manual_latest_feedback_and_retry_without_polling_leak(self):
+        from unittest.mock import patch
+        with patch.object(self.m, 'check_manifest', return_value={'windows': {'version': '1.0.0'}}), \
+                patch.object(self.m, 'is_newer', return_value=False), \
+                patch('tkinter.messagebox.showinfo') as info:
+            first = self.m.start_manual_check(self.root, '.', None)
+            self.threads.pop()()
+            self.root.pump()
+            self.assertIn('актуаль', info.call_args.args[1])
+            self.assertFalse(self.root.callbacks)
+            self.assertFalse(self.root.bindings)
+            self.assertFalse(first.alive)
+            self.assertIsNot(self.m.start_manual_check(self.root, '.', None), first)
+
+    def test_manual_offline_and_verification_errors_are_safe(self):
+        from unittest.mock import patch
+        for error, fragment in ((OSError('secret-token'), 'соединение'),
+                                (ValueError('private signature details'), 'провер')):
+            with self.subTest(error=type(error).__name__), \
+                    patch.object(self.m, 'check_manifest', side_effect=error), \
+                    patch('tkinter.messagebox.showerror') as feedback:
+                self.m.start_manual_check(self.root, '.', None)
+                self.threads.pop()()
+                self.root.pump()
+                text = feedback.call_args.args[1]
+                self.assertIn(fragment, text.lower())
+                self.assertNotIn(str(error), text)
+                self.assertFalse(self.root.callbacks)
+
+    def test_manual_dedup_and_startup_overlap(self):
+        from unittest.mock import patch
+        with patch.object(self.m, '_started', False), \
+                patch.object(self.m, 'check_manifest', return_value={'windows': {'version': '1.0.0'}}), \
+                patch.object(self.m, 'is_newer', return_value=False), \
+                patch('tkinter.messagebox.showinfo') as info:
+            startup = self.m.start_startup_check(self.root, '.', None)
+            self.assertIs(self.m.start_manual_check(self.root, '.', None), startup)
+            self.assertIs(self.m.start_manual_check(self.root, '.', None), startup)
+            self.assertEqual(len(self.threads), 1)
+            self.threads.pop()()
+            self.root.pump()
+            info.assert_called_once()
+            self.assertIsNone(self.m.start_startup_check(self.root, '.', None))
+            self.assertIsNotNone(self.m.start_manual_check(self.root, '.', None))
+
+    def test_manual_new_version_uses_existing_offer_and_keeps_dedup(self):
+        from unittest.mock import patch
+        manifest = {'windows': {'version': '99.0.0'}}
+        def offer(controller, value):
+            self.assertIs(value, manifest)
+            controller.window = object()
+        with patch.object(self.m, 'check_manifest', return_value=manifest), \
+                patch.object(self.m, 'is_newer', return_value=True), \
+                patch.object(self.m.UpdateController, '_offer', offer):
+            controller = self.m.start_manual_check(self.root, '.', None)
+            self.threads.pop()()
+            self.root.pump()
+            self.assertIs(self.m.start_manual_check(self.root, '.', None), controller)
+            self.assertFalse(self.root.callbacks)
+            self.assertEqual(len(self.threads), 0)
+
+    def test_offer_dismiss_releases_controller_for_retry(self):
+        import tkinter as tk
+        from tkinter import ttk
+        from unittest.mock import patch
+        root = tk.Tk()
+        root.withdraw()
+        self.addCleanup(root.destroy)
+        with patch.object(self.m, 'check_manifest', return_value={'windows': {'version': '99.0.0'}}), \
+                patch.object(self.m, 'is_newer', return_value=True):
+            controller = self.m.start_manual_check(root, '.', None)
+            self.threads.pop()()
+            controller._drain()
+            dialog = controller.window
+            row = next(child for child in dialog.winfo_children() if isinstance(child, ttk.Frame))
+            next(child for child in row.winfo_children() if child.cget('text') == 'Not now').invoke()
+            self.assertIsNone(controller.window)
+            self.assertFalse(controller.alive)
+            self.assertIsNot(self.m.start_manual_check(root, '.', None), controller)
+
+    def test_manual_uses_signed_manifest_and_persisted_sequence(self):
+        from datetime import datetime, timezone
+        from test_update_protocol import FIXTURE
+        from update_protocol import SequenceState
+        from unittest.mock import patch
+        real_check = self.m.check_manifest
+        for maximum, expected_offer in ((0, True), (2, False)):
+            with self.subTest(maximum=maximum), tempfile.TemporaryDirectory() as directory, \
+                    patch.object(self.m, 'check_manifest', side_effect=lambda path: real_check(path, opener=lambda url: io.BytesIO(FIXTURE), now=datetime(2026, 11, 13, tzinfo=timezone.utc))), \
+                    patch.object(self.m, 'is_newer', return_value=True), \
+                    patch.object(self.m.UpdateController, '_offer') as offer, \
+                    patch('tkinter.messagebox.showerror') as error:
+                if maximum:
+                    SequenceState(Path(directory)).accept(maximum)
+                self.m.start_manual_check(self.root, directory, None)
+                self.threads.pop()()
+                self.root.pump()
+                self.assertEqual(offer.called, expected_offer)
+                self.assertEqual(error.called, not expected_offer)
+                self.assertEqual(SequenceState(Path(directory)).maximum(), maximum or 1)
+
+    def test_source_offer_only_opens_release_page_after_explicit_click(self):
+        import tkinter as tk
+        from tkinter import ttk
+        from unittest.mock import patch
+        root = tk.Tk()
+        root.withdraw()
+        self.addCleanup(root.destroy)
+        with patch.object(self.m, 'check_manifest', return_value={'windows': {'version': '99.0.0'}}), \
+                patch.object(self.m, 'is_newer', return_value=True), \
+                patch.object(self.m.webbrowser, 'open') as browser, \
+                patch.object(self.m, 'download_asset') as download:
+            controller = self.m.start_manual_check(root, '.', None)
+            self.threads.pop()()
+            controller._drain()
+            browser.assert_not_called()
+            dialog = controller.window
+            row = next(child for child in dialog.winfo_children() if isinstance(child, ttk.Frame))
+            next(child for child in row.winfo_children() if child.cget('text') == 'Update').invoke()
+            browser.assert_called_once_with('https://github.com/alexfduch231-prog/DroidBridge/releases/latest')
+            download.assert_not_called()
+            self.assertIsNone(controller.window)
+            self.assertFalse(controller.alive)
+
+    def test_manual_rejects_bad_signed_manifest_without_fallback(self):
+        from unittest.mock import patch
+        real_check = self.m.check_manifest
+        with tempfile.TemporaryDirectory() as directory, \
+                patch.object(self.m, 'check_manifest', side_effect=lambda path: real_check(path, opener=lambda url: io.BytesIO(b'{"signature":"bad"}'))), \
+                patch.object(self.m.UpdateController, '_offer') as offer, \
+                patch('tkinter.messagebox.showerror') as error, \
+                patch.object(self.m.webbrowser, 'open') as browser:
+            self.m.start_manual_check(self.root, directory, None)
+            self.threads.pop()()
+            self.root.pump()
+            error.assert_called_once()
+            offer.assert_not_called()
+            browser.assert_not_called()
+            self.assertFalse(list(Path(directory).iterdir()))
+
+    def test_download_keeps_single_job_and_releases_after_cancel(self):
+        import sys
+        import tkinter as tk
+        from tkinter import ttk
+        from unittest.mock import patch
+        from datetime import datetime, timezone
+        from test_update_protocol import FIXTURE
+        from update_protocol import verify_manifest
+        manifest = verify_manifest(FIXTURE, now=datetime(2026, 11, 13, tzinfo=timezone.utc))
+        root = tk.Tk()
+        root.withdraw()
+        self.addCleanup(root.destroy)
+        with tempfile.TemporaryDirectory() as directory, \
+                patch.object(self.m, 'check_manifest', return_value=manifest), \
+                patch.object(self.m, 'is_newer', return_value=True), \
+                patch.object(sys, 'frozen', True, create=True), \
+                patch('tkinter.messagebox.askyesno', return_value=True), \
+                patch.object(self.m, 'download_asset', side_effect=self.m.Cancelled()), \
+                patch('tkinter.messagebox.showerror') as error:
+            controller = self.m.start_manual_check(root, directory, None)
+            self.threads.pop()()
+            controller._drain()
+            row = next(child for child in controller.window.winfo_children() if isinstance(child, ttk.Frame))
+            next(child for child in row.winfo_children() if child.cget('text') == 'Update').invoke()
+            self.assertIs(self.m.start_manual_check(root, directory, None), controller)
+            self.assertEqual(len(self.threads), 1)
+            self.assertIsNotNone(controller.timer)
+            controller.cancel.set()
+            self.threads.pop()()
+            controller._drain()
+            self.assertFalse(controller.alive)
+            self.assertIsNone(controller.window)
+            error.assert_not_called()
+
+    def test_root_destroy_cancels_pending_work_and_unbinds(self):
+        from unittest.mock import patch
+        with patch.object(self.m, 'check_manifest', return_value={'windows': {'version': '1.0.0'}}), \
+                patch.object(self.m, 'is_newer', return_value=False), \
+                patch('tkinter.messagebox.showinfo') as info:
+            controller = self.m.start_manual_check(self.root, '.', None)
+            controller._destroy(type('Event', (), {'widget': self.root})())
+            self.threads.pop()()
+            self.root.pump()
+            self.assertTrue(controller.cancel.is_set())
+            self.assertFalse(controller.alive)
+            self.assertFalse(self.root.callbacks)
+            self.assertFalse(self.root.bindings)
+            info.assert_not_called()
+
+
 class HelperTests(unittest.TestCase):
     def setUp(self):
         self.h = importlib.import_module('update_helper')

@@ -212,4 +212,18 @@
     <string name="upload_discard_local_confirm">«Удалить передачу» очищает незавершённую передачу на исходном ПК и телефоне. Если ПК или исходный ключ недоступны, можно удалить только на телефоне: часть на ПК останется до истечения 7 дней. Уже сохранённые файлы не удаляются.</string>
     <string name="upload_discard_local_done">Состояние, временная копия и доступ удалены на телефоне. Часть на ПК может оставаться до 7 дней.</string>
     <string name="upload_session_missing">ПК больше не знает эту передачу либо не подтвердил её создание. Автоматический старт заново запрещён: папка могла измениться. Удали передачу и явно выбери файл снова.</string>
+    <string name="nav_control">Управление ПК</string>
+    <string name="nav_programs">Программы</string>
+    <string name="nav_files">Файлы</string>
+    <string name="nav_broadcast">Трансляция</string>
+    <string name="nav_settings">Настройки</string>
+    <string name="nav_open">Открыть меню разделов</string>
+    <string name="nav_close">Закрыть меню</string>
+    <string name="app_version">Версия %1$s</string>
+    <string name="update_check">Проверить обновления</string>
+    <string name="update_checking">Проверяем обновления…</string>
+    <string name="update_latest">Установлена последняя доступная версия.</string>
+    <string name="update_incompatible">Новая версия пока не поддерживает эту версию Android.</string>
+    <string name="update_check_failed">Не удалось проверить обновления. Проверь интернет и попробуй ещё раз.</string>
+    <string name="update_busy">Обновление уже проверяется или загружается.</string>
 </resources>

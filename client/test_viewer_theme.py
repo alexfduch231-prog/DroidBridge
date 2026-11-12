@@ -21,8 +21,12 @@ class Widget:
     def pack(self, **options):
         self.packing = options
 
-    def bind(self, event, callback):
+    def bind(self, event, callback, add=None):
         self.bindings[event] = callback
+        return event
+
+    def winfo_toplevel(self):
+        return self.parent.winfo_toplevel() if self.parent else self
 
     def title(self, value):
         self.window_title = value
@@ -130,6 +134,191 @@ class ViewerThemeTests(unittest.TestCase):
         self.assertEqual(self.viewer.text_entry.bindings["<Return>"], self.viewer._send_text)
         self.assertEqual(self.viewer.root.bindings["<Configure>"], self.viewer._on_resize)
         self.assertEqual(len(self.viewer.control_widgets), 5)
+
+
+class LiveViewerThemeTests(unittest.TestCase):
+    """Real Tk widgets; only external networking/worker startup is blocked."""
+
+    def setUp(self):
+        import tkinter as tk
+        import threading
+        import socket
+        from unittest.mock import patch
+        from test_embedded_viewer import load_viewer
+        self.module = load_viewer()
+        self.root = tk.Tk()
+        self.root.geometry("960x720+10+10")
+        self.errors = []
+        self.root.report_callback_exception = lambda *args: self.errors.append(args)
+        self.controller = SimpleNamespace(palette=dict(PALETTE))
+        self.root.theme_controller = self.controller
+        self.blockers = [patch.object(threading.Thread, "start"),
+                         patch.object(socket, "create_connection", side_effect=AssertionError("network"))]
+        for blocker in self.blockers:
+            blocker.start()
+        self.addCleanup(self.cleanup)
+        self.root.update()
+
+    def cleanup(self):
+        for child in self.root.winfo_children():
+            dispose = getattr(child, "dispose", None)
+            if dispose:
+                dispose()
+        self.root.destroy()
+        for blocker in reversed(self.blockers):
+            blocker.stop()
+
+    def page(self, parent=None):
+        page = self.module.build_viewer_page(parent or self.root, "localhost", 8768, "test-token")
+        page.pack(fill="both", expand=True)
+        self.root.update()
+        # Freeze asynchronous pumps: this test isolates a theme event while a
+        # decoded frame and an outbound command are pending, not a frame render.
+        for after_id in page.viewer._after_ids:
+            page.after_cancel(after_id)
+        page.viewer._after_ids.clear()
+        return page
+
+    def change(self, **colors):
+        self.controller.palette.update(colors)
+        self.root.event_generate("<<DroidBridgeThemeChanged>>")
+        self.root.update()
+
+    def test_root_palette_updates_existing_controls_without_touching_live_state(self):
+        import time
+        from unittest.mock import Mock
+        viewer = self.page().viewer
+        viewer.authenticated = viewer.control_capable = viewer.control_enabled = True
+        viewer.last_rendered = time.monotonic()
+        viewer._refresh_controls()
+        viewer.text_entry.insert(0, "unsent text")
+        decoder, photo, frame = Mock(), object(), object()
+        viewer.vproc, viewer.photo, viewer.latest = decoder, photo, frame
+        epoch, command = viewer.control_epoch, b"queued-command"
+        viewer.control_q.put(command)
+        for background, surface, text, muted, primary in (
+                ("#111827", "#1F2937", "#F9FAFB", "#CBD5E1", "#93C5FD"),
+                ("#081E2C", "#12344A", "#E5F5FF", "#B2D8F0", "#79D8FF"),
+                ("#102519", "#1B3927", "#E9FBEF", "#BCD9C6", "#8DDFAC"),
+                ("#28172B", "#402345", "#FFF0FF", "#DCC1E0", "#E6A6F2")):
+            with self.subTest(background=background):
+                self.change(background=background, surface=surface, text=text,
+                            muted=muted, primary=primary, button_text="#FFFFFF")
+                self.assertEqual(viewer.root.cget("bg"), background)
+                self.assertEqual(viewer.status_label.cget("bg"), surface)
+                self.assertEqual(viewer.status_label.cget("fg"), muted)
+                self.assertEqual(viewer.control_label.cget("fg"), muted)
+                self.assertEqual(viewer.control_toggle.cget("fg"), text)
+                self.assertEqual(viewer.control_toggle.cget("selectcolor"), surface)
+                self.assertEqual(viewer.text_entry.cget("insertbackground"), text)
+                self.assertEqual(viewer.text_entry.cget("selectforeground"), "#FFFFFF")
+                for widget in [viewer.control_toggle, *viewer.control_widgets]:
+                    self.assertEqual(widget.cget("highlightcolor"), primary)
+                    self.assertEqual(widget.cget("disabledforeground"), muted)
+                self.assertEqual(viewer.image_label.cget("bg"), "#000000")
+                self.assertEqual(viewer.text_entry.get(), "unsent text")
+                self.assertEqual(viewer.text_entry.cget("state"), "normal")
+                self.assertTrue(viewer.control_var.get())
+                self.assertIs(viewer.vproc, decoder)
+                self.assertIs(viewer.photo, photo)
+                self.assertIs(viewer.latest, frame)
+                self.assertEqual(viewer.control_epoch, epoch)
+                self.assertFalse(viewer.stop.is_set())
+        self.assertIs(viewer.control_q.get_nowait(), command)
+        decoder.kill.assert_not_called()
+        viewer.vproc = None
+        viewer.latest = None
+        self.assertEqual(self.errors, [])
+
+    def test_real_controller_modes_repaint_existing_viewer(self):
+        import tempfile
+        from desktop.theme import ThemeController, palette_for
+        self.root.theme_controller = None
+        with tempfile.TemporaryDirectory() as directory:
+            controller = ThemeController(self.root, directory)
+            try:
+                viewer = self.page().viewer
+                for mode in ("dark", "ocean", "forest", "plum", "light"):
+                    with self.subTest(mode=mode):
+                        controller.set_mode(mode)
+                        self.root.update()
+                        p = palette_for(mode)
+                        self.assertEqual(viewer.root.cget("bg"), p["background"])
+                        self.assertEqual(viewer.text_entry.cget("fg"), p["text"])
+                        self.assertEqual(viewer.control_toggle.cget("selectcolor"), p["surface"])
+                        self.assertEqual(viewer.image_label.cget("bg"), "#000000")
+                        viewer.status_color = self.module.BAD
+                        viewer._pump()
+                        self.assertEqual(viewer.status_label.cget("fg"), p["danger"])
+                        for after_id in viewer._after_ids:
+                            viewer.root.after_cancel(after_id)
+                        viewer._after_ids.clear()
+            finally:
+                controller.dispose()
+
+    def test_embedded_first_paint_uses_owning_root_not_global_light_palette(self):
+        self.controller.palette.update(background="#111827", surface="#1F2937", text="#F9FAFB")
+        viewer = self.page().viewer
+        self.assertEqual(viewer.root.cget("bg"), "#111827")
+        self.assertEqual(viewer.text_entry.cget("fg"), "#F9FAFB")
+        self.module.apply_theme.assert_not_called()
+        self.assertEqual(viewer.status_label.cget("font"), "{Segoe UI} 9")
+
+    def test_standalone_reads_palette_installed_by_apply_theme(self):
+        self.root.theme_controller = None
+        def apply(root):
+            root._droidbridge_palette = dict(PALETTE, background="#111827", text="#F9FAFB")
+        self.module.apply_theme.side_effect = apply
+        viewer = self.module.Viewer.__new__(self.module.Viewer)
+        viewer.root = self.root
+        viewer.status = "подключение…"
+        viewer.audio_enabled = True
+        viewer.control_message = "управление выключено"
+        viewer._build_ui()
+        self.assertEqual(self.root.cget("bg"), "#111827")
+        self.assertEqual(viewer.text_entry.cget("fg"), "#F9FAFB")
+        self.assertEqual(viewer.image_label.cget("bg"), "#000000")
+        self.module.apply_theme.assert_called_once_with(self.root)
+
+    def test_error_and_success_status_are_recolored_without_changing_status_identity(self):
+        viewer = self.page().viewer
+        viewer.status_color = self.module.BAD
+        self.change(danger="#FFB4AB", success="#8EDBAA")
+        self.assertEqual(viewer.status_label.cget("fg"), "#FFB4AB")
+        self.assertEqual(viewer.status_color, self.module.BAD)
+        viewer.status_color = self.module.OK
+        self.change(success="#8EDBAA")
+        self.assertEqual(viewer.status_label.cget("fg"), "#8EDBAA")
+
+    def test_theme_listener_cleanup_preserves_other_root_callbacks(self):
+        import tkinter as tk
+        seen = []
+        callback = self.root.bind("<<DroidBridgeThemeChanged>>", lambda event: seen.append(1), add="+")
+        baseline = self.root.bind("<<DroidBridgeThemeChanged>>")
+        container = tk.Frame(self.root)
+        container.pack()
+        page = self.page(container)
+        self.assertNotEqual(self.root.bind("<<DroidBridgeThemeChanged>>"), baseline)
+        self.change(background="#111827")
+        self.assertEqual(page.cget("bg"), "#111827")
+        page.dispose()
+        page.dispose()
+        self.assertEqual(self.root.bind("<<DroidBridgeThemeChanged>>").strip(), baseline.strip())
+        self.change(background="#223344")
+        self.assertEqual(len(seen), 2)
+        self.root.unbind("<<DroidBridgeThemeChanged>>", callback)
+        self.assertEqual(self.errors, [])
+
+    def test_parent_destroy_removes_viewer_theme_listener(self):
+        import tkinter as tk
+        container = tk.Frame(self.root)
+        baseline = self.root.bind("<<DroidBridgeThemeChanged>>")
+        self.page(container)
+        container.destroy()
+        self.root.update()
+        self.assertEqual(self.root.bind("<<DroidBridgeThemeChanged>>").strip(), baseline.strip())
+        self.change(background="#111827")
+        self.assertEqual(self.errors, [])
 
 
 if __name__ == "__main__":

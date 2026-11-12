@@ -26,6 +26,7 @@ pairing-tls/
 **/android_setup.json
 **/update_state.json
 **/wol_onboarding.json
+**/theme_settings.json
 **/mirror-request.json
 **/mirror-gui-heartbeat.json
 private-release-signing/

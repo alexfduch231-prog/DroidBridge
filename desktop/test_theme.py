@@ -17,6 +17,12 @@ def descendants(widget):
 
 
 class ThemeTests(unittest.TestCase):
+    def setUp(self):
+        # Legacy light presentation assertions must not depend on the user's OS.
+        detector = patch('desktop.theme.system_theme', return_value='light')
+        detector.start()
+        self.addCleanup(detector.stop)
+
     def test_shared_theme_renders_android_palette_and_button_states(self):
         # Missing theme application would leave platform-dependent grey controls.
         theme = importlib.import_module('desktop.theme')
@@ -25,17 +31,17 @@ class ThemeTests(unittest.TestCase):
         theme.apply_theme(root)
         style = ttk.Style(root)
         self.assertEqual(style.theme_use(), 'clam')
-        self.assertEqual(root.cget('background').lower(), '#f1f3f8')
+        self.assertEqual(root.cget('background').lower(), '#f7f7f8')
         self.assertEqual(style.lookup('DB.Primary.TButton', 'background'), '#1A63E7')
         self.assertNotEqual(style.lookup('DB.Primary.TButton', 'background', ('disabled',)), '#1A63E7')
         panel = theme.card(root)
         panel.pack()
         self.assertEqual(style.lookup(panel.cget('style'), 'background'), '#FFFFFF')
-        self.assertEqual(style.lookup('DB.Muted.TLabel', 'foreground'), '#5C6270')
+        self.assertEqual(style.lookup('DB.Muted.TLabel', 'foreground'), '#606068')
         theme.apply_theme(root)  # Reapplying for an owned Toplevel must be safe.
         window = tk.Toplevel(root)
         theme.apply_theme(window)
-        self.assertEqual(window.cget('background').lower(), '#f1f3f8')
+        self.assertEqual(window.cget('background').lower(), '#f7f7f8')
 
     def test_window_icon_uses_source_or_frozen_assets_for_roots_and_dialogs(self):
         theme = importlib.import_module('desktop.theme')
@@ -59,8 +65,30 @@ class ThemeTests(unittest.TestCase):
         self.addCleanup(root.destroy)
         with patch.object(root, 'iconbitmap', side_effect=tk.TclError('missing or unsupported icon')):
             theme.apply_theme(root)
-        self.assertEqual(root.cget('background').lower(), '#f1f3f8')
+        self.assertEqual(root.cget('background').lower(), '#f7f7f8')
         self.assertEqual(ttk.Style(root).theme_use(), 'clam')
+
+    def test_installed_ui_font_preference_and_fallback_are_root_local(self):
+        theme = importlib.import_module('desktop.theme')
+        root = tk.Tk()
+        self.addCleanup(root.destroy)
+        fallback = theme.font.nametofont('TkDefaultFont', root=root).actual('family')
+        for available, expected in (
+                (('Segoe UI', 'segoe ui variable text', 'Segoe UI Variable'), 'segoe ui variable text'),
+                (('Segoe UI', 'Segoe UI Variable'), 'Segoe UI Variable'),
+                (('Segoe UI',), 'Segoe UI'),
+                (('Arial',), fallback)):
+            with self.subTest(available=available):
+                if hasattr(root, '_droidbridge_font'):
+                    del root._droidbridge_font
+                with patch.object(theme.font, 'families', return_value=available):
+                    self.assertEqual(theme.font_family(root), expected)
+                    window = tk.Toplevel(root)
+                    self.assertEqual(theme.font_family(window), expected)
+                    window.destroy()
+        # The chosen face also reaches widget styles, not only the helper.
+        theme.apply_theme(root)
+        self.assertEqual(root.tk.splitlist(ttk.Style(root).lookup('TButton', 'font'))[0], fallback)
 
     def test_launcher_cards_resize_and_scroll_without_starting_network_or_children(self):
         # Fixed minimum sizing or an unscrollable body would hide actions at 800x600.
@@ -74,12 +102,41 @@ class ThemeTests(unittest.TestCase):
                     root.update()
                     self.assertEqual((root.winfo_width(), root.winfo_height()), (940, 760))
                     self.assertEqual(root.navigation.current_key, 'connection')
-                    for size, scaling in (('940x760', 1.33), ('800x600', 2.0)):
+                    nav = next(w for w in descendants(root) if isinstance(w, ttk.Button) and ''.join(str(w.cget('text')).split()) == 'Подключение')
+                    self.assertGreaterEqual(nav.master.winfo_width(), 196)
+                    self.assertLessEqual(nav.master.winfo_width(), int(root.winfo_width() * .45))
+                    self.assertLessEqual(nav.winfo_reqwidth(), nav.winfo_width())
+                    from update_protocol import CURRENT_VERSION
+                    version = next(w for w in descendants(nav.master) if isinstance(w, ttk.Label) and w.cget('text') == 'DroidBridge ' + CURRENT_VERSION)
+                    manual_update = next(w for w in descendants(nav.master) if isinstance(w, ttk.Button) and ''.join(str(w.cget('text')).split()) == 'Проверитьобновления')
+                    manual_update.invoke()
+                    manual_check.assert_called_once_with(root, Path(isolated), None)
+                    self.assertTrue(nav.cget('image'), 'navigation needs restrained line icons')
+                    self.assertEqual(nav.cget('style'), 'DB.Nav.Selected.TButton')
+                    root.show_section('screen')
+                    self.assertEqual(nav.cget('style'), 'DB.Nav.TButton')
+                    root.show_section('connection')
+                    summaries = [w for w in descendants(root) if isinstance(w, ttk.Label) and w.cget('textvariable') == str(root.wol_status)]
+                    self.assertTrue(summaries)
+                    self.assertTrue(all(str(w).startswith(str(root.navigation) + '.') for w in summaries), 'WoL guidance belongs to connection content, not a global banner')
+                    self.assertEqual(len(root._navigation_icons), 6)
+                    for image in root._navigation_icons.values():
+                        self.assertEqual((image.width(), image.height()), (12, 12))
+                    for size, scaling in (('940x760', 1.33), ('800x600', 2.0), ('800x600', 3.0)):
                         root.tk.call('tk', 'scaling', scaling)
                         root.geometry(size)
                         root.update()
-                        for title in ('Подключение', 'Экран телефона', 'Программы', 'Приём файлов', 'Настройки'):
-                            button = next(w for w in descendants(root) if isinstance(w, ttk.Button) and w.cget('text') == title)
+                        manual_update.event_generate('<FocusIn>')
+                        root.update()
+                        for footer_widget in (version, manual_update):
+                            self.assertTrue(footer_widget.winfo_ismapped())
+                            self.assertGreaterEqual(footer_widget.winfo_rooty(), root.winfo_rooty())
+                            self.assertLessEqual(footer_widget.winfo_rooty() + footer_widget.winfo_height(), root.winfo_rooty() + root.winfo_height())
+                        for title in ('Подключение', 'Экран телефона', 'Программы', 'Приём файлов', 'Включение ПК', 'Настройки'):
+                            button = next(w for w in descendants(root) if isinstance(w, ttk.Button) and ''.join(str(w.cget('text')).split()) == ''.join(title.split()))
+                            button.event_generate('<FocusIn>')
+                            root.update()
+                            self.assertLessEqual(button.winfo_reqwidth(), button.winfo_width(), (title, scaling, button.cget('text'), ttk.Style(button).lookup(button.cget('style'), 'font'), ttk.Style(button).lookup(button.cget('style'), 'padding'), button.tk.call('font', 'measure', ttk.Style(button).lookup(button.cget('style'), 'font'), button.cget('text')), button.master.winfo_width(), button.master.master.winfo_width()))
                             self.assertGreaterEqual(button.winfo_rootx(), root.winfo_rootx())
                             self.assertGreaterEqual(button.winfo_rooty(), root.winfo_rooty())
                             self.assertLessEqual(button.winfo_rootx() + button.winfo_width(), root.winfo_rootx() + root.winfo_width())
@@ -108,6 +165,7 @@ class ThemeTests(unittest.TestCase):
                  patch('runtime.create_update_signal', return_value=None), \
                  patch('android_setup.should_show_on_startup', return_value=False), \
                  patch('update_manager.start_startup_check'), \
+                  patch('update_manager.start_manual_check', create=True) as manual_check, \
                  patch.object(launcher, 'start_child', side_effect=AssertionError('no child startup')), \
                  patch.object(socket.socket, 'connect', side_effect=AssertionError('no network')), \
                  patch.object(socket.socket, 'bind', side_effect=AssertionError('no listener')), \

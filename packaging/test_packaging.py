@@ -146,7 +146,7 @@ class PackagingTests(unittest.TestCase):
         p = load('build_support', ROOT / 'packaging' / 'build_support.py')
         modules = {'desktop/update_protocol.py', 'desktop/update_manager.py', 'desktop/update_helper.py'}
         self.assertTrue(modules <= set(p.SOURCE_FILES))
-        self.assertEqual(len(p.SOURCE_FILES), 28)
+        self.assertEqual(len(p.SOURCE_FILES), 31)
         with tempfile.TemporaryDirectory() as tmp:
             source, target = Path(tmp) / 'source', Path(tmp) / 'staged'
             for relative in p.SOURCE_FILES:
@@ -219,6 +219,31 @@ class PackagingTests(unittest.TestCase):
                 (output / 'build-manifest.json').write_text(json.dumps(manifest), encoding='utf-8')
                 with self.assertRaisesRegex(ValueError, 'Unexpected private runtime file in payload:'):
                     module.audit(output, Path(tmp) / 'source')
+
+    def test_native_window_chrome_is_allowlisted(self):
+        support = load('chrome_support', ROOT / 'packaging' / 'build_support.py')
+        self.assertIn('desktop/window_chrome.py', support.SOURCE_FILES)
+
+    def test_appearance_modules_are_allowlisted(self):
+        support = load('appearance_support', ROOT / 'packaging' / 'build_support.py')
+        for relative in ('desktop/theme_settings.py', 'desktop/appearance_page.py'):
+            self.assertIn(relative, support.SOURCE_FILES)
+
+    def test_audit_rejects_private_theme_settings(self):
+        import json, sys
+        sys.path.insert(0, str(ROOT / 'packaging'))
+        from build_support import inventory
+        audit = load('appearance_audit', ROOT / 'packaging' / 'audit_artifact.py')
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / 'build'
+            payload = output / 'dist' / 'DroidBridge'
+            config = payload / '_internal' / 'THEME_SETTINGS.JSON'
+            config.parent.mkdir(parents=True)
+            config.write_text('{"mode":"dark"}', encoding='utf-8')
+            manifest = {'source_sha256': {}, 'payload_sha256': inventory(payload), 'contains_ffmpeg': False, 'self_test': {'ok': True}}
+            (output / 'build-manifest.json').write_text(json.dumps(manifest), encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'Unexpected private runtime file in payload:'):
+                audit.audit(output, Path(tmp) / 'source')
 
     def test_wol_readiness_module_is_allowlisted(self):
         p = load('build_support', ROOT / 'packaging' / 'build_support.py')

@@ -12,7 +12,7 @@
     <color name="on_primary">#FF0B1220</color>
     <color name="danger">#FFF28B82</color>
     <color name="on_danger">#FF2A0C09</color>
-    <color name="wake_bg_top">#FF339B60</color>
+    <color name="wake_bg_top">#FF287A4A</color>
     <color name="wake_bg_bottom">#FF257444</color>
     <color name="wake_text">#FFC9FFDB</color>
     <color name="text_primary">#FFE9ECEF</color>
@@ -24,4 +24,10 @@
     <color name="icon_bg">#FF0F1319</color>
     <color name="icon_fg">#FF8AB4F8</color>
     <color name="ok">#FF6DD58C</color>
+    <!-- Permanently dark video toolbar; these roles deliberately do not vary by theme. -->
+    <color name="button_toolbar_text">#FFB5D2FF</color>
+    <color name="button_toolbar_surface">#FF17212B</color>
+    <color name="button_toolbar_disabled">#FF74859B</color>
+    <color name="button_toolbar_highlight">#FF304968</color>
+    <color name="button_toolbar_ripple">#408AB4F8</color>
 </resources>

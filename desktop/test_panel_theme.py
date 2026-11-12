@@ -20,6 +20,13 @@ def descendants(widget):
 
 class PanelThemeTests(unittest.TestCase):
     def setUp(self):
+        detector = patch('desktop.theme.system_theme', return_value='light')
+        detector.start()
+        self.addCleanup(detector.stop)
+        # Source wrappers may import the compatibility module by its short name.
+        short_detector = patch('theme.system_theme', return_value='light')
+        short_detector.start()
+        self.addCleanup(short_detector.stop)
         self.root = tk.Tk()
         self.root.withdraw()
         self.addCleanup(self.root.destroy)
@@ -28,7 +35,7 @@ class PanelThemeTests(unittest.TestCase):
         self.data = Path(temporary.name) / 'data'
 
     def assert_light_panel(self, window):
-        self.assertEqual(window.cget('background').lower(), '#f1f3f8')
+        self.assertEqual(window.cget('background').lower(), '#f7f7f8')
         buttons = [w for w in descendants(window) if isinstance(w, ttk.Button)]
         self.assertTrue(any(w.cget('style') == 'DB.Primary.TButton' for w in buttons))
         frames = [w for w in descendants(window) if isinstance(w, ttk.Frame)]
@@ -127,7 +134,7 @@ class PanelThemeTests(unittest.TestCase):
         warning = next(w for w in labels if 'TLS' in str(w.cget('text')))
         style = ttk.Style(window)
         self.assertEqual(style.lookup(qr.cget('style'), 'background').lower(), '#ffffff')
-        self.assertEqual(style.lookup(warning.cget('style'), 'foreground').lower(), '#cc2f23')
+        self.assertEqual(style.lookup(warning.cget('style'), 'foreground').lower(), '#bc2b21')
         self.assertFalse(self.data.exists())
 
 

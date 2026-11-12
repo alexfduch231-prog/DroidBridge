@@ -62,6 +62,12 @@
 
 Страница объясняет проверку Windows и ручные настройки BIOS/UEFI. Здесь показано состояние до проверки. 100% означает завершение действий, а не доказательство, что выключенный ПК проснётся.
 
+## Телефон: боковое меню
+
+<img src="images/android-menu-1.17.png" alt="Боковое меню Android: пять разделов, крестик закрытия и версия приложения" width="320">
+
+В меню собраны управление ПК, программы, файлы, трансляция и настройки. Крестик справа закрывает меню; номер версии находится внизу. Это экран Android 1.17 с системным шрифтом устройства.
+
 ## Телефон: управление ПК
 
 <img src="images/android-current.png" alt="Кнопки управления компьютером в Android" width="320">
@@ -133,6 +139,12 @@ The regular installer includes FFmpeg and ffplay. This page lets you choose a lo
 ![Wake-on-LAN](images/windows-wake-on-lan.png)
 
 This page explains the Windows check and manual BIOS/UEFI settings. The screenshot shows the state before checking. 100% means the actions finished, not proof that the PC will wake.
+
+## Android: navigation menu
+
+<img src="images/android-menu-1.17.png" alt="Android navigation with five sections, a close button and the app version" width="320">
+
+The menu groups PC controls, applications, files, casting and settings. The upper-right cross closes it, and the version is at the bottom. This is Android 1.17 using the device's system font.
 
 ## Android: control your PC
 

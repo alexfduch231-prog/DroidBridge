@@ -24,4 +24,10 @@
     <color name="icon_bg">#FF1A63E7</color>
     <color name="icon_fg">#FFFFFFFF</color>
     <color name="ok">#FF178A4C</color>
+    <!-- Permanently dark video toolbar; these roles deliberately do not vary by theme. -->
+    <color name="button_toolbar_text">#FFB5D2FF</color>
+    <color name="button_toolbar_surface">#FF17212B</color>
+    <color name="button_toolbar_disabled">#FF74859B</color>
+    <color name="button_toolbar_highlight">#FF304968</color>
+    <color name="button_toolbar_ripple">#408AB4F8</color>
 </resources>

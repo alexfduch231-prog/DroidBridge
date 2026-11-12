@@ -8,5 +8,16 @@
         <item name="android:statusBarColor">@color/bg_screen</item>
         <item name="android:navigationBarColor">@color/bg_screen</item>
         <item name="android:colorControlHighlight">@color/ripple</item>
+        <item name="android:buttonStyle">@style/AppButton</item>
+        <item name="android:alertDialogTheme">@style/AppDialogTheme</item>
+    </style>
+    <!-- App-owned dialogs only; OS permission/installer UI uses its own theme. -->
+    <style name="AppDialogTheme" parent="@android:style/Theme.Material.Dialog.Alert">
+        <item name="android:colorAccent">@color/primary</item>
+        <item name="android:buttonStyle">@style/AppButton</item>
+        <item name="android:buttonBarButtonStyle">@style/BtnDialog</item>
+        <item name="android:buttonBarPositiveButtonStyle">@style/BtnDialog</item>
+        <item name="android:buttonBarNegativeButtonStyle">@style/BtnDialog</item>
+        <item name="android:buttonBarNeutralButtonStyle">@style/BtnDialog</item>
     </style>
 </resources>

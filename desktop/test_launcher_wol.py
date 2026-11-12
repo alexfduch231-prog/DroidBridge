@@ -50,7 +50,12 @@ class LauncherWolTests(unittest.TestCase):
     def test_no_startup_probe_and_first_pairing_opens_embedded_gate(self):
         def inspect(root, pending, data):
             root.update()
-            self.assertNotIn(1500, [item[0] for item in pending.values()])
+            # A 1500 ms appearance poll is expected; a startup WoL diagnostic
+            # callback is still forbidden (the actual diagnostic calls are also
+            # guarded by raising patches in run_shell).
+            for delay, callback, _args in pending.values():
+                if delay == 1500:
+                    self.assertEqual(callback, root.theme_controller._poll_system)
             with patch('desktop.wol_onboarding.build_onboarding_page', side_effect=lambda parent, data, on_completed: ttk.Frame(parent)) as gate, patch('pairing_panel.build_pairing_page', side_effect=AssertionError('pairing cannot bypass gate')):
                 root.connection_pairing()
                 self.assertEqual(root.navigation.current_key, 'connection')

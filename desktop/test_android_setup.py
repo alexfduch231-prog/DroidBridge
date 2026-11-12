@@ -14,7 +14,7 @@ try:
 except ImportError:
     android_setup = None
 
-PUBLIC_APK = 'https://github.com/alexfduch231-prog/DroidBridge/releases/download/v1.0.6/DroidBridge-1.16-android.apk'
+PUBLIC_APK = 'https://github.com/alexfduch231-prog/DroidBridge/releases/download/v1.0.8/DroidBridge-1.17-android.apk'
 
 
 def descendants(widget):
@@ -200,6 +200,11 @@ class AndroidSetupTests(unittest.TestCase):
                 for w in descendants(root):
                     if w.winfo_toplevel() is not root:
                         continue
+                    # Unsupported native chrome deliberately keeps its fallback
+                    # titlebar subtree hidden while the standard OS caption stays.
+                    titlebar = root.window_chrome.titlebar
+                    if not titlebar.winfo_ismapped() and (w is titlebar or str(w).startswith(str(titlebar) + '.')):
+                        continue
                     # Canvas content may extend below its clipped viewport; the
                     # launcher resize tests verify scrolling and focus reachability.
                     ancestor = w.master
@@ -210,6 +215,10 @@ class AndroidSetupTests(unittest.TestCase):
                             break
                         ancestor = ancestor.master
                     if in_scroll_content:
+                        continue
+                    # Auto-hiding sidebar scrollbars are intentionally unmanaged
+                    # when all navigation controls fit in the viewport.
+                    if w.winfo_class() == 'TScrollbar' and not w.winfo_manager():
                         continue
                     self.assertTrue(w.winfo_ismapped(), str(w))
                     self.assertGreaterEqual(w.winfo_rootx(), root.winfo_rootx(), str(w))

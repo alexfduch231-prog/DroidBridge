@@ -1,10 +1,14 @@
 # Изменения / Changelog
 
-## 1.0.8 — в разработке / in development
+## 1.0.8 — 2026-11-12
 
-Windows получает выбор оформления в настройках: **как в Windows**, светлое, тёмное и готовые цветовые темы «Океан», «Лес» и «Слива». Выбор сохраняется и применяется без перезапуска. В системном режиме приложение следует переключению светлой и тёмной темы Windows. Изображение телефона и QR не перекрашиваются. Android остаётся версии **1.16**.
+Компактная боковая панель и единая верхняя строка выполнены в духе Harness. Справа сверху — рабочие кнопки сворачивания, разворачивания/восстановления и закрытия; закрытие сохраняет подтверждение для активных процессов.
 
-Windows gains appearance settings: **follow Windows**, light, dark and Ocean, Forest and Plum presets. The selection is saved and applied without restarting. System mode follows changes to the Windows light/dark preference. Video and QR images retain their original colors. Android remains **1.16**.
+Windows получает выбор оформления в настройках: **как в Windows**, светлое, тёмное и готовые цветовые темы «Океан», «Лес» и «Слива». Выбор сохраняется и применяется без перезапуска. В системном режиме приложение следует переключению светлой и тёмной темы Windows. Изображение телефона и QR не перекрашиваются. Внизу видны версия и ручная проверка обновлений. В Android **1.17** добавлено боковое меню с категориями, версией и ручной проверкой обновлений в настройках; используется системный шрифт телефона. Боковое меню плавно выезжает и следует за пальцем при свайпе, закрывается крестиком и учитывает системное отключение анимаций. Кнопки Android приведены к общей теме вместо стандартных серых плашек; оформление учитывает светлый и тёмный режим. Windows выбирает Segoe UI Variable при наличии, иначе Segoe UI. Кнопки Windows получили скругления и единые состояния наведения, нажатия, отключения и фокуса во всех темах.
+
+A compact sidebar and unified title bar take inspiration from Harness. Top-right controls minimize, maximize/restore and close; closing preserves confirmation for active processes.
+
+Windows gains appearance settings: **follow Windows**, light, dark and Ocean, Forest and Plum presets. The selection is saved and applied without restarting. System mode follows changes to the Windows light/dark preference. Video and QR images retain their original colors. The footer shows the version and a manual update check. Android **1.17** adds a sidebar with categories and the app version, plus a manual update check in Settings; it uses the phone's system font. The drawer slides smoothly, follows swipe gestures and closes with a compact cross, respecting disabled system animations. Windows chooses Segoe UI Variable when available, otherwise Segoe UI. Android buttons now share the app theme instead of standard gray blocks. Windows buttons have rounded corners and consistent hover, pressed, disabled and focus states across themes.
 
 ## 1.0.7 — 2026-11-12
 

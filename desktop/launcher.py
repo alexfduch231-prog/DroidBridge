@@ -45,6 +45,8 @@ def main():
                 import android_setup
                 import wol_setup
                 import desktop.navigation
+                import desktop.theme_settings
+                import desktop.appearance_page
                 import update_protocol
                 import update_manager
                 import update_helper
@@ -65,7 +67,7 @@ def main():
                 os.environ.pop('VZAIMOPULT_DATA_DIR', None)
             else:
                 os.environ['VZAIMOPULT_DATA_DIR'] = previous_data
-        Path(args.self_test).write_text(json.dumps({'ok': True, 'components_imported': ['server', 'viewer', 'pairing', 'apps', 'uploads', 'media', 'android_setup'], 'python': sys.version.split()[0],
+        Path(args.self_test).write_text(json.dumps({'ok': True, 'components_imported': ['server', 'viewer', 'pairing', 'apps', 'uploads', 'media', 'android_setup', 'appearance'], 'python': sys.version.split()[0],
             'pillow': Image.__version__, 'tls': ssl.OPENSSL_VERSION,
             'frozen': bool(getattr(sys, 'frozen', False))}), encoding='utf-8')
         return 0
@@ -81,6 +83,124 @@ def main():
     return run_launcher(update_signal)
 
 
+class _SidebarViewport(ttk.Frame):
+    """Keep native sidebar actions readable without reducing the selected font."""
+    def __init__(self, parent):
+        super().__init__(parent, style='DB.TFrame', width=220)
+        from desktop.theme import palette_for_widget
+        self.pack_propagate(False)
+        self.canvas = tk.Canvas(self, highlightthickness=0, width=1,
+                                background=palette_for_widget(self)['background'])
+        self.scrollbar = ttk.Scrollbar(self, orient='vertical', command=self.canvas.yview)
+        self.canvas.configure(yscrollcommand=self.scrollbar.set)
+        self.canvas.pack(side='left', fill='both', expand=True)
+        self.content = ttk.Frame(self.canvas, style='DB.TFrame', padding=(12, 16))
+        self.item = self.canvas.create_window(0, 0, anchor='nw', window=self.content)
+        self.captions = {}
+        self.labels = []
+        self.pending = None
+        self.canvas.bind('<Configure>', self._schedule)
+        self.content.bind('<Configure>', self._schedule)
+        self.bind('<Destroy>', self._dispose, add='+')
+        owner = self.winfo_toplevel()
+        self.bindings = [(event, owner.bind(event, callback, add='+')) for event, callback in (
+            ('<Configure>', self._schedule), ('<FocusIn>', self._reveal),
+            ('<MouseWheel>', self._wheel), ('<<DroidBridgeThemeChanged>>', self._schedule))]
+
+    def _schedule(self, _event=None):
+        if (_event is not None and _event.type == tk.EventType.Configure and
+                _event.widget not in (self.master, self.canvas, self.content, self.winfo_toplevel())):
+            return
+        if self.pending is None:
+            self.pending = self.after_idle(self._layout)
+
+    def _layout(self):
+        self.pending = None
+        from desktop.theme import palette_for_widget
+        self.canvas.configure(background=palette_for_widget(self)['background'])
+        limit = max(220, int(self.master.winfo_width() * .45))
+        style = ttk.Style(self)
+        natural = 220
+        measurements = []
+        for button, caption in self.captions.items():
+            name = button.cget('style') or 'TButton'
+            # Measure the style's own Tcl font. Copying it through Font(font=)
+            # can materialize stale point metrics after tk scaling changes.
+            button_font = style.lookup(name, 'font')
+            def measure(text, button_font=button_font):
+                return int(self.tk.call('font', 'measure', button_font, text))
+            padding = self.tk.splitlist(style.lookup(name, 'padding'))
+            horizontal = int(padding[0]) * 2 if padding else 0
+            if len(padding) >= 3:
+                horizontal = int(padding[0]) + int(padding[2])
+            # The image border has explicit zero padding; only style padding
+            # and the compound icon consume the native text parcel.
+            overhead = 4 + horizontal + (16 if button.cget('image') else 0)
+            natural = max(natural, measure(caption) + overhead + 24)
+            measurements.append((button, caption, measure, overhead))
+        width = min(limit, natural)
+        if int(self.cget('width')) != width:
+            self.configure(width=width)
+        available = max(1, self.canvas.winfo_width())
+        for button, caption, measure, overhead in measurements:
+            budget = max(1, available - 24 - overhead)
+            lines, line = [], ''
+            for word in caption.split():
+                candidate = (line + ' ' + word).strip()
+                if line and measure(candidate) > budget:
+                    lines.append(line)
+                    line = ''
+                # A single long word must also fit at high DPI/minimum width.
+                for char in word:
+                    candidate = line + char
+                    if line and measure(candidate) > budget:
+                        lines.append(line)
+                        line = char
+                    else:
+                        line = candidate
+                line += ' '
+            lines.append(line.rstrip())
+            rendered = '\n'.join(part.rstrip() for part in lines)
+            if str(button.cget('text')) != rendered:
+                button.configure(text=rendered)
+        for label in self.labels:
+            label.configure(wraplength=max(1, available - 48))
+        height = max(self.canvas.winfo_height(), self.content.winfo_reqheight())
+        self.canvas.itemconfigure(self.item, width=available, height=height)
+        self.canvas.configure(scrollregion=(0, 0, available, height))
+        overflow = height > self.canvas.winfo_height()
+        if overflow and not self.scrollbar.winfo_manager():
+            self.scrollbar.pack(side='right', fill='y', before=self.canvas)
+        elif not overflow and self.scrollbar.winfo_manager():
+            self.scrollbar.pack_forget()
+            self.canvas.yview_moveto(0)
+
+    def _reveal(self, event):
+        if event.widget not in self.captions:
+            return
+        button = event.widget
+        top = button.winfo_rooty() - self.content.winfo_rooty()
+        bottom = top + button.winfo_height()
+        height = max(1, self.content.winfo_height())
+        if top < self.canvas.canvasy(0):
+            self.canvas.yview_moveto(max(0, top - 4) / height)
+        elif bottom > self.canvas.canvasy(self.canvas.winfo_height()):
+            self.canvas.yview_moveto((bottom + 4 - self.canvas.winfo_height()) / height)
+
+    def _wheel(self, event):
+        if str(event.widget).startswith(str(self) + '.') and event.delta:
+            self.canvas.yview_scroll(-int(event.delta / 120) or (-1 if event.delta > 0 else 1), 'units')
+
+    def _dispose(self, event):
+        if event.widget is not self:
+            return
+        if self.pending is not None:
+            self.after_cancel(self.pending)
+            self.pending = None
+        for sequence, identifier in self.bindings:
+            self.winfo_toplevel().unbind(sequence, identifier)
+
+
 def run_launcher(update_signal=None):
     """Own all pages, timers and children for the lifetime of the root."""
     from desktop.navigation import PageHost
@@ -89,8 +209,12 @@ def run_launcher(update_signal=None):
     root.title('DroidBridge')
     root.geometry('940x760')
     root.minsize(800, 600)
-    apply_theme(root)
     data = data_directory()
+    from desktop.theme import ThemeController
+    theme_controller = ThemeController(root, data)
+    from desktop.window_chrome import WindowChrome
+    chrome = WindowChrome(root, lambda: close(), title='DroidBridge')
+    root.window_chrome = chrome
     # Embedded components use the same persistent media/log context as children.
     import os
     os.environ['VZAIMOPULT_DATA_DIR'] = str(data)
@@ -107,11 +231,35 @@ def run_launcher(update_signal=None):
         pass  # An unavailable handoff must not prevent local controls.
     closing = [False]
 
-    header = ttk.Frame(root, style='DB.TFrame', padding=(20, 12))
+    shell = ttk.Frame(root, style='DB.TFrame')
+    shell.pack(fill='both', expand=True)
+    sidebar_view = _SidebarViewport(shell)
+    sidebar_view.pack(side='left', fill='y')
+    sidebar = sidebar_view.content
+    def sidebar_label(parent, text, style, **packing):
+        label = ttk.Label(parent, text=text, style=style)
+        label.pack(anchor='w', padx=12, **packing)
+        sidebar_view.labels.append(label)
+        return label
+    sidebar_label(sidebar, 'DroidBridge', 'DB.Title.TLabel', pady=(0, 4))
+    sidebar_label(sidebar, 'ПК и телефон, рядом', 'DB.Subtitle.TLabel', pady=(0, 22))
+    from update_protocol import CURRENT_VERSION
+    footer = ttk.Frame(sidebar, style='DB.TFrame')
+    footer.pack(side='bottom', fill='x')
+    sidebar_label(footer, 'DroidBridge ' + CURRENT_VERSION, 'DB.Subtitle.TLabel', pady=(12, 4))
+    def check_updates():
+        from update_manager import start_manual_check
+        start_manual_check(root, data, update_signal)
+    update_button = ttk.Button(footer, text='Проверить обновления', width=0, style='DB.Sidebar.TButton', command=check_updates)
+    update_button.pack(fill='x')
+    sidebar_view.captions[update_button] = 'Проверить обновления'
+    ttk.Separator(shell, orient='vertical').pack(side='left', fill='y')
+    workspace = ttk.Frame(shell, style='DB.TFrame')
+    workspace.pack(side='left', fill='both', expand=True)
+    header = ttk.Frame(workspace, style='DB.TFrame', padding=(20, 14))
     header.pack(fill='x')
-    ttk.Label(header, text='DroidBridge', style='DB.Title.TLabel').pack(anchor='w')
-    status_label = ttk.Label(header, textvariable=status, style='DB.Subtitle.TLabel', wraplength=720)
-    status_label.pack(anchor='w', pady=(4, 8))
+    status_label = ttk.Label(header, textvariable=status, style='DB.Subtitle.TLabel', wraplength=480)
+    status_label.pack(anchor='w', pady=(0, 8))
     controls = ttk.Frame(header, style='DB.TFrame')
     controls.pack(fill='x')
 
@@ -130,19 +278,14 @@ def run_launcher(update_signal=None):
             server[0].terminate()
             status.set('Остановка сервера…')
 
-    ttk.Button(controls, text='Запустить сервер', style='DB.Primary.TButton', command=start_server).pack(side='left')
-    ttk.Button(controls, text='Остановить', style='DB.TButton', command=stop_server).pack(side='left', padx=(8, 0))
+    ttk.Button(controls, text='Запустить сервер', style='DB.Sidebar.TButton', command=start_server).pack(side='left')
+    ttk.Button(controls, text='Остановить', style='DB.Sidebar.TButton', command=stop_server).pack(side='left', padx=(8, 0))
     wol_status = tk.StringVar(root, value='Включение ПК по сети настраивается один раз перед первым сопряжением. Автопроверок при запуске нет.')
     root.wol_status = wol_status
-    wol_summary = ttk.Label(header, textvariable=wol_status, style='DB.Muted.TLabel', wraplength=720)
-    wol_summary.pack(fill='x', pady=(8, 0))
-    def resize_summary(event):
-        wol_summary.configure(wraplength=max(100, event.width - 40))
-    header.bind('<Configure>', resize_summary, add='+')
-    shell = ttk.Frame(root, style='DB.TFrame')
-    shell.pack(fill='both', expand=True, padx=(20, 12), pady=(0, 12))
-    sidebar = ttk.Frame(shell, style='DB.TFrame')
-    sidebar.pack(side='left', fill='y', padx=(0, 12))
+    def resize_header(event):
+        status_label.configure(wraplength=max(100, event.width - 40))
+    header.bind('<Configure>', resize_header, add='+')
+    ttk.Separator(workspace, orient='horizontal').pack(fill='x')
 
     def setup_page(parent):
         from android_setup import build_android_setup_page
@@ -164,6 +307,7 @@ def run_launcher(update_signal=None):
                   style='DB.Muted.TLabel', wraplength=400).pack(anchor='w', pady=(8, 12))
         ttk.Button(content, text='Установить приложение Android', style='DB.TButton', command=open_setup).pack(anchor='w', pady=(0, 8))
         ttk.Button(content, text='Приложение уже установлено', style='DB.Primary.TButton', command=pairing).pack(anchor='w')
+        ttk.Label(content, textvariable=wol_status, style='DB.Muted.TLabel', wraplength=400).pack(anchor='w', pady=(16, 0))
         return page
 
     def pairing():
@@ -247,14 +391,14 @@ def run_launcher(update_signal=None):
         return build_uploads_page(parent, data)
 
     def settings_page(parent):
-        from media_setup import build_media_page
-        return build_media_page(parent, data)
+        from desktop.appearance_page import build_appearance_page
+        return build_appearance_page(parent, data, theme_controller)
 
     def wol_page(parent):
         from wol_setup import build_wol_page
         return build_wol_page(parent, data)
 
-    navigation = PageHost(shell, {'connection': connection_page, 'screen': screen_page,
+    navigation = PageHost(workspace, {'connection': connection_page, 'screen': screen_page,
                                   'apps': applications_page, 'uploads': uploads_page,
                                   'settings': settings_page, 'wol': wol_page})
     navigation.pack(side='left', fill='both', expand=True)
@@ -268,16 +412,32 @@ def run_launcher(update_signal=None):
                 navigation.builders['connection'] = connection_page
             page = navigation.show_page(key, refresh=refresh)
             for name, button in buttons.items():
-                button.configure(style='DB.Primary.TButton' if name == key else 'DB.TButton')
+                button.configure(style='DB.Nav.Selected.TButton' if name == key else 'DB.Nav.TButton')
             return page
         except (ImportError, OSError, ValueError) as error:
             messagebox.showerror('Раздел недоступен', str(error), parent=root)
             return None
+    # Small monochrome XBM line icons scale with Tk without an emoji font.
+    icon_bits = {
+        'connection': '0x00,0x00,0x1c,0x00,0x22,0x00,0x22,0x00,0x1c,0x00,0x08,0x00,0x38,0x00,0x40,0x00,0x40,0x00,0x38,0x00,0x08,0x00,0x00,0x00',
+        'screen': '0x00,0x00,0x7e,0x00,0x42,0x00,0x42,0x00,0x42,0x00,0x42,0x00,0x42,0x00,0x7e,0x00,0x18,0x00,0x3c,0x00,0x00,0x00,0x00,0x00',
+        'apps': '0x00,0x00,0x66,0x00,0x66,0x00,0x00,0x00,0x66,0x00,0x66,0x00,0x00,0x00,0x66,0x00,0x66,0x00,0x00,0x00,0x00,0x00,0x00,0x00',
+        'uploads': '0x00,0x00,0x08,0x00,0x1c,0x00,0x2a,0x00,0x08,0x00,0x08,0x00,0x08,0x00,0x42,0x00,0x42,0x00,0x7e,0x00,0x00,0x00,0x00,0x00',
+        'wol': '0x00,0x00,0x08,0x00,0x2a,0x00,0x49,0x00,0x49,0x00,0x41,0x00,0x41,0x00,0x22,0x00,0x1c,0x00,0x00,0x00,0x00,0x00,0x00,0x00',
+        'settings': '0x00,0x00,0x08,0x00,0x7e,0x00,0x08,0x00,0x20,0x00,0x7e,0x00,0x20,0x00,0x04,0x00,0x7e,0x00,0x04,0x00,0x00,0x00,0x00,0x00',
+    }
+    nav_icons = {key: tk.BitmapImage(master=root, foreground=theme_controller.palette['text'],
+                    data='#define icon_width 12\n#define icon_height 12\nstatic char icon_bits[] = {\n' + bits + '\n};')
+                 for key, bits in icon_bits.items()}
+    root._navigation_icons = nav_icons
+    root.bind('<<DroidBridgeThemeChanged>>', lambda _event: [image.configure(foreground=theme_controller.palette['text']) for image in nav_icons.values()], add='+')
     for key, title in (('connection', 'Подключение'), ('screen', 'Экран телефона'),
                        ('apps', 'Программы'), ('uploads', 'Приём файлов'), ('wol', 'Включение ПК'), ('settings', 'Настройки')):
-        button = ttk.Button(sidebar, text=title, style='DB.TButton', command=lambda key=key: show_section(key))
-        button.pack(fill='x', pady=(0, 4))
+        button = ttk.Button(sidebar, text=title, image=nav_icons[key], compound='left', width=0, style='DB.Nav.TButton', command=lambda key=key: show_section(key))
+        button.pack(fill='x', pady=(0, 2))
         buttons[key] = button
+        sidebar_view.captions[button] = title
+    sidebar_view._schedule()
     # Direct navigation is also used by integration tests and explicit page actions.
     root.show_section = show_section
     show_section('connection')
@@ -293,6 +453,8 @@ def run_launcher(update_signal=None):
         if event.widget is not root or closing[0]:
             return
         closing[0] = True
+        chrome.dispose()
+        theme_controller.dispose()
         try:
             mirror_handoff.close()
         except OSError:

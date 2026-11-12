@@ -145,6 +145,137 @@ public class MainActivity extends Activity {
     private ProgressBar dBarCpu, dBarRam, dBarGpu, dBarVram;
     private JSONObject lastStatus;
     private ScrollView scroll;
+    private final NavigationState navigation = new NavigationState();
+    private View[] sections, navigationItems;
+    private View drawerPanel, drawerDim, mainContent;
+    private DrawerHost drawerHost;
+    private TextView sectionTitle;
+    private int pendingProgramScroll = -1, scrollRestoreRevision;
+
+    private int currentSectionScroll() {
+        return navigation.section() == 1 && pendingProgramScroll >= 0 ? pendingProgramScroll : scroll.getScrollY();
+    }
+
+    private void restoreSectionScroll(final int y) {
+        final int section = navigation.section(), revision = ++scrollRestoreRevision;
+        if (section == 1 && !appsLoaded) pendingProgramScroll = y;
+        scroll.post(new Runnable() { public void run() {
+            if (revision != scrollRestoreRevision || section != navigation.section()) return;
+            if (section == 1 && !appsLoaded) return; // Placeholder height must not consume the saved offset.
+            scroll.scrollTo(0, y);
+            if (section == 1) pendingProgramScroll = -1;
+        } });
+    }
+    private static final int[] SECTION_LABELS = {R.string.nav_control, R.string.nav_programs,
+            R.string.nav_files, R.string.nav_broadcast, R.string.nav_settings};
+
+    private void setupNavigation(Bundle saved) {
+        sections = new View[]{findViewById(R.id.section_control), findViewById(R.id.section_programs),
+                findViewById(R.id.section_files), findViewById(R.id.section_broadcast), findViewById(R.id.section_settings)};
+        navigationItems = new View[]{findViewById(R.id.nav_control), findViewById(R.id.nav_programs),
+                findViewById(R.id.nav_files), findViewById(R.id.nav_broadcast), findViewById(R.id.nav_settings)};
+        mainContent = findViewById(R.id.main_content);
+        drawerPanel = findViewById(R.id.drawer_panel);
+        drawerDim = findViewById(R.id.drawer_dim);
+        sectionTitle = (TextView) findViewById(R.id.section_title);
+        // Keep a visible strip on narrow devices, without fixing any text height.
+        ViewGroup.LayoutParams drawerParams = drawerPanel.getLayoutParams();
+        drawerParams.width = Math.min(dpInt(300f), getResources().getDisplayMetrics().widthPixels - dpInt(48f));
+        drawerPanel.setLayoutParams(drawerParams);
+        drawerHost = (DrawerHost) drawerPanel.getParent();
+        drawerHost.bind(drawerPanel, drawerDim, new DrawerHost.Listener() {
+            public void onDrawerTarget(boolean open) {
+                if (open) navigation.openDrawer(); else navigation.back();
+                updateDrawerAccessibility();
+            }
+        });
+        if (saved != null) navigation.restore(saved.getInt("navigation_section", 0), saved.getIntArray("navigation_scroll"));
+        for (int i = 0; i < navigationItems.length; i++) {
+            final int section = i;
+            navigationItems[i].setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) { selectSection(section); }
+            });
+        }
+        findViewById(R.id.btn_menu).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                if (navigation.isDrawerOpen()) navigation.back(); else navigation.openDrawer();
+                View focus = getCurrentFocus();
+                if (focus != null) ((android.view.inputmethod.InputMethodManager)getSystemService(INPUT_METHOD_SERVICE))
+                        .hideSoftInputFromWindow(focus.getWindowToken(), 0);
+                renderDrawer();
+            }
+        });
+        View.OnClickListener close = new View.OnClickListener() {
+            public void onClick(View v) { navigation.back(); renderDrawer(); }
+        };
+        drawerDim.setOnClickListener(close);
+        findViewById(R.id.drawer_close).setOnClickListener(close);
+        String version = "?";
+        try { version = getPackageManager().getPackageInfo(getPackageName(), 0).versionName; }
+        catch (PackageManager.NameNotFoundException ignored) { }
+        ((TextView)findViewById(R.id.drawer_version)).setText(getString(R.string.app_version, version));
+        findViewById(R.id.btn_check_updates).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { if (startupUpdate != null) startupUpdate.checkManually(); }
+        });
+        scroll.setOnTouchListener(new View.OnTouchListener() {
+            public boolean onTouch(View view, android.view.MotionEvent event) {
+                if (event.getActionMasked() == android.view.MotionEvent.ACTION_DOWN) {
+                    pendingProgramScroll = -1;
+                    scrollRestoreRevision++; // User input wins over a posted or asynchronous restore.
+                }
+                return false;
+            }
+        });
+        renderSection();
+        renderDrawer();
+        restoreSectionScroll(navigation.positions()[navigation.section()]);
+    }
+
+    private void selectSection(int section) {
+        final int y = navigation.select(section, currentSectionScroll());
+        pendingProgramScroll = -1;
+        View focus = getCurrentFocus();
+        if (focus != null) focus.clearFocus();
+        renderSection();
+        renderDrawer();
+        restoreSectionScroll(y);
+    }
+
+    private void renderSection() {
+        for (int i = 0; i < sections.length; i++) {
+            sections[i].setVisibility(i == navigation.section() ? View.VISIBLE : View.GONE);
+            navigationItems[i].setSelected(i == navigation.section());
+        }
+        sectionTitle.setText(SECTION_LABELS[navigation.section()]);
+    }
+
+    private void renderDrawer() {
+        drawerHost.show(navigation.isDrawerOpen(), true);
+        updateDrawerAccessibility();
+    }
+
+    private void updateDrawerAccessibility() {
+        boolean open = navigation.isDrawerOpen();
+        drawerPanel.setImportantForAccessibility(open ? View.IMPORTANT_FOR_ACCESSIBILITY_AUTO
+                : View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);
+        mainContent.setImportantForAccessibility(open ? View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS
+                : View.IMPORTANT_FOR_ACCESSIBILITY_AUTO);
+        if (open) findViewById(R.id.drawer_close).requestFocus();
+        else findViewById(R.id.btn_menu).requestFocus();
+    }
+
+    @Override public void onBackPressed() {
+        if (navigation.back()) { renderDrawer(); return; }
+        super.onBackPressed();
+    }
+
+    @Override protected void onSaveInstanceState(Bundle outState) {
+        if (drawerHost != null) drawerHost.settleImmediately();
+        navigation.rememberScroll(currentSectionScroll());
+        outState.putInt("navigation_section", navigation.section());
+        outState.putIntArray("navigation_scroll", navigation.positions());
+        super.onSaveInstanceState(outState);
+    }
     private final List<View> appTiles = new ArrayList<View>();
     private final List<View> actionTiles = new ArrayList<View>();
 
@@ -393,6 +524,7 @@ public class MainActivity extends Activity {
                 public void onClick(View v) { showMonitorDialog(); }
             });
         }
+        setupNavigation(savedInstanceState);
         playIntro();
         if (FileUpload.hasPending(this)) offerPendingUpload();
     }
@@ -479,6 +611,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onPause() {
+        if (drawerHost != null) drawerHost.settleImmediately();
         if (fileUpload != null) fileUpload.cancel();
         if (startupUpdate != null) startupUpdate.onPause();
         discoveryResumed = false;
@@ -832,6 +965,7 @@ public class MainActivity extends Activity {
         appIcons.evictAll();
         HttpURLConnection previous=appsConnection;if(previous!=null)previous.disconnect();
         Thread previousThread=appsThread;if(previousThread!=null)previousThread.interrupt();
+        if (navigation.section() == 1) pendingProgramScroll = currentSectionScroll();
         remoteApps.clear();appsLoaded=false;buildAppTiles();
         if(!discoveryResumed || host.isEmpty() || key.isEmpty())return;
         appsThread=new Thread(new Runnable(){public void run(){
@@ -865,6 +999,7 @@ public class MainActivity extends Activity {
             final boolean loaded=success;
             runOnUiThread(new Runnable(){public void run(){if(!discoveryResumed || isFinishing() || generation!=appsGeneration || !host.equals(prefs.getString(K_HOST,"")) || !key.equals(prefs.getString(K_KEY,"")))return;
                 remoteApps.clear();if(loaded)remoteApps.addAll(found);appsLoaded=loaded;buildAppTiles();
+                if (loaded && navigation.section() == 1 && pendingProgramScroll >= 0) restoreSectionScroll(pendingProgramScroll);
                 if(loaded)startAppIcons(host,key,generation,new ArrayList<RemoteApp>(found));}});
         }},"pc-app-catalog");appsThread.start();
     }
@@ -1334,7 +1469,7 @@ public class MainActivity extends Activity {
             public void run() {
                 // Автопрокрутка только если журнал уже на экране: иначе плитки
                 // «убегали» вниз после каждого нажатия и по ним нельзя было попасть повторно.
-                if (statusView == null) return;
+                if (statusView == null || !statusView.isShown()) return;
                 int[] logPos = new int[2];
                 int[] scrollPos = new int[2];
                 statusView.getLocationOnScreen(logPos);

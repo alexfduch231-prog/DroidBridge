@@ -42,15 +42,40 @@ public final class StartupUpdate {
             return;
         }
         if(pendingEnvelope!=null){offer(pendingEnvelope);return;}
-        if(CHECKED.compareAndSet(false,true))start(new Runnable(){public void run(){
+        if(CHECKED.compareAndSet(false,true))checkForUpdates(false);
+    }
+    /** Explicit user action uses the same signed feed, validation and installer consent. */
+    public void checkManually(){
+        if(!active||disposed)return;
+        // Never reset cancellation or epoch while an older task is still unwinding.
+        if(downloading||progress!=null||dialog!=null||worker!=null&&worker.isAlive()){
+            message(R.string.update_busy);return;
+        }
+        CHECKED.set(true);
+        if(pendingEnvelope!=null){offer(pendingEnvelope);return;}
+        message(R.string.update_checking);
+        checkForUpdates(true);
+    }
+    private void message(int resource){android.widget.Toast.makeText(activity,resource,android.widget.Toast.LENGTH_LONG).show();}
+    private void checkForUpdates(final boolean manual){
+        start(new Runnable(){public void run(){
             try{
                 cleanup(activity);
-                byte[] envelope=fetchManifest();UpdateManifest m=checkedManifest(activity,envelope);
+                final byte[] envelope=fetchManifest();final UpdateManifest m=checkedManifest(activity,envelope);
+                check();
                 // Persist rollback floor only after complete signed schema and installed-identity checks.
-                if(!activity.getSharedPreferences(PREFS,0).edit().putLong("max_sequence",m.sequence).commit())return;
+                if(!activity.getSharedPreferences(PREFS,0).edit().putLong("max_sequence",m.sequence).commit())throw new IOException("Metadata unavailable");
                 PackageInfo installed=activity.getPackageManager().getPackageInfo(activity.getPackageName(),0);
-                if(m.isNewer(version(installed))&&m.minSdk<=Build.VERSION.SDK_INT){pendingEnvelope=envelope;post(new Runnable(){public void run(){offer(pendingEnvelope);}});}
-            }catch(Exception ignored){/* An unavailable feed is intentionally silent. */}
+                if(m.isNewer(version(installed))&&m.minSdk<=Build.VERSION.SDK_INT){
+                    post(new Runnable(){public void run(){pendingEnvelope=envelope;offer(envelope);}});
+                }else if(manual){
+                    final int result=m.isNewer(version(installed))?R.string.update_incompatible:R.string.update_latest;
+                    post(new Runnable(){public void run(){message(result);}});
+                }
+            }catch(Exception ignored){
+                if(manual)post(new Runnable(){public void run(){message(R.string.update_check_failed);}});
+                // Automatic startup failures remain silent.
+            }
         }});
     }
     public void onPause(){
@@ -58,6 +83,9 @@ public final class StartupUpdate {
         if(dialog!=null){dialog.dismiss();dialog=null;}if(progress!=null){progress.dismiss();progress=null;}
         // An APK being handed to system UI must remain available through its URI grant.
         if(downloading){activity.getSharedPreferences(PREFS,0).edit().remove("verified_envelope").commit();}
+        // The worker may have been cancelled before entering download's try/finally.
+        // Keep worker.isAlive() as the retry gate while it unwinds, not this UI flag.
+        downloading=false;
     }
     public void dispose(){disposed=true;onPause();ui.removeCallbacksAndMessages(null);}
     private void start(final Runnable work){
@@ -126,7 +154,11 @@ public final class StartupUpdate {
             dialog=new AlertDialog.Builder(activity).setMessage(R.string.update_permission).setPositiveButton(R.string.update_now,new DialogInterface.OnClickListener(){public void onClick(DialogInterface d,int which){
                 dialog=null;activity.getSharedPreferences(PREFS,0).edit().putBoolean("awaiting_permission",true).commit();
                 try{activity.startActivity(new Intent(Settings.ACTION_MANAGE_UNKNOWN_APP_SOURCES,Uri.parse("package:"+activity.getPackageName())));}catch(Exception ignored){activity.getSharedPreferences(PREFS,0).edit().putBoolean("awaiting_permission",false).commit();}
-            }}).setNegativeButton(R.string.update_later,null).create();dialog.show();return;
+            }}).setNegativeButton(R.string.update_later,null).create();
+            dialog.setOnDismissListener(new DialogInterface.OnDismissListener(){public void onDismiss(DialogInterface dismissed){
+                if(dialog==dismissed)dialog=null;
+            }});
+            dialog.show();return;
         }installVerified();
     }
     private void installVerified(){start(new Runnable(){public void run(){try{

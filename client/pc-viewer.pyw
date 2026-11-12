@@ -200,7 +200,12 @@ class Viewer(object):
             w = min(480, max(360, sw // 3))
             h = min(sh - 120, 980)
             self.root.geometry("%dx%d+%d+%d" % (w, h, sw - w - 60, 60))
+        self._theme_root = self.root.winfo_toplevel()
+        p = self._palette()
+        BG, PANEL, TEXT, MUTED, PRIMARY = (p[key] for key in
+                                         ("background", "surface", "text", "muted", "primary"))
         self.root.configure(bg=BG)
+        self._theme_checks = []
 
         top = tk.Frame(self.root, bg=PANEL)
         top.pack(side="top", fill="x")
@@ -209,7 +214,7 @@ class Viewer(object):
                                      anchor="w", font=("Segoe UI", 9))
         self.status_label.pack(side="left", padx=12, pady=8, fill="x", expand=True)
 
-        # Native Tk controls need explicit light/focus states; ttk theme settings
+        # Native Tk controls need explicit palette/focus states; ttk theme settings
         # do not affect them. Keep widget layout and all commands unchanged.
         focus_style = dict(takefocus=True, highlightthickness=1,
                            highlightcolor=PRIMARY, highlightbackground=PANEL)
@@ -217,18 +222,22 @@ class Viewer(object):
                            activeforeground=TEXT, selectcolor=PANEL,
                            disabledforeground=MUTED, bd=0,
                            font=("Segoe UI", 9), **focus_style)
-        button_style = dict(bg=BG, fg=TEXT, activebackground=PALETTE["surface_alt"],
+        button_style = dict(bg=BG, fg=TEXT, activebackground=p["surface_alt"],
                             activeforeground=TEXT, disabledforeground=MUTED,
                             relief="flat", overrelief="flat", **focus_style)
 
         self.on_top = tk.BooleanVar(value=False)
         if not getattr(self, "embedded", False):
-            tk.Checkbutton(top, text="Поверх", variable=self.on_top, command=self._toggle_top,
-                           **check_style).pack(side="right", padx=(0, 6))
+            on_top = tk.Checkbutton(top, text="Поверх", variable=self.on_top,
+                                    command=self._toggle_top, **check_style)
+            on_top.pack(side="right", padx=(0, 6))
+            self._theme_checks.append(on_top)
 
         self.audio_var = tk.BooleanVar(value=self.audio_enabled)
-        tk.Checkbutton(top, text="Звук", variable=self.audio_var, command=self._toggle_audio,
-                       **check_style).pack(side="right", padx=(0, 6))
+        audio = tk.Checkbutton(top, text="Звук", variable=self.audio_var,
+                               command=self._toggle_audio, **check_style)
+        audio.pack(side="right", padx=(0, 6))
+        self._theme_checks.append(audio)
 
         controls = tk.Frame(self.root, bg=PANEL)
         controls.pack(side="top", fill="x")
@@ -269,6 +278,51 @@ class Viewer(object):
         self.image_label.bind("<MouseWheel>", self._wheel)
 
         self.root.bind("<Configure>", self._on_resize)
+        self._theme_panels = (top, controls, textbar)
+        self._theme_checks.append(self.control_toggle)
+        self._theme_binding = self._theme_root.bind(
+            "<<DroidBridgeThemeChanged>>", self._on_theme_changed, add="+")
+        self._on_theme_changed()
+
+    def _palette(self):
+        """Use the owning shell's palette; never create a second Tk/controller."""
+        owner = self._theme_root
+        controller = getattr(owner, "theme_controller", None)
+        return (controller.palette if controller is not None else
+                getattr(owner, "_droidbridge_palette", PALETTE))
+
+    def _status_foreground(self):
+        # Worker queues retain their legacy semantic colors. Resolve them only
+        # at paint time so a queued error cannot restore a light-theme color.
+        p = self._palette()
+        color = getattr(self, "status_color", MUTED)
+        return {MUTED: p["muted"], BAD: p["danger"],
+                OK: p.get("success", OK)}.get(color, color)
+
+    def _on_theme_changed(self, event=None):
+        if getattr(self, "_closed", False):
+            return
+        p = self._palette()
+        self.root.configure(bg=p["background"])
+        for panel in self._theme_panels:
+            panel.configure(bg=p["surface"])
+        self.status_label.configure(bg=p["surface"], fg=self._status_foreground())
+        self.control_label.configure(bg=p["surface"], fg=p["muted"])
+        focus = dict(highlightcolor=p["primary"], highlightbackground=p["surface"])
+        for check in self._theme_checks:
+            check.configure(bg=p["surface"], fg=p["text"],
+                            activebackground=p["surface"], activeforeground=p["text"],
+                            selectcolor=p["surface"], disabledforeground=p["muted"], **focus)
+        for button in self.control_widgets:
+            if button is self.text_entry:
+                continue
+            button.configure(bg=p["background"], fg=p["text"],
+                             activebackground=p["surface_alt"], activeforeground=p["text"],
+                             disabledforeground=p["muted"], **focus)
+        self.text_entry.configure(bg=p["surface"], fg=p["text"],
+                                  disabledbackground=p["background"], disabledforeground=p["muted"],
+                                  insertbackground=p["text"], selectbackground=p["primary"],
+                                  selectforeground=p.get("button_text", "#FFFFFF"), **focus)
 
     def _on_resize(self, event):
         if event.widget is not self.root:
@@ -636,7 +690,7 @@ class Viewer(object):
                 self._invalidate_render()
                 log("кадр не разобран: %r" % (e,))
 
-        self.status_label.configure(text=self._status_text(), fg=self.status_color)
+        self.status_label.configure(text=self._status_text(), fg=self._status_foreground())
         self._schedule(10, self._pump)
 
     # ---------- видео H.264 ----------
@@ -895,6 +949,13 @@ class Viewer(object):
             return
         self._closed = True
         self.stop.set()
+        theme_binding = getattr(self, "_theme_binding", None)
+        if theme_binding:
+            try:
+                self._theme_root.unbind("<<DroidBridgeThemeChanged>>", theme_binding)
+            except tk.TclError:
+                pass
+            self._theme_binding = None
         for after_id in self._after_ids:
             try:
                 self.root.after_cancel(after_id)

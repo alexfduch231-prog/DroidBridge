@@ -36,7 +36,7 @@ public final class PairingActivity extends Activity {
         input.setSaveEnabled(false);input.setInputType(android.text.InputType.TYPE_CLASS_TEXT|android.text.InputType.TYPE_TEXT_VARIATION_PASSWORD);
         if(android.os.Build.VERSION.SDK_INT>=26)input.setImportantForAutofill(android.view.View.IMPORTANT_FOR_AUTOFILL_NO_EXCLUDE_DESCENDANTS);
         content.addView(input,new LinearLayout.LayoutParams(-1,-2));
-        connect=new Button(this);connect.setText(R.string.pair_connect);content.addView(connect);
+        connect=new Button(this, null, 0, R.style.BtnFilled);connect.setText(R.string.pair_connect);content.addView(connect);
         status=new TextView(this);status.setSaveEnabled(false);content.addView(status);
         Button cancel=new Button(this);cancel.setText(android.R.string.cancel);content.addView(cancel);cancel.setOnClickListener(new View.OnClickListener(){public void onClick(View v){finish();}});
         setContentView(content);

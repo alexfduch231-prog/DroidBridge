@@ -1,74 +1,351 @@
-"""Shared, dependency-free ttk theme matching DroidBridge's Android day palette.
-
-apply_theme only changes appearance. It never owns window geometry, bindings,
-application state, or lifecycle. Native Tk cannot reproduce Android's rounded
-Material cards; white surfaces and spacing provide the same visual hierarchy.
-"""
+"""Root-scoped native Tk appearance with live updates and rounded ttk buttons."""
+from io import BytesIO
 from pathlib import Path
+from PIL import Image, ImageDraw
 import sys
+import tkinter as tk
 from tkinter import TclError, font, ttk
+from desktop.theme_settings import (THEME_MODES, load_theme_mode, save_theme_mode,
+                                    system_theme)
 
-PALETTE = {
-    'primary': '#1A63E7', 'background': '#F1F3F8', 'surface': '#FFFFFF',
-    'surface_alt': '#F7F8FC', 'text': '#16181D', 'muted': '#5C6270',
-    'danger': '#CC2F23', 'outline': '#8A909C', 'line': '#DDE2EC',
+_LIGHT = {
+    'primary': '#1A63E7', 'background': '#F7F7F8', 'surface': '#FFFFFF',
+    'surface_alt': '#EEEEF0', 'text': '#202024', 'muted': '#606068',
+    'danger': '#BC2B21', 'outline': '#94949C', 'line': '#DEDEE2',
+    'success': '#187645', 'button_text': '#FFFFFF', 'danger_button': '#CC2F23',
+    'active': '#E9EFFB', 'pressed': '#DDE6F7', 'disabled': '#EDF0F5',
+    'disabled_text': '#5C6270', 'primary_active': '#1557CD',
+    'primary_pressed': '#1049AF', 'danger_active': '#B6281E', 'danger_pressed': '#992219',
 }
+# Historical imports keep their object identity. Root-local styling must never
+# mutate this fallback: separate Tk interpreters may use different themes.
+PALETTE = dict(_LIGHT)
 
 
-def apply_theme(window) -> None:
-    """Apply the shared light theme to an existing Tk root or Toplevel."""
+def palette_for(mode, system=None) -> dict:
+    if mode not in THEME_MODES:
+        mode = 'system'
+    if mode == 'system':
+        mode = system if system in ('light', 'dark') else system_theme()
+    if mode == 'light':
+        return dict(_LIGHT)
+    backgrounds = {
+        'dark': ('#1B1B1B', '#232323', '#2D2D2D', '#285FC6'),
+        'ocean': ('#081D30', '#102C43', '#18394F', '#17649B'),
+        'forest': ('#10231C', '#19352A', '#214133', '#176B46'),
+        'plum': ('#24152F', '#34203F', '#412B4D', '#8247A6'),
+    }
+    background, surface, alternate, accent = backgrounds[mode]
+    def shade(color, factor):
+        return '#' + ''.join(f'{round(int(color[i:i + 2], 16) * factor):02X}' for i in (1, 3, 5))
+    return dict(_LIGHT, background=background, surface=surface,
+                surface_alt=alternate, primary=accent, text='#F5F7FC',
+                muted='#C1CAD8', danger='#FFB6AE', success='#83DFAD',
+                outline='#81818A', line='#48484E', active=alternate,
+                pressed=background, disabled=alternate, disabled_text='#C1CAD8',
+                primary_active=shade(accent, .88), primary_pressed=shade(accent, .74),
+                danger_active='#B6281E', danger_pressed='#992219')
+
+
+def _root(window):
+    return window._root()
+
+
+def palette_for_widget(widget):
+    root = _root(widget)
+    return getattr(root, '_droidbridge_palette', _LIGHT)
+
+
+def font_family(window):
+    """Use an installed Windows UI face, without downloading or installing fonts."""
+    root = _root(window)
+    cached = getattr(root, '_droidbridge_font', None)
+    if cached is not None:
+        return cached
+    available = {name.casefold(): name for name in font.families(root)}
+    for candidate in ('Segoe UI Variable Text', 'Segoe UI Variable', 'Segoe UI'):
+        if candidate.casefold() in available:
+            family = available[candidate.casefold()]
+            break
+    else:
+        family = font.nametofont('TkDefaultFont', root=root).actual('family')
+    root._droidbridge_font = family
+    return family
+
+
+def _rounded_buttons(root, style, p):
+    """Install stretchable borders once; refresh a bounded set of Tk images in place.
+
+    The label/padding remain ttk elements: commands, focus traversal, keyboard
+    bindings, state and accessibility still belong to the real TButton widget.
+    Corner pixels match the containing surface. ttk paints its style background
+    before drawing elements, so alpha-only corners would reveal a square accent.
+    """
+    images = getattr(root, '_droidbridge_button_images', None)
+    if images is None:
+        images = root._droidbridge_button_images = {}
+    signature = tuple(sorted(p.items()))
+    refresh = getattr(root, '_droidbridge_button_signature', None) != signature
+    specs = (
+        ('neutral', 'TButton', p['surface_alt'], p['active'], p['pressed'], 11, p['line']),
+        ('background', 'DB.Sidebar.TButton', p['surface_alt'], p['active'], p['pressed'], 11, p['line']),
+        ('primary', 'DB.Primary.TButton', p['primary'], p['primary_active'], p['primary_pressed'], 11, p['primary']),
+        ('danger', 'DB.Danger.TButton', _LIGHT['danger'], p['danger_active'], p['danger_pressed'], 11, _LIGHT['danger']),
+        ('nav', 'DB.Nav.TButton', p['background'], p['surface_alt'], p['pressed'], 8, p['background']),
+        ('selected', 'DB.Nav.Selected.TButton', p['surface_alt'], p['active'], p['pressed'], 8, p['surface_alt']),
+    )
+    existing = set(style.element_names())
+    for role, name, normal, active, pressed, radius, outline in specs:
+        states = (('normal', normal), ('disabled', p['disabled']),
+                  ('pressed_focus', pressed), ('pressed', pressed),
+                  ('active_focus', active), ('active', active), ('focus', normal))
+        for state, fill in states:
+            key = role, state
+            if key not in images or refresh:
+                # Four-times supersampling gives smooth edges without new deps.
+                # Tk tiles the nine-slice center (it does not scale it). A 3px
+                # center causes thousands of native photo draws per button.
+                size, supersample = 51, 4
+                backdrop = p['background'] if role in ('background', 'nav', 'selected') else p['surface']
+                tile = Image.new('RGBA', (size * supersample, size * supersample), backdrop)
+                draw = ImageDraw.Draw(tile)
+                focused = state in ('focus', 'active_focus', 'pressed_focus')
+                ring = p['button_text'] if role in ('primary', 'danger') else p['primary']
+                edge = ring if focused else (fill if state != 'normal' else outline)
+                inset = 1 if focused else 2
+                box = (inset * supersample, inset * supersample,
+                       (size - inset) * supersample - 1, (size - inset) * supersample - 1)
+                draw.rounded_rectangle(box, radius=radius * supersample, fill=fill,
+                                       outline=edge, width=(2 if focused else 1) * supersample)
+                tile = tile.resize((size, size), Image.Resampling.LANCZOS)
+                encoded = BytesIO()
+                tile.save(encoded, format='PNG')
+                if key not in images:
+                    images[key] = tk.PhotoImage(master=root, data=encoded.getvalue())
+                else:
+                    # Reconfigure the existing Tcl image: old widgets/elements keep
+                    # valid names and repeated switches cannot grow the cache.
+                    images[key].configure(data=encoded.getvalue())
+        element = 'DB.Rounded.' + role
+        if element not in existing:
+            style.element_create(element, 'image', images[role, 'normal'],
+                                 ('disabled', images[role, 'disabled']),
+                                 ('pressed', 'focus', images[role, 'pressed_focus']),
+                                 ('pressed', images[role, 'pressed']),
+                                 ('active', 'focus', images[role, 'active_focus']),
+                                 ('active', images[role, 'active']),
+                                 ('focus', images[role, 'focus']),
+                                 border=12, padding=0, width=27, height=27, sticky='nsew')
+        style.layout(name, [(element, {'sticky': 'nsew', 'children': [
+            ('Button.padding', {'sticky': 'nsew', 'children': [
+                ('Button.label', {'sticky': 'nsew'})]})]})])
+    root._droidbridge_button_signature = signature
+
+
+def _apply_styles(window, p):
     style = ttk.Style(window)
-    style.theme_use('clam')
-    family = 'Segoe UI' if 'Segoe UI' in font.families(window) else font.nametofont('TkDefaultFont', root=window).actual('family')
-    p = PALETTE
+    if style.theme_use() != 'clam':
+        style.theme_use('clam')
+    root = _root(window)
+    family = font_family(window)
     window.configure(background=p['background'])
-    asset_root = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parents[1]))
-    try:
-        window.iconbitmap(str(asset_root / 'assets' / 'droidbridge.ico'))
-    except TclError:
-        # Source checkouts may not contain the asset yet; non-Windows Tk may
-        # reject ICO. Neither case should prevent the actual window opening.
-        pass
     style.configure('.', font=(family, 10), background=p['surface'],
                     foreground=p['text'], bordercolor=p['line'],
                     lightcolor=p['surface'], darkcolor=p['line'],
                     troughcolor=p['background'], selectbackground=p['primary'],
-                    selectforeground=p['surface'])
-    style.configure('TFrame', background=p['surface'])
-    style.configure('DB.TFrame', background=p['background'])
-    style.configure('DB.Card.TFrame', background=p['surface'], relief='flat', borderwidth=0)
-    style.configure('DB.Accent.TFrame', background=p['primary'])
-    for name in ('TLabel', 'DB.TLabel', 'DB.QR.TLabel'):
+                    selectforeground=p['button_text'])
+    for name, color in (('TFrame', p['surface']), ('DB.TFrame', p['background']),
+                        ('DB.Card.TFrame', p['surface']), ('DB.Accent.TFrame', p['primary'])):
+        style.configure(name, background=color, relief='flat', borderwidth=0)
+    for name in ('TLabel', 'DB.TLabel'):
         style.configure(name, background=p['surface'], foreground=p['text'], font=(family, 10))
-    style.configure('DB.Title.TLabel', background=p['background'], foreground=p['text'], font=(family, 25, 'bold'))
+    # QR pixels and their white quiet zone are intentionally not themed.
+    style.configure('DB.QR.TLabel', background='#FFFFFF', foreground='#16181D', font=(family, 10))
+    style.configure('DB.Title.TLabel', background=p['background'], foreground=p['text'], font=(family, 12, 'bold'))
     style.configure('DB.Subtitle.TLabel', background=p['background'], foreground=p['muted'], font=(family, 10))
     style.configure('DB.Heading.TLabel', background=p['surface'], foreground=p['text'], font=(family, 13, 'bold'))
     style.configure('DB.Muted.TLabel', background=p['surface'], foreground=p['muted'])
     style.configure('DB.Danger.TLabel', background=p['surface'], foreground=p['danger'])
-    style.configure('TButton', font=(family, 10), padding=(16, 10), relief='flat',
+    # Tk scaling is pixels/point (96 DPI = 4/3); use pixel-sized button fonts
+    # so reapplying after a DPI change does not reuse stale Tk font metrics.
+    scaling = float(root.tk.call('tk', 'scaling'))
+    density = scaling / (4 / 3)
+    button_font = (family, -max(10, round(10 * scaling)))
+    padding = (max(12, round(16 * density)), max(8, round(13 * density)))
+    style.configure('TButton', font=button_font, padding=padding, relief='flat',
                     background=p['surface_alt'], foreground=p['text'], borderwidth=1,
                     bordercolor=p['line'], focusthickness=2, focuscolor=p['primary'])
-    style.map('TButton', background=[('disabled', '#EDF0F5'), ('pressed', '#DDE6F7'), ('active', '#E9EFFB')],
-              foreground=[('disabled', '#737A87')], bordercolor=[('focus', p['primary'])])
+    style.map('TButton', background=[('disabled', p['disabled']), ('pressed', p['pressed']), ('active', p['active'])],
+              foreground=[('disabled', p['disabled_text'])], bordercolor=[('focus', p['primary'])])
     style.configure('DB.TButton')
+    for name, selected in (('DB.Nav.TButton', False), ('DB.Nav.Selected.TButton', True)):
+        background = p['surface_alt'] if selected else p['background']
+        style.configure(name, background=background, foreground=p['text'],
+                        anchor='w', padding=(padding[0], max(8, round(8 * density))), borderwidth=0,
+                        font=button_font, focuscolor=p['primary'])
+        style.map(name, background=[('pressed', p['pressed']), ('active', p['surface_alt'])],
+                  foreground=[('disabled', p['disabled_text']), ('!disabled', p['text'])],
+                  bordercolor=[('focus', p['primary'])])
+    # Danger text on dark surfaces is pale; danger buttons retain a dark red
+    # background so their fixed white caption remains readable.
     for name, color, active, pressed in (
-            ('DB.Primary.TButton', p['primary'], '#1557CD', '#1049AF'),
-            ('DB.Danger.TButton', p['danger'], '#B6281E', '#992219')):
-        style.configure(name, background=color, foreground=p['surface'],
-                        bordercolor=color, focuscolor=p['surface'])
-        style.map(name, background=[('disabled', '#E3E7EE'), ('pressed', pressed), ('active', active)],
-                  foreground=[('disabled', '#737A87'), ('!disabled', p['surface'])],
-                  bordercolor=[('disabled', '#E3E7EE'), ('!disabled', color)])
-    style.configure('TEntry', padding=(10, 9), fieldbackground=p['surface_alt'],
-                    foreground=p['text'], bordercolor=p['outline'], insertcolor=p['text'])
-    style.map('TEntry', bordercolor=[('focus', p['primary'])],
-              fieldbackground=[('disabled', '#EDF0F5')])
-    style.configure('TCheckbutton', background=p['surface'], padding=(0, 6))
-    style.configure('DB.Card.TCheckbutton', background=p['surface'])
-    style.map('TCheckbutton', background=[('active', p['surface'])])
+            ('DB.Primary.TButton', p['primary'], p['primary_active'], p['primary_pressed']),
+            ('DB.Danger.TButton', _LIGHT['danger'], p['danger_active'], p['danger_pressed'])):
+        style.configure(name, background=color, foreground=p['button_text'],
+                        bordercolor=color, focuscolor=p['button_text'])
+        style.map(name, background=[('disabled', p['disabled']), ('pressed', pressed), ('active', active)],
+                  foreground=[('disabled', p['disabled_text']), ('!disabled', p['button_text'])],
+                  bordercolor=[('disabled', p['disabled']), ('!disabled', color)])
+    _rounded_buttons(root, style, p)
+    for name in ('TEntry', 'TCombobox'):
+        style.configure(name, padding=(10, 9), fieldbackground=p['surface_alt'],
+                        background=p['surface_alt'], foreground=p['text'],
+                        arrowcolor=p['text'], bordercolor=p['outline'], insertcolor=p['text'])
+        style.map(name, bordercolor=[('focus', p['primary'])],
+                  fieldbackground=[('disabled', p['disabled']), ('readonly', p['surface_alt'])],
+                  foreground=[('disabled', p['disabled_text']), ('readonly', p['text'])],
+                  selectbackground=[('!disabled', p['primary'])],
+                  selectforeground=[('!disabled', p['button_text'])])
+    for name in ('TCheckbutton', 'TRadiobutton', 'DB.Card.TCheckbutton'):
+        style.configure(name, background=p['surface'], foreground=p['text'], padding=(0, 6))
+        style.map(name, background=[('active', p['surface'])], foreground=[('disabled', p['disabled_text'])])
+    style.configure('Treeview', background=p['surface_alt'], fieldbackground=p['surface_alt'],
+                    foreground=p['text'], bordercolor=p['outline'])
+    style.map('Treeview', background=[('disabled', p['disabled']), ('selected', p['primary'])],
+              foreground=[('disabled', p['disabled_text']), ('selected', p['button_text'])])
+    style.configure('Treeview.Heading', background=p['surface'], foreground=p['text'],
+                    bordercolor=p['line'])
+    style.map('Treeview.Heading', background=[('pressed', p['pressed']), ('active', p['active'])],
+              foreground=[('disabled', p['disabled_text']), ('!disabled', p['text'])])
     style.configure('TSeparator', background=p['line'])
-    style.configure('Vertical.TScrollbar', background='#CDD4E0', borderwidth=0,
-                    arrowcolor=p['muted'], troughcolor=p['background'])
+    for name in ('Vertical.TScrollbar', 'Horizontal.TScrollbar'):
+        style.configure(name, background=p['line'], borderwidth=0,
+                        arrowcolor=p['muted'], troughcolor=p['background'])
+    # Combobox popup is a native Tk listbox, not a ttk widget.
+    for option, value in (('background', p['surface_alt']), ('foreground', p['text']),
+                          ('selectBackground', p['primary']), ('selectForeground', p['button_text'])):
+        window.option_add('*TCombobox*Listbox.' + option, value, 80)
+
+
+def _walk_colors(widget, old, new):
+    """Only replace known appearance colors; never touch pixels or widget state."""
+    if isinstance(widget, (tk.Tk, tk.Toplevel)):
+        widget.configure(background=new['background'])
+    elif not isinstance(widget, ttk.Widget):
+        options = widget.keys()
+        for option in ('background', 'foreground', 'insertbackground', 'selectbackground',
+                       'selectforeground', 'highlightbackground', 'highlightcolor',
+                       'readonlybackground', 'disabledbackground', 'disabledforeground'):
+            if option not in options:
+                continue
+            current = str(widget.cget(option)).lower()
+            # QR quiet zones and explicit image backgrounds stay white.
+            if (option in ('background', 'highlightbackground')
+                    and current in ('#ffffff', 'white')
+                    and 'image' in options and widget.cget('image')):
+                continue
+            for key, color in old.items():
+                if current == color.lower():
+                    widget.configure(**{option: new[key]})
+                    break
+    for child in widget.winfo_children():
+        _walk_colors(child, old, new)
+
+
+def apply_theme(window) -> None:
+    """Compatibility wrapper: inherit this interpreter's context, never globals."""
+    root = _root(window)
+    if not hasattr(root, '_droidbridge_palette'):
+        root._droidbridge_palette = palette_for('system')
+    _apply_styles(window, root._droidbridge_palette)
+    asset_root = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parents[1]))
+    try:
+        window.iconbitmap(str(asset_root / 'assets' / 'droidbridge.ico'))
+    except TclError:
+        pass
+
+
+class ThemeController:
+    """One controller per Tk interpreter; all work runs on Tk's owning thread."""
+    def __new__(cls, root, data_dir):
+        owner = _root(root)
+        existing = getattr(owner, 'theme_controller', None)
+        if existing is not None and not existing._disposed:
+            return existing
+        return super().__new__(cls)
+
+    def __init__(self, root, data_dir):
+        if getattr(self, '_initialized', False):
+            return
+        self._initialized = True
+        self.root = _root(root)
+        self.data_dir = Path(data_dir)
+        self.mode = load_theme_mode(data_dir)
+        self.palette = palette_for(self.mode)
+        self._disposed = False
+        self._timer = None
+        self.root.theme_controller = self.root._theme_controller = self
+        self.root._droidbridge_palette = self.palette
+        apply_theme(self.root)
+        self._destroy_binding = self.root.bind('<Destroy>', self._on_destroy, add='+')
+        self._schedule()
+
+    def _schedule(self):
+        if not self._disposed and self.mode == 'system' and self._timer is None:
+            self._timer = self.root.after(1500, self._poll_system)
+
+    def _cancel_timer(self):
+        if self._timer is not None:
+            try:
+                self.root.after_cancel(self._timer)
+            except TclError:
+                pass
+            self._timer = None
+
+    def _poll_system(self):
+        self._cancel_timer()
+        if self._disposed or self.mode != 'system':
+            return
+        palette = palette_for('system')
+        if palette != self.palette:
+            self._apply(palette)
+        self._schedule()
+
+    def _apply(self, palette):
+        old = self.palette.copy()
+        self.palette.clear()
+        self.palette.update(palette)
+        self.root._droidbridge_palette = self.palette
+        _apply_styles(self.root, self.palette)
+        _walk_colors(self.root, old, self.palette)
+        self.root.event_generate('<<DroidBridgeThemeChanged>>')
+
+    def set_mode(self, mode):
+        if self._disposed:
+            return
+        # Save before changing anything: failures must leave selection and UI true.
+        save_theme_mode(self.data_dir, mode)
+        palette = palette_for(mode)
+        self.mode = mode
+        self._cancel_timer()
+        self._apply(palette)
+        self._schedule()
+
+    def _on_destroy(self, event):
+        if event.widget is self.root:
+            self.dispose()
+
+    def dispose(self):
+        if self._disposed:
+            return
+        self._disposed = True
+        self._cancel_timer()
+        if self._destroy_binding:
+            try:
+                self.root.unbind('<Destroy>', self._destroy_binding)
+            except TclError:
+                pass
+            self._destroy_binding = None
 
 
 def card(parent, **kwargs) -> ttk.Frame:
@@ -83,7 +360,7 @@ def scrollable_card(window) -> ttk.Frame:
     import tkinter as tk
     viewport = ttk.Frame(window, style='DB.TFrame')
     viewport.pack(fill='both', expand=True, padx=20, pady=20)
-    canvas = tk.Canvas(viewport, background=PALETTE['background'], highlightthickness=0)
+    canvas = tk.Canvas(viewport, background=palette_for_widget(window)['background'], highlightthickness=0)
     vertical = ttk.Scrollbar(viewport, orient='vertical', command=canvas.yview)
     horizontal = ttk.Scrollbar(viewport, orient='horizontal', command=canvas.xview)
     canvas.configure(yscrollcommand=vertical.set, xscrollcommand=horizontal.set)
@@ -97,6 +374,15 @@ def scrollable_card(window) -> ttk.Frame:
 
     button_text = {}
 
+    def button_insets(button, style):
+        # ttk padding is scaled with the font; a fixed 44px allowance clips
+        # captions at high DPI even when their containing card fits the canvas.
+        padding = button.tk.splitlist(style.lookup(button.cget('style') or 'TButton', 'padding'))
+        pixels = [button.winfo_pixels(value) for value in padding]
+        horizontal = (pixels[0] + pixels[2] if len(pixels) >= 3
+                      else 2 * pixels[0] if pixels else 0)
+        return horizontal + 8
+
     def fit_controls(parent, available):
         """Reflow text and action groups without reducing the user's font size."""
         children = parent.winfo_children()
@@ -108,7 +394,7 @@ def scrollable_card(window) -> ttk.Frame:
                 style = ttk.Style(button)
                 button_font = style.lookup(button.cget('style') or 'TButton', 'font')
                 return max(button.winfo_reqwidth() + 8,
-                           int(button.tk.call('font', 'measure', button_font, original.replace('\n', ' '))) + 60)
+                           int(button.tk.call('font', 'measure', button_font, original.replace('\n', ' '))) + button_insets(button, style) + 8)
             stacked = sum(natural_width(child) for child in children) > available
             for child in children:
                 child.pack_configure(side='top' if stacked else 'left',
@@ -127,7 +413,7 @@ def scrollable_card(window) -> ttk.Frame:
                 lines, line = [], ''
                 for word in original.replace('\n', ' ').split():
                     candidate = f'{line} {word}'.strip()
-                    if line and int(child.tk.call('font', 'measure', button_font, candidate)) > max(40, available - 44):
+                    if line and int(child.tk.call('font', 'measure', button_font, candidate)) > max(40, available - button_insets(child, style)):
                         lines.append(line)
                         line = word
                     else:

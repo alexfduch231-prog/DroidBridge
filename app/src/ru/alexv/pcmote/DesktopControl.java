@@ -66,7 +66,7 @@ final class DesktopControl implements View.OnTouchListener {
     }
     private int dp(int n){return Math.round(n*activity.getResources().getDisplayMetrics().density);}
     private Button button(LinearLayout row,String title,final Runnable r){
-        Button b=new Button(activity); b.setText(title); b.setTextSize(12);
+        Button b=new Button(activity, null, 0, R.style.BtnToolbar); b.setText(title); b.setTextSize(12);
         row.addView(b,new LinearLayout.LayoutParams(-2,dp(48)));
         b.setOnClickListener(new View.OnClickListener(){public void onClick(View v){r.run();}}); return b;
     }
