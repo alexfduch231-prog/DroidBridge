@@ -1,63 +1,47 @@
 # DroidBridge
 
-Управляй домашним компьютером с телефона — или телефоном с компьютера. Оба устройства должны быть в одной локальной сети. Аккаунты и облако не нужны.
+Телефон вместо пульта для компьютера. Или наоборот — экран телефона на ПК и управление мышью. Всё работает в одной домашней сети, без аккаунтов и облака.
 
 **[Скачать для Windows и Android](https://github.com/alexfduch231-prog/DroidBridge/releases/latest)** · [English](#english)
 
-## Что умеет
+## Что можно делать
 
-- Показывает экран ПК на телефоне: можно нажимать, прокручивать и печатать.
-- Показывает экран телефона на ПК. Если разрешить управление на Android, можно пользоваться им мышью.
-- Отправляет файлы с телефона в выбранную папку на компьютере. Прерванную передачу можно продолжить.
-- Запускает твои программы, управляет музыкой, блокирует, перезагружает и выключает ПК.
-- Может разбудить выключенный ПК, если компьютер и сеть поддерживают Wake-on-LAN.
+- Смотреть экран ПК на телефоне, нажимать, прокручивать и печатать своей обычной клавиатурой Android.
+- Вывести телефон на монитор и пользоваться им мышью.
+- Перекидывать файлы **в обе стороны**, выбирать папку и продолжать передачу после обрыва. До 50 ГиБ на файл, без перезаписи одноимённых файлов.
+- Запускать свои программы, управлять музыкой, блокировать, перезагружать и выключать компьютер.
+- Будить ПК по сети, если он поддерживает Wake-on-LAN.
 
-## Как подключить
+## Как начать
 
-1. **Установи приложение на ПК и телефон.** Нужные файлы лежат на странице скачивания; архивы с исходниками не нужны. QR для скачивания Android-приложения есть и в разделе «Подключение» на ПК.
-2. **Подключи устройства к одной домашней сети** и нажми на ПК «Запустить сервер».
-3. **Открой «Подключение».** Перед первым подключением приложение попросит настроить включение ПК по сети. Если найдёт проблему, покажет, что исправить. Этот шаг нельзя пропустить; часть настроек BIOS придётся проверить вручную.
-4. **Создай QR подключения и открой его телефоном.** Если камера не открывает ссылку, скопируй её в «Добавить ПК» на телефоне.
-5. **Сравни код на двух экранах.** Нажми «Разрешить» на ПК и «Сохранить ПК» на телефоне. Готово — можно пользоваться.
+1. Установи приложение на компьютер и телефон, подключи их к одной сети.
+2. На ПК нажми **«Запустить сервер»**, затем открой **«Подключение»**. При первом подключении пройди настройку включения ПК по сети — приложение подскажет, что проверить.
+3. Создай QR подключения. На телефоне открой настройки и нажми **«Сканировать QR»**.
+4. Сравни код на двух экранах и подтверди подключение на обоих устройствах.
 
-Нужны **Windows 10/11 x64** и **Android 5 или новее**. Для управления телефоном жестами — Android 7+.
+После этого выбирай, что нужно: показать экран, отправить файл или запустить программу. Для трансляции телефона нажми **«Трансляция на ПК»** на Android и разреши показ экрана. Управление телефоном мышью включается отдельно через специальные возможности Android.
 
-**[Подробная инструкция и помощь с подключением](docs/GETTING_STARTED.md)**
+Для отправки файла **на телефон** выбери его на ПК в разделе **«Приём файлов»**. Затем на телефоне открой **«Файлы» → «Получить с ПК»**, выбери папку и забери файл из очереди. Весь диск при этом не расшаривается.
 
-## Где что искать
+Что-то не подключается? **[Здесь инструкция и помощь](docs/GETTING_STARTED.md)**.
 
-В Windows все разделы находятся слева в одном окне:
+## Перед установкой
 
-- **Подключение** — установить приложение на телефон и связать устройства.
-- **Экран телефона** — смотреть телефон и управлять им.
-- **Программы** — добавить свои программы для запуска с телефона.
-- **Приём файлов** — выбрать, куда сохранять загрузки.
-- **Включение ПК** — проверить и настроить пробуждение по сети.
-- **Настройки** — видео, звук и оформление.
+Нужны **Windows 10/11 x64** и **Android 5+**. Для управления телефоном жестами — Android 7+. Показ экрана ПК пока требует видеокарту **NVIDIA с NVENC**.
 
-Чтобы показать телефон на компьютере, оставь окно DroidBridge и сервер включёнными. На телефоне нажми **«Трансляция на ПК»** и разреши показ экрана. Для управления телефоном понадобится ещё разрешение в специальных возможностях Android.
+Пользуйся в доверенной домашней сети: команды, видео и файлы пока передаются без шифрования. Не открывай порты приложения в интернет. Пробуждение ПК зависит от его настроек и железа.
 
-## Обновления
+Во время передачи файлов оставляй экран передачи открытым. Для докачки на ПК нужна папка на NTFS; для получения на телефоне — свободное место под временную копию и готовый файл. [Подробности о передаче файлов](docs/GETTING_STARTED.md).
 
-Приложение само проверяет обновления при запуске. Можно установить их сразу или отложить. На Android установку нужно подтвердить в системном окне.
+## Скриншоты
 
-## Что важно знать
-
-- **Используй только в доверенной домашней сети.** Подключение устройств защищено, но сами команды, видео и файлы пока передаются без шифрования. Не открывай порты приложения в интернет.
-- **Для показа экрана ПК нужна совместимая видеокарта NVIDIA с NVENC.** На других видеокартах этот режим пока не работает.
-- **Файлы — до 50 ГиБ.** Для докачки выбирай папку на NTFS; FAT/exFAT не подходят. Не меняй исходный файл и держи приложение на телефоне открытым во время передачи. Незаконченные загрузки хранятся до семи дней.
-- **Пробуждение зависит от компьютера и сети.** Приложение поможет с настройкой, но не сможет включить эту возможность, если её не поддерживает железо. Даже успешная проверка не заменяет пробное включение.
-- **Системные ограничения остаются.** Приложение не обходит защиту Android и Windows. Звук телефона доступен на Android 10+ и только там, где само приложение разрешает его захватывать.
-
-## Как выглядит
-
-[Скриншоты с пояснениями](docs/SCREENSHOTS.md). В галерее указано, к каким версиям относятся снимки: оформление может отличаться.
+[Посмотреть интерфейс](docs/SCREENSHOTS.md)
 
 ## О проекте
 
-Сделал с помощью ИИ для себя, потом решил поделиться — вдруг кому-то тоже пригодится. Это личный эксперимент, а не коммерческий сервис с круглосуточной поддержкой. Ошибки вполне возможны.
+Сделал с помощью ИИ для себя, потом решил поделиться — вдруг ещё кому пригодится.
 
-Нашёл баг или придумал улучшение — **[напиши в Issues](https://github.com/alexfduch231-prog/DroidBridge/issues)**. Хочешь помочь кодом — [как участвовать](CONTRIBUTING.md) и [как собрать проект](docs/DEVELOPMENT.md).
+Нашёл баг или хочешь что-то добавить — [пиши в Issues](https://github.com/alexfduch231-prog/DroidBridge/issues). Хочешь помочь кодом — [как участвовать](CONTRIBUTING.md) и [как собрать проект](docs/DEVELOPMENT.md).
 
 [Что нового](CHANGELOG.md) · [Безопасность](SECURITY.md) · [Лицензия MIT](LICENSE)
 
@@ -65,63 +49,47 @@
 
 # English
 
-Control your home PC from your phone — or your phone from your PC. Both devices need to be on the same local network. No account or cloud service required.
+Use your phone as a remote for your PC — or put your phone screen on the PC and control it with a mouse. Both devices stay on your home network. No accounts or cloud service.
 
 **[Download for Windows and Android](https://github.com/alexfduch231-prog/DroidBridge/releases/latest)**
 
-## What it does
+## What you can do
 
-- Shows your PC screen on your phone, with clicking, scrolling and typing.
-- Shows your phone screen on your PC. Grant Android's control permission to use it with a mouse.
-- Sends files from your phone to a folder you choose on the PC, with pause and resume.
-- Launches your programs, controls media, locks, restarts and shuts down your PC.
-- Can wake the PC if your hardware and network support Wake-on-LAN.
+- View your PC screen on your phone, click, scroll and type with your usual Android keyboard.
+- View and control your phone from your PC.
+- Send files **both ways**, choose where to save them and resume interrupted transfers. Up to 50 GiB per file, without overwriting existing files.
+- Launch your programs, control music, lock, restart and shut down your PC.
+- Wake the PC over the network if it supports Wake-on-LAN.
 
-## Connect your devices
+## Getting started
 
-1. **Install the Windows app and Android APK** from the download page. You don't need the source archives. The PC app also has an Android download QR under Connection.
-2. **Connect both devices to your home network** and click Start server on the PC.
-3. **Open Connection.** Before the first pairing, the app requires network-wake setup. If something is wrong, it tells you what to fix. This step cannot be skipped; some BIOS settings need to be checked manually.
-4. **Create a pairing QR and open it on your phone.** If the camera doesn't open the link, paste it into Add PC in the Android app.
-5. **Compare the code on both screens.** Click Allow on the PC, then Save PC on the phone. You're ready to go.
+1. Install the app on your PC and phone and connect both to the same network.
+2. On the PC, click **Start server**, then open **Connection**. Complete the first-time network-wake setup; the app walks you through what to check.
+3. Create a pairing QR. On your phone, open Settings and tap **Scan QR**.
+4. Compare the code on both screens and approve the connection on both devices.
 
-Requires **Windows 10/11 x64** and **Android 5+**. Phone-control gestures require Android 7+.
+Then choose what you want to do: share a screen, send a file or launch a program. To show your phone on the PC, tap **Cast phone to PC** on Android and approve screen sharing. Mouse control needs a separate Android Accessibility permission.
 
-**[Full setup guide and troubleshooting](docs/GETTING_STARTED.md#english)**
+To send a file **to your phone**, select it in **Received files** on the PC. On Android, open **Files → Receive from PC**, choose a folder and select the queued file. This doesn't share your whole drive.
 
-## Finding your way around
+Need a hand? **[Setup guide and troubleshooting](docs/GETTING_STARTED.md#english)**. The Windows sidebar currently uses Russian labels.
 
-The Windows sidebar keeps everything in one window:
+## Before installing
 
-- **Connection** — install the Android app and pair your devices.
-- **Phone screen** — view and control your phone.
-- **Applications** — choose programs to launch from your phone.
-- **Received files** — choose where uploads are saved.
-- **Wake PC** — check and configure network waking.
-- **Settings** — video, audio and appearance.
+Requires **Windows 10/11 x64** and **Android 5+**. Phone-control gestures need Android 7+. PC screen streaming currently requires an **NVIDIA GPU with NVENC**.
 
-To cast your phone, keep the DroidBridge window open and its server running. Tap **Cast phone to PC** on Android and approve screen sharing. Phone control also needs Android's Accessibility permission. The Windows sidebar currently uses Russian labels.
+Use a trusted home network: commands, video and files aren't encrypted yet. Don't expose the app's ports to the internet. Waking the PC depends on its hardware and settings.
 
-## Updates
-
-The app checks for updates at startup. Install now or leave it for later — your choice. Android asks you to confirm installation in its system dialog.
-
-## Before you use it
-
-- **Use a trusted home network only.** Pairing is protected, but commands, video and files are not yet encrypted. Don't expose the app's ports to the internet.
-- **PC screen streaming needs a supported NVIDIA GPU with NVENC.** Other GPUs aren't supported by this mode yet.
-- **Files can be up to 50 GiB.** Use an NTFS destination for resumable uploads; FAT/exFAT won't work. Keep the source unchanged and the Android app open while transferring. Incomplete uploads are kept for up to seven days.
-- **Waking depends on your PC and network.** The app helps with setup, but can't add hardware support. A successful check isn't a substitute for trying an actual wake.
-- **OS restrictions still apply.** The app doesn't bypass Android or Windows protections. Phone audio needs Android 10+ and an app that allows audio capture.
+Keep the transfer screen open while sending or receiving. Resumable uploads to the PC need an NTFS destination. Receiving on Android needs room for both the temporary copy and the saved file. [File transfer details](docs/GETTING_STARTED.md#english).
 
 ## Screenshots
 
-[See the screens and explanations](docs/SCREENSHOTS.md). Each capture is labelled with its version; the current app may look different.
+[Take a look at the interface](docs/SCREENSHOTS.md)
 
 ## About
 
-Built with AI for my own home setup, then shared in case someone else finds it useful. It's a personal experiment, not a commercial service with round-the-clock support. Expect some rough edges.
+Built with AI for my own setup, then shared in case someone else finds it useful.
 
-Found a bug or have an idea? **[Open an Issue](https://github.com/alexfduch231-prog/DroidBridge/issues)**. Want to help with the code? See [contributing](CONTRIBUTING.md) and the [build guide](docs/DEVELOPMENT.md).
+Found a bug or have an idea? [Open an Issue](https://github.com/alexfduch231-prog/DroidBridge/issues). Want to help with the code? See [contributing](CONTRIBUTING.md) and the [build guide](docs/DEVELOPMENT.md).
 
 [What's new](CHANGELOG.md) · [Security](SECURITY.md) · [MIT license](LICENSE)
