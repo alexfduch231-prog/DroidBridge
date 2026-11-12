@@ -20,7 +20,7 @@
 4. **Создай QR подключения и открой его телефоном.** Если камера не открывает ссылку, скопируй её в «Добавить ПК» на телефоне.
 5. **Сравни код на двух экранах.** Нажми «Разрешить» на ПК и «Сохранить ПК» на телефоне. Готово — можно пользоваться.
 
-Нужны **Windows 10/11 x64** и **Android 5 или новее**. Для управления телефоном жестами — Android 7+. Всё необходимое для видео уже входит в Windows-установщик: отдельно искать FFmpeg или ставить Python не надо.
+Нужны **Windows 10/11 x64** и **Android 5 или новее**. Для управления телефоном жестами — Android 7+.
 
 **[Подробная инструкция и помощь с подключением](docs/GETTING_STARTED.md)**
 
@@ -85,7 +85,7 @@ Control your home PC from your phone — or your phone from your PC. Both device
 4. **Create a pairing QR and open it on your phone.** If the camera doesn't open the link, paste it into Add PC in the Android app.
 5. **Compare the code on both screens.** Click Allow on the PC, then Save PC on the phone. You're ready to go.
 
-Requires **Windows 10/11 x64** and **Android 5+**. Phone-control gestures require Android 7+. Video tools are included in the Windows installer — no separate FFmpeg download or Python installation needed.
+Requires **Windows 10/11 x64** and **Android 5+**. Phone-control gestures require Android 7+.
 
 **[Full setup guide and troubleshooting](docs/GETTING_STARTED.md#english)**
 
