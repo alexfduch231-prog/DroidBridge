@@ -4,7 +4,7 @@
 
 **[Windows и Android — скачать](https://github.com/alexfduch231-prog/DroidBridge/releases/latest)** · [English](#english)
 
-Здесь описывается готовящийся Windows-интерфейс **1.0.6**: одно основное окно с разделами слева. Пока выпуск не опубликован, ссылка выше ведёт на последнюю доступную версию; её интерфейс может отличаться. Готовится Android **1.16** (сборка **26**): вместе с Windows **1.0.6** он показывает значки программ из настроенных на ПК EXE и ярлыков LNK. Если значок получить не удалось или одна из сторон старой версии, останется обычный значок программы. Android **1.15** остаётся совместимым для прежних функций. Проверка новых сценариев на реальном телефоне пока не подтверждена.
+Windows **1.0.6** — одно основное окно с разделами слева. Android **1.16** (сборка **26**): вместе с Windows **1.0.6** он показывает значки программ из настроенных на ПК EXE и ярлыков LNK. Если значок получить не удалось или одна из сторон старой версии, останется обычный значок программы. Android **1.15** остаётся совместимым для прежних функций. Проверка новых сценариев на реальном телефоне пока не подтверждена.
 
 ## Что можно делать
 
@@ -15,7 +15,7 @@
 
 ## Начать
 
-1. Скачай установщик Windows и Android APK со страницы релиза. Архивы **Source code** для установки не нужны. В готовящемся интерфейсе 1.0.6 QR скачивания APK находится в разделе **«Подключение» → «Установить на телефон»**. Если приложение уже есть, выбери **«Уже установлено → подключить к ПК»**.
+1. Скачай установщик Windows и Android APK со страницы релиза. Архивы **Source code** для установки не нужны. В Windows 1.0.6 QR скачивания APK находится в разделе **«Подключение» → «Установить на телефон»**. Если приложение уже есть, выбери **«Уже установлено → подключить к ПК»**.
 2. Установи приложения и подключи устройства к одной доверенной домашней сети. Нужны Windows 10/11 x64 и Android 5+; жесты управления телефоном — Android 7+.
 3. На ПК нажми **«Запустить сервер»** вверху окна. В разделе **«Подключение»** перейди к сопряжению, выбери домашний сетевой адаптер и нажми **«Создать новый QR»**. Пока подключаешь телефон, оставайся в этом разделе.
 4. Открой QR телефоном или вставь скопированную ссылку в **«Добавить ПК»**. Сравни код на двух устройствах, нажми **«Разрешить»** на ПК и **«Сохранить ПК»** на телефоне.
@@ -27,7 +27,7 @@
 
 ## Одно основное окно
 
-В готовящемся 1.0.6 разделы **«Подключение»**, **«Экран телефона»**, **«Программы»**, **«Приём файлов»**, **«Включение ПК»** и **«Настройки»** открываются внутри одного окна. Скачивание Android-приложения и сопряжение находятся в подключении; просмотр телефона — в своём разделе. Для просмотра телефона оставь главное окно DroidBridge открытым и запусти сервер. На сопряжённом телефоне нажми **«Трансляция на ПК»** и подтверди системный запрос Android: экран откроется здесь без ручного ввода IP. Управление включится автоматически только при уже разрешённой службе специальных возможностей Android; приложение не выдаёт это разрешение за тебя. Ручное подключение по IP остаётся доступным. Один сервер без основного окна может обслуживать команды, но не встроенный просмотр телефона. Системные запросы разрешений, выбор файлов и подтверждения по-прежнему могут открывать диалоги.
+В 1.0.6 разделы **«Подключение»**, **«Экран телефона»**, **«Программы»**, **«Приём файлов»**, **«Включение ПК»** и **«Настройки»** открываются внутри одного окна. Скачивание Android-приложения и сопряжение находятся в подключении; просмотр телефона — в своём разделе. Для просмотра телефона оставь главное окно DroidBridge открытым и запусти сервер. На сопряжённом телефоне нажми **«Трансляция на ПК»** и подтверди системный запрос Android: экран откроется здесь без ручного ввода IP. Управление включится автоматически только при уже разрешённой службе специальных возможностей Android; приложение не выдаёт это разрешение за тебя. Ручное подключение по IP остаётся доступным. Один сервер без основного окна может обслуживать команды, но не встроенный просмотр телефона. Системные запросы разрешений, выбор файлов и подтверждения по-прежнему могут открывать диалоги.
 
 При уходе со страницы сопряжения временный QR перестаёт действовать: вернись в **«Подключение»** и создай новый. При уходе с просмотра телефона подключение просмотра закрывается. Сервер запускается только по твоей команде; его статус не доказывает доступность ПК с телефона.
 
@@ -45,7 +45,7 @@
 
 ## Как выглядит
 
-Ниже **иллюстрации прежнего интерфейса, не скриншоты**. Они не показывают точный вид готовящегося единого окна 1.0.6.
+Ниже **иллюстрации прежнего интерфейса, не скриншоты**. Они не показывают точный вид единого окна 1.0.6.
 
 <p>
   <img src="docs/images/android-demo.svg" alt="Иллюстрация интерфейса Android, не скриншот" width="360">
@@ -66,7 +66,7 @@ Use your phone as a remote for your Windows PC, or view your phone on the comput
 
 **[Windows and Android — download](https://github.com/alexfduch231-prog/DroidBridge/releases/latest)**
 
-This page describes the upcoming Windows **1.0.6** interface: one main window with sidebar sections. Until it is published, the link above opens the latest available release, whose interface may differ. Upcoming Android **1.16** (build **26**), together with Windows **1.0.6**, shows program icons from the EXE files and LNK shortcuts configured on the PC. If an icon cannot be obtained or either side is older, a generic program icon remains. Android **1.15** remains compatible with existing features. Verification of new scenarios on a real phone is not yet confirmed.
+Windows **1.0.6** has one main window with sidebar sections. Android **1.16** (build **26**), together with Windows **1.0.6**, shows program icons from the EXE files and LNK shortcuts configured on the PC. If an icon cannot be obtained or either side is older, a generic program icon remains. Android **1.15** remains compatible with existing features. Verification of new scenarios on a real phone is not yet confirmed.
 
 ## What you can do
 
@@ -77,7 +77,7 @@ This page describes the upcoming Windows **1.0.6** interface: one main window wi
 
 ## Get started
 
-1. Download the Windows installer and Android APK from the release page. You do not need the **Source code** archives. In the upcoming 1.0.6 interface, the APK download QR is under **«Подключение» → «Установить на телефон»** (Connection → Install on phone). If already installed, choose **«Уже установлено → подключить к ПК»** (Already installed → connect to PC).
+1. Download the Windows installer and Android APK from the release page. You do not need the **Source code** archives. In Windows 1.0.6, the APK download QR is under **«Подключение» → «Установить на телефон»** (Connection → Install on phone). If already installed, choose **«Уже установлено → подключить к ПК»** (Already installed → connect to PC).
 2. Install both apps and connect them to the same trusted home network. Requires Windows 10/11 x64 and Android 5+; phone-control gestures require Android 7+.
 3. Click **«Запустить сервер»** (Start server) at the top of the Windows window. Open pairing in **«Подключение»** (Connection), select your home network adapter and choose **Create new QR**. Stay in this section while pairing.
 4. Open the QR link on Android, or paste the copied link into **Add PC**. Compare the code on both devices, click **Allow** on the PC, then **Save PC** on the phone.
@@ -89,7 +89,7 @@ The standard Windows installer **includes FFmpeg and ffplay and selects them aut
 
 ## One main window
 
-Upcoming 1.0.6 has **«Подключение»** (Connection), **«Экран телефона»** (Phone screen), **«Программы»** (Applications), **«Приём файлов»** (Received files), **«Включение ПК»** (Wake PC) and **«Настройки»** (Settings) inside one main window. Android download and pairing belong to Connection; phone viewing has its own section. Keep the DroidBridge main window open and its server running. On the paired phone, tap **Cast phone to PC** and approve Android's system capture prompt: the screen opens here without typing an IP. Control enables automatically only if you have already enabled the Android Accessibility service; the app does not grant that permission for you. Manual IP connection remains available. A server running alone can handle commands, but not embedded phone viewing. System permission prompts, file pickers and confirmations can still open dialogs. The sidebar currently uses Russian labels.
+Windows 1.0.6 has **«Подключение»** (Connection), **«Экран телефона»** (Phone screen), **«Программы»** (Applications), **«Приём файлов»** (Received files), **«Включение ПК»** (Wake PC) and **«Настройки»** (Settings) inside one main window. Android download and pairing belong to Connection; phone viewing has its own section. Keep the DroidBridge main window open and its server running. On the paired phone, tap **Cast phone to PC** and approve Android's system capture prompt: the screen opens here without typing an IP. Control enables automatically only if you have already enabled the Android Accessibility service; the app does not grant that permission for you. Manual IP connection remains available. A server running alone can handle commands, but not embedded phone viewing. System permission prompts, file pickers and confirmations can still open dialogs. The sidebar currently uses Russian labels.
 
 Leaving pairing invalidates its temporary QR: return to Connection and create a new one. Leaving phone viewing closes the viewer connection. The server starts only when you request it; its status does not establish network reachability.
 
