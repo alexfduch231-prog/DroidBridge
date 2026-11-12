@@ -11,7 +11,7 @@ import re
 import tempfile
 from urllib.parse import urlsplit, unquote
 
-CURRENT_VERSION = '1.0.8'
+CURRENT_VERSION = '1.0.9'
 REPOSITORY = 'alexfduch231-prog/DroidBridge'
 FEED_URL = 'https://github.com/' + REPOSITORY + '/releases/latest/download/update-manifest.json'
 DOMAIN = b'DroidBridge/update-manifest/v1\n'

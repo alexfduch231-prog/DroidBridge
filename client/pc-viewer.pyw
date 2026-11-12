@@ -62,7 +62,7 @@ except MediaToolsError:
 _PROJECT_DIR = os.path.dirname(HERE)
 if _PROJECT_DIR not in sys.path:
     sys.path.insert(0, _PROJECT_DIR)
-from desktop.theme import PALETTE, apply_theme
+from desktop.theme import PALETTE, apply_theme, font_family
 
 BG = PALETTE["background"]
 PANEL = PALETTE["surface"]
@@ -202,17 +202,20 @@ class Viewer(object):
             self.root.geometry("%dx%d+%d+%d" % (w, h, sw - w - 60, 60))
         self._theme_root = self.root.winfo_toplevel()
         p = self._palette()
+        family = font_family(self.root)
         BG, PANEL, TEXT, MUTED, PRIMARY = (p[key] for key in
                                          ("background", "surface", "text", "muted", "primary"))
         self.root.configure(bg=BG)
         self._theme_checks = []
 
-        top = tk.Frame(self.root, bg=PANEL)
+        self.control_panel = tk.Frame(self.root, bg=PANEL, width=240)
+        self.control_panel.pack(side="left", fill="y", padx=(8, 16), pady=8)
+        top = tk.Frame(self.control_panel, bg=PANEL)
         top.pack(side="top", fill="x")
 
         self.status_label = tk.Label(top, text=self.status, fg=MUTED, bg=PANEL,
-                                     anchor="w", font=("Segoe UI", 9))
-        self.status_label.pack(side="left", padx=12, pady=8, fill="x", expand=True)
+                                     anchor="w", font=(family, 10), wraplength=220)
+        self.status_label.pack(side="top", anchor="w", pady=(0, 12))
 
         # Native Tk controls need explicit palette/focus states; ttk theme settings
         # do not affect them. Keep widget layout and all commands unchanged.
@@ -221,10 +224,11 @@ class Viewer(object):
         check_style = dict(bg=PANEL, fg=TEXT, activebackground=PANEL,
                            activeforeground=TEXT, selectcolor=PANEL,
                            disabledforeground=MUTED, bd=0,
-                           font=("Segoe UI", 9), **focus_style)
+                           font=(family, 10), **focus_style)
         button_style = dict(bg=BG, fg=TEXT, activebackground=p["surface_alt"],
                             activeforeground=TEXT, disabledforeground=MUTED,
-                            relief="flat", overrelief="flat", **focus_style)
+                            relief="flat", overrelief="flat", font=(family, 10),
+                            padx=10, pady=6, **focus_style)
 
         self.on_top = tk.BooleanVar(value=False)
         if not getattr(self, "embedded", False):
@@ -236,49 +240,53 @@ class Viewer(object):
         self.audio_var = tk.BooleanVar(value=self.audio_enabled)
         audio = tk.Checkbutton(top, text="Звук", variable=self.audio_var,
                                command=self._toggle_audio, **check_style)
-        audio.pack(side="right", padx=(0, 6))
+        audio.pack(side="left", padx=(0, 6))
         self._theme_checks.append(audio)
 
-        controls = tk.Frame(self.root, bg=PANEL)
+        controls = tk.Frame(self.control_panel, bg=PANEL)
         controls.pack(side="top", fill="x")
         self.control_var = tk.BooleanVar(value=False)
         self.control_toggle = tk.Checkbutton(
             controls, text="Управлять", variable=self.control_var, command=self._toggle_control,
             state="disabled", **check_style)
-        self.control_toggle.pack(side="left", padx=4)
+        self.control_toggle.pack(side="top", anchor="w", pady=(12, 8))
         self.control_widgets = []
         for label, name in (("Назад", "back"), ("Домой", "home"), ("Недавние", "recents")):
             button = tk.Button(controls, text=label, state="disabled",
                                command=lambda n=name: self._queue_control({"action": "global", "name": n}),
                                **button_style)
-            button.pack(side="left", padx=2, pady=4)
+            button.pack(side="top", anchor="w", fill="x", pady=4)
             self.control_widgets.append(button)
-        textbar = tk.Frame(self.root, bg=PANEL)
+        textbar = tk.Frame(self.control_panel, bg=PANEL)
         textbar.pack(side="top", fill="x")
         self.text_entry = tk.Entry(textbar, state="disabled", bg=PANEL, fg=TEXT,
                                    disabledbackground=BG, disabledforeground=MUTED,
                                    insertbackground=TEXT, selectbackground=PRIMARY,
                                    selectforeground=PANEL, relief="flat", **focus_style)
-        self.text_entry.pack(side="left", fill="x", expand=True, padx=(6, 3), pady=3)
+        self.text_entry.configure(width=22, font=(family, 10))
+        self.text_entry.pack(side="top", anchor="w", fill="x", pady=(16, 8))
         self.text_entry.bind("<Return>", self._send_text)
         send = tk.Button(textbar, text="Текст →", command=self._send_text,
                          state="disabled", **button_style)
-        send.pack(side="right", padx=(0, 6))
+        send.pack(side="top", anchor="w", pady=(0, 12))
         self.control_widgets.extend((self.text_entry, send))
-        self.control_label = tk.Label(self.root, text=self.control_message, bg=PANEL,
-                                      fg=MUTED, anchor="w", font=("Segoe UI", 9), wraplength=440)
+        self.control_label = tk.Label(self.control_panel, text=self.control_message, bg=PANEL,
+                                      fg=MUTED, anchor="w", font=(family, 10), wraplength=220)
         self.control_label.pack(side="top", fill="x", padx=4)
 
-        self.image_label = tk.Label(self.root, bg="#000000", bd=0, highlightthickness=0,
+        self.viewport = tk.Frame(self.root, bg=BG)
+        self.viewport.pack(side="left", fill="both", expand=True, pady=8)
+        self.viewport.bind("<Configure>", lambda event: self._layout_phone_surface())
+        self.image_label = tk.Label(self.viewport, bg="#000000", bd=0, highlightthickness=0,
                                     padx=0, pady=0, anchor="center")
-        self.image_label.pack(side="top", fill="both", expand=True)
+        self.image_label.place(x=0, y=0, anchor="nw", width=1, height=1)
         self.image_label.bind("<ButtonPress-1>", self._pointer_down)
         self.image_label.bind("<ButtonRelease-1>", self._pointer_up)
         self.image_label.bind("<Button-3>", self._pointer_back)
         self.image_label.bind("<MouseWheel>", self._wheel)
 
         self.root.bind("<Configure>", self._on_resize)
-        self._theme_panels = (top, controls, textbar)
+        self._theme_panels = (self.control_panel, top, controls, textbar)
         self._theme_checks.append(self.control_toggle)
         self._theme_binding = self._theme_root.bind(
             "<<DroidBridgeThemeChanged>>", self._on_theme_changed, add="+")
@@ -304,6 +312,7 @@ class Viewer(object):
             return
         p = self._palette()
         self.root.configure(bg=p["background"])
+        self.viewport.configure(bg=p["background"])
         for panel in self._theme_panels:
             panel.configure(bg=p["surface"])
         self.status_label.configure(bg=p["surface"], fg=self._status_foreground())
@@ -324,12 +333,23 @@ class Viewer(object):
                                   insertbackground=p["text"], selectbackground=p["primary"],
                                   selectforeground=p.get("button_text", "#FFFFFF"), **focus)
 
+    def _layout_phone_surface(self):
+        width, height = self.viewport.winfo_width(), self.viewport.winfo_height()
+        if width <= 1 or height <= 1:
+            return
+        ratio = self.vw / float(self.vh) if self.vw > 0 and self.vh > 0 else 0.45
+        target_w = min(width, max(1, int(height * ratio)))
+        target_h = min(height, max(1, int(target_w / ratio)))
+        self.image_label.place_configure(width=target_w, height=target_h)
+
     def _on_resize(self, event):
         if event.widget is not self.root:
             return
+        self._layout_phone_surface()
         # Toolbar height is variable; rendering and decoding use the image area only.
-        self.max_w = max(1, self.image_label.winfo_width())
-        self.max_h = max(1, self.image_label.winfo_height())
+        width, height = self.image_label.winfo_width(), self.image_label.winfo_height()
+        if width > 1 and height > 1:
+            self.max_w, self.max_h = width, height
 
     def _toggle_top(self):
         if getattr(self, "embedded", False):
@@ -517,7 +537,7 @@ class Viewer(object):
             except queue.Empty:
                 break
         self.control_label.configure(text=self.control_message,
-                                     wraplength=max(200, self.root.winfo_width() - 12))
+                                     wraplength=220)
 
     # ---------- сеть ----------
 
@@ -666,6 +686,7 @@ class Viewer(object):
             self.status_color = color
 
         self._refresh_controls()
+        self._layout_phone_surface()
         with self.lock:
             data, self.latest = self.latest, None
         if data:
@@ -859,9 +880,10 @@ class Viewer(object):
             self.level = max(level, int(self.level * 0.5))
             if not self.audio_enabled:
                 continue
-            if self.ffplay is None or self.ffplay.poll() is not None:
-                self._start_ffplay()
             proc = self.ffplay
+            if proc is None or proc.poll() is not None:
+                self._start_ffplay()
+                proc = self.ffplay
             if proc is None:
                 continue
             try:
@@ -884,7 +906,7 @@ class Viewer(object):
             cmd = [exe, "-hide_banner", "-loglevel", "error", "-nodisp", "-autoexit",
                    "-fflags", "nobuffer", "-flags", "low_delay",
                    "-f", "s16le", "-sample_rate", str(self.sr),
-                   "-ch_layout", layout, "-"]
+                   "-ch_layout", layout, "pipe:0"]
             try:
                 self.ffplay = subprocess.Popen(cmd, stdin=subprocess.PIPE,
                                                stdout=subprocess.DEVNULL,

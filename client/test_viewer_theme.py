@@ -21,6 +21,9 @@ class Widget:
     def pack(self, **options):
         self.packing = options
 
+    def place(self, **options):
+        self.placement = options
+
     def bind(self, event, callback, add=None):
         self.bindings[event] = callback
         return event
@@ -65,7 +68,7 @@ class ViewerThemeTests(unittest.TestCase):
                   and any(isinstance(t, ast.Name) and t.id in
                           {"BG", "PANEL", "TEXT", "MUTED", "OK", "BAD", "PRIMARY"}
                           for t in n.targets)]
-        cls.namespace = dict(PALETTE=PALETTE, apply_theme=lambda root: None,
+        cls.namespace = dict(PALETTE=PALETTE, apply_theme=lambda root: None, font_family=lambda root: 'Segoe UI',
                              tk=SimpleNamespace(Frame=Widget, Label=Widget, Checkbutton=Widget,
                                                 Button=Widget, Entry=Widget, BooleanVar=Variable))
         exec(compile(ast.Module(body=colors + [viewer], type_ignores=[]),
@@ -120,8 +123,9 @@ class ViewerThemeTests(unittest.TestCase):
         self.assertEqual(self.viewer.image_label.options,
                          dict(bg="#000000", bd=0, highlightthickness=0,
                               padx=0, pady=0, anchor="center"))
-        self.assertEqual(self.viewer.image_label.packing,
-                         dict(side="top", fill="both", expand=True))
+        self.assertEqual(self.viewer.viewport.packing,
+                         dict(side="left", fill="both", expand=True, pady=8))
+        self.assertEqual(self.viewer.image_label.placement['anchor'], 'nw')
         self.assertEqual(set(self.viewer.image_label.bindings),
                          {"<ButtonPress-1>", "<ButtonRelease-1>", "<Button-3>", "<MouseWheel>"})
 
@@ -262,7 +266,7 @@ class LiveViewerThemeTests(unittest.TestCase):
         self.assertEqual(viewer.root.cget("bg"), "#111827")
         self.assertEqual(viewer.text_entry.cget("fg"), "#F9FAFB")
         self.module.apply_theme.assert_not_called()
-        self.assertEqual(viewer.status_label.cget("font"), "{Segoe UI} 9")
+        self.assertEqual(viewer.status_label.cget("font"), "{Segoe UI} 10")
 
     def test_standalone_reads_palette_installed_by_apply_theme(self):
         self.root.theme_controller = None

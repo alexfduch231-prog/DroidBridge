@@ -33,7 +33,7 @@ def load_viewer():
                      BG=PALETTE["background"], PANEL=PALETTE["surface"],
                      TEXT=PALETTE["text"], MUTED=PALETTE["muted"],
                      PRIMARY=PALETTE["primary"], BAD=PALETTE["danger"], PALETTE=PALETTE,
-                     apply_theme=Mock(), log=lambda message: None)
+                     font_family=lambda root: 'Segoe UI', apply_theme=Mock(), log=lambda message: None)
     exec(compile(ast.Module(body=nodes, type_ignores=[]), "pc-viewer.pyw", "exec"), namespace)
     return SimpleNamespace(**namespace)
 
@@ -73,6 +73,87 @@ class EmbeddedViewerTests(unittest.TestCase):
         page.pack(fill="both", expand=True)
         self.root.update()
         return page
+
+    def test_viewer_controls_stay_grouped_on_left(self):
+        viewer = self.page().viewer
+        audio = next(w for w in viewer._theme_checks if w.cget('text') == 'Звук')
+        self.assertEqual(audio.pack_info()['side'], 'left')
+        self.assertEqual(viewer.text_entry.pack_info()['expand'], 0)
+        self.assertEqual(viewer.image_label.place_info()['anchor'], 'nw')
+        self.assertLessEqual(int(viewer.status_label.cget('wraplength')), 240)
+        self.assertGreater(viewer.viewport.winfo_x(), viewer.status_label.winfo_rootx() - viewer.root.winfo_rootx())
+        self.assertGreater(viewer.image_label.winfo_height(), 600)
+        self.assertGreater(viewer.image_label.winfo_width(), 270)
+
+    def test_phone_surface_tracks_portrait_and_landscape_aspect(self):
+        viewer = self.page().viewer
+        for width, height in ((720, 1600), (1600, 720)):
+            viewer.vw, viewer.vh = width, height
+            viewer._on_resize(SimpleNamespace(widget=viewer.root))
+            self.root.update()
+            actual = viewer.image_label.winfo_width() / viewer.image_label.winfo_height()
+            self.assertAlmostEqual(actual, width / height, delta=0.02)
+
+    def test_audio_loop_survives_concurrent_player_clear(self):
+        source = ast.parse(Path(__file__).with_name('pc-viewer.pyw').read_text(encoding='utf-8'))
+        viewer = next(n for n in source.body if isinstance(n, ast.ClassDef) and n.name == 'Viewer')
+        method = next(n for n in viewer.body if isinstance(n, ast.FunctionDef) and n.name == '_audio_loop')
+        namespace = dict(queue=queue, peak_percent=lambda chunk: 0, log=lambda message: None)
+        exec(compile(ast.Module(body=[method], type_ignores=[]), 'audio-loop', 'exec'), namespace)
+        stop = threading.Event()
+        proc = Mock()
+        proc.poll.return_value = None
+        class Audio:
+            audio_enabled = True
+            audio_seen = 0
+            level = 0
+            reads = 0
+            @property
+            def ffplay(self):
+                self.reads += 1
+                return proc if self.reads == 1 else None
+            def _start_ffplay(self):
+                pass
+            def _stop_ffplay(self):
+                pass
+        audio = Audio()
+        audio.stop = stop
+        audio.audio_q = Mock()
+        def next_chunk(timeout):
+            if audio.reads:
+                stop.set()
+                raise queue.Empty
+            return b'pcm'
+        audio.audio_q.get.side_effect = next_chunk
+        namespace['_audio_loop'](audio)
+        self.assertTrue(stop.is_set())
+        self.assertEqual(audio.reads, 1)
+        proc.stdin.write.assert_called_once_with(b'pcm')
+
+    def test_audio_uses_supported_explicit_pipe_protocol(self):
+        viewer = self.page().viewer
+        viewer.audio_enabled = True
+        viewer._start_ffplay.__globals__['MEDIA_TOOLS'] = SimpleNamespace(ffplay=__file__)
+        with patch.object(subprocess, 'Popen') as popen:
+            viewer._start_ffplay()
+        self.assertEqual(popen.call_args.args[0][-1], 'pipe:0')
+        viewer._stop_ffplay()
+
+    def test_unmapped_page_does_not_replace_decoder_width_with_one_pixel(self):
+        page = self.module.build_viewer_page(self.root, '127.0.0.1', 8768,
+                                             'test-token', audio=False)
+        viewer = page.viewer
+        viewer._on_resize(SimpleNamespace(widget=page))
+        self.assertGreaterEqual(viewer.max_w, 320)
+        viewer._ensure_decoder.__globals__['MEDIA_TOOLS'] = SimpleNamespace(ffmpeg=__file__)
+        viewer.vw, viewer.vh = 720, 1600
+        proc = Mock()
+        proc.poll.return_value = None
+        with patch.object(subprocess, 'Popen', return_value=proc):
+            viewer._ensure_decoder()
+        self.assertGreaterEqual(viewer.ow, 320)
+        self.assertGreater(viewer.oh, viewer.ow)
+        page.dispose()
 
     def test_manual_page_does_not_auto_enable_after_capable_hello(self):
         viewer = self.page().viewer
