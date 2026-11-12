@@ -140,6 +140,10 @@ class AndroidSetupTests(unittest.TestCase):
             self.assertLessEqual(canvas.winfo_rooty() + canvas.winfo_height(),
                                  window.winfo_rooty() + window.winfo_height())
             for widget in descendants(window):
+                # Auto-hidden overflow bars are intentionally unmanaged; real
+                # content and controls must still be mapped and reachable.
+                if isinstance(widget, ttk.Scrollbar) and not widget.winfo_manager():
+                    continue
                 self.assertTrue(widget.winfo_ismapped(), str(widget))
                 if isinstance(widget, (ttk.Button, ttk.Checkbutton)):
                     self.assertGreaterEqual(widget.winfo_height(), widget.winfo_reqheight(), str(widget))

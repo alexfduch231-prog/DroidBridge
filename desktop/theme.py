@@ -9,7 +9,7 @@ from desktop.theme_settings import (THEME_MODES, load_theme_mode, save_theme_mod
                                     system_theme)
 
 _LIGHT = {
-    'primary': '#1A63E7', 'background': '#F7F7F8', 'surface': '#FFFFFF',
+    'primary': '#1A63E7', 'background': '#F7F7F8', 'surface': '#F7F7F8',
     'surface_alt': '#EEEEF0', 'text': '#202024', 'muted': '#606068',
     'danger': '#BC2B21', 'outline': '#94949C', 'line': '#DEDEE2',
     'success': '#187645', 'button_text': '#FFFFFF', 'danger_button': '#CC2F23',
@@ -38,7 +38,7 @@ def palette_for(mode, system=None) -> dict:
     background, surface, alternate, accent = backgrounds[mode]
     def shade(color, factor):
         return '#' + ''.join(f'{round(int(color[i:i + 2], 16) * factor):02X}' for i in (1, 3, 5))
-    return dict(_LIGHT, background=background, surface=surface,
+    return dict(_LIGHT, background=background, surface=background,
                 surface_alt=alternate, primary=accent, text='#F5F7FC',
                 muted='#C1CAD8', danger='#FFB6AE', success='#83DFAD',
                 outline='#81818A', line='#48484E', active=alternate,
@@ -87,9 +87,9 @@ def _rounded_buttons(root, style, p):
     signature = tuple(sorted(p.items()))
     refresh = getattr(root, '_droidbridge_button_signature', None) != signature
     specs = (
-        ('neutral', 'TButton', p['surface_alt'], p['active'], p['pressed'], 11, p['line']),
-        ('background', 'DB.Sidebar.TButton', p['surface_alt'], p['active'], p['pressed'], 11, p['line']),
-        ('primary', 'DB.Primary.TButton', p['primary'], p['primary_active'], p['primary_pressed'], 11, p['primary']),
+        ('neutral', 'TButton', p['surface_alt'], p['active'], p['pressed'], 11, p['surface_alt']),
+        ('background', 'DB.Sidebar.TButton', p['surface_alt'], p['active'], p['pressed'], 11, p['surface_alt']),
+        ('primary', 'DB.Primary.TButton', p['surface_alt'], p['active'], p['pressed'], 11, p['surface_alt']),
         ('danger', 'DB.Danger.TButton', _LIGHT['danger'], p['danger_active'], p['danger_pressed'], 11, _LIGHT['danger']),
         ('nav', 'DB.Nav.TButton', p['background'], p['surface_alt'], p['pressed'], 8, p['background']),
         ('selected', 'DB.Nav.Selected.TButton', p['surface_alt'], p['active'], p['pressed'], 8, p['surface_alt']),
@@ -110,7 +110,7 @@ def _rounded_buttons(root, style, p):
                 tile = Image.new('RGBA', (size * supersample, size * supersample), backdrop)
                 draw = ImageDraw.Draw(tile)
                 focused = state in ('focus', 'active_focus', 'pressed_focus')
-                ring = p['button_text'] if role in ('primary', 'danger') else p['primary']
+                ring = p['button_text'] if role == 'danger' else p['primary']
                 edge = ring if focused else (fill if state != 'normal' else outline)
                 inset = 1 if focused else 2
                 box = (inset * supersample, inset * supersample,
@@ -173,8 +173,8 @@ def _apply_styles(window, p):
     button_font = (family, -max(10, round(10 * scaling)))
     padding = (max(12, round(16 * density)), max(8, round(13 * density)))
     style.configure('TButton', font=button_font, padding=padding, relief='flat',
-                    background=p['surface_alt'], foreground=p['text'], borderwidth=1,
-                    bordercolor=p['line'], focusthickness=2, focuscolor=p['primary'])
+                    background=p['surface_alt'], foreground=p['text'], borderwidth=0,
+                    bordercolor=p['surface_alt'], focusthickness=2, focuscolor=p['primary'])
     style.map('TButton', background=[('disabled', p['disabled']), ('pressed', p['pressed']), ('active', p['active'])],
               foreground=[('disabled', p['disabled_text'])], bordercolor=[('focus', p['primary'])])
     style.configure('DB.TButton')
@@ -196,6 +196,14 @@ def _apply_styles(window, p):
         style.map(name, background=[('disabled', p['disabled']), ('pressed', pressed), ('active', active)],
                   foreground=[('disabled', p['disabled_text']), ('!disabled', p['button_text'])],
                   bordercolor=[('disabled', p['disabled']), ('!disabled', color)])
+    # Primary actions use the same quiet fill as ordinary controls; the accent
+    # remains a focus/selection cue rather than a large saturated rectangle.
+    style.configure('DB.Primary.TButton', background=p['surface_alt'],
+                    foreground=p['text'], bordercolor=p['surface_alt'], focuscolor=p['primary'])
+    style.map('DB.Primary.TButton',
+              background=[('disabled', p['disabled']), ('pressed', p['pressed']), ('active', p['active'])],
+              foreground=[('disabled', p['disabled_text']), ('!disabled', p['text'])],
+              bordercolor=[('focus', p['primary']), ('!focus', p['surface_alt'])])
     _rounded_buttons(root, style, p)
     for name in ('TEntry', 'TCombobox'):
         style.configure(name, padding=(10, 9), fieldbackground=p['surface_alt'],
@@ -349,7 +357,7 @@ class ThemeController:
 
 
 def card(parent, **kwargs) -> ttk.Frame:
-    """Create a white card; callers choose its layout and content."""
+    """Create a borderless main-surface card; callers choose its layout."""
     kwargs.setdefault('style', 'DB.Card.TFrame')
     kwargs.setdefault('padding', 20)
     return ttk.Frame(parent, **kwargs)
@@ -360,15 +368,18 @@ def scrollable_card(window) -> ttk.Frame:
     import tkinter as tk
     viewport = ttk.Frame(window, style='DB.TFrame')
     viewport.pack(fill='both', expand=True, padx=20, pady=20)
-    canvas = tk.Canvas(viewport, background=palette_for_widget(window)['background'], highlightthickness=0)
+    canvas = tk.Canvas(viewport, background=palette_for_widget(window)['background'],
+                       highlightthickness=0, borderwidth=0, relief='flat')
     vertical = ttk.Scrollbar(viewport, orient='vertical', command=canvas.yview)
     horizontal = ttk.Scrollbar(viewport, orient='horizontal', command=canvas.xview)
-    canvas.configure(yscrollcommand=vertical.set, xscrollcommand=horizontal.set)
     viewport.rowconfigure(0, weight=1)
     viewport.columnconfigure(0, weight=1)
     canvas.grid(row=0, column=0, sticky='nsew')
     vertical.grid(row=0, column=1, sticky='ns')
     horizontal.grid(row=1, column=0, sticky='ew')
+    vertical.grid_remove()
+    horizontal.grid_remove()
+    canvas.configure(yscrollcommand=vertical.set, xscrollcommand=horizontal.set)
     content = card(canvas)
     item = canvas.create_window(0, 0, anchor='nw', window=content)
 
@@ -426,14 +437,55 @@ def scrollable_card(window) -> ttk.Frame:
             if isinstance(child, ttk.Frame):
                 fit_controls(child, available)
 
+    def minimum_width(parent):
+        """Natural minimum excluding fields/tables designed to shrink to fit."""
+        horizontal, vertical = 0, 0
+        for child in parent.winfo_children():
+            if isinstance(child, ttk.Frame):
+                required = minimum_width(child)
+            elif isinstance(child, (ttk.Entry, ttk.Combobox, ttk.Treeview)):
+                required = 0
+            else:
+                required = child.winfo_reqwidth()
+            if child.winfo_manager() == 'pack':
+                info = child.pack_info()
+                padx = child.tk.splitlist(str(info['padx']))
+                required += sum(child.winfo_pixels(value) for value in padx) * (2 if len(padx) == 1 else 1)
+                if str(info['side']) in ('left', 'right'):
+                    horizontal += required
+                else:
+                    vertical = max(vertical, required)
+            else:
+                vertical = max(vertical, required)
+        padding = parent.tk.splitlist(parent.cget('padding'))
+        pixels = [parent.winfo_pixels(value) for value in padding]
+        inset = pixels[0] + pixels[2] if len(pixels) >= 3 else 2 * pixels[0] if pixels else 0
+        return max(horizontal, vertical) + inset
+
     def resize(_event=None):
         width = canvas.winfo_width()
         if width > 100:
             fit_controls(content, max(40, width - 40))
-        canvas.itemconfigure(item, width=width)
-        # Let Tk derive the window item's height from its requested geometry.
-        # Setting an explicit height during Configure can leave packed children
-        # laid out at the previous height while the scroll region already shrank.
+        # Stretch ordinary content, but keep genuinely unbreakable controls at
+        # their natural width so horizontal scrolling can reach their far edge.
+        requested_width = minimum_width(content)
+        canvas.itemconfigure(item, width=max(width, requested_width))
+        # Base overflow on the full viewport, not the already reduced canvas:
+        # otherwise a visible bar can keep itself alive after content shrinks.
+        full_width, full_height = viewport.winfo_width(), viewport.winfo_height()
+        need_x = requested_width > full_width
+        need_y = content.winfo_reqheight() > full_height - (horizontal.winfo_reqheight() if need_x else 0)
+        if need_y:
+            need_x = requested_width > full_width - vertical.winfo_reqwidth()
+        if need_x:
+            need_y = content.winfo_reqheight() > full_height - horizontal.winfo_reqheight()
+        for bar, needed in ((vertical, need_y), (horizontal, need_x)):
+            if needed and not bar.winfo_manager():
+                bar.grid()
+            elif not needed and bar.winfo_manager():
+                bar.grid_remove()
+        # Let Tk derive the item height from its requested geometry. Explicit
+        # heights during Configure can strand children at the previous height.
         canvas.configure(scrollregion=canvas.bbox('all'))
 
     def reveal(event):
@@ -462,8 +514,15 @@ def scrollable_card(window) -> ttk.Frame:
     # Tk sends descendant events to their toplevel bindtag, not arbitrary
     # ancestor frames. Bind there so embedded pages retain focus scrolling.
     owner = window.winfo_toplevel()
+    def descendant_resize(event):
+        # A constrained item's requested width can change without changing the
+        # item's actual width; child Configure events still expose that change.
+        if str(event.widget).startswith(str(content) + '.'):
+            resize()
+
     bindings = [(event, owner.bind(event, callback, add='+'))
-                for event, callback in (('<FocusIn>', reveal), ('<MouseWheel>', wheel))]
+                for event, callback in (('<FocusIn>', reveal), ('<MouseWheel>', wheel),
+                                        ('<Configure>', descendant_resize))]
 
     def cleanup(event):
         if event.widget is not viewport:

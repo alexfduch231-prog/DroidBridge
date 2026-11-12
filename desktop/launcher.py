@@ -207,14 +207,24 @@ def run_launcher(update_signal=None):
     from desktop.theme import scrollable_card
     root = tk.Tk()
     root.title('DroidBridge')
-    root.geometry('940x760')
-    root.minsize(800, 600)
     data = data_directory()
     from desktop.theme import ThemeController
     theme_controller = ThemeController(root, data)
     from desktop.window_chrome import WindowChrome
     chrome = WindowChrome(root, lambda: close(), title='DroidBridge')
     root.window_chrome = chrome
+    # Leave room for the taskbar and native resize frame. On tiny work areas,
+    # allow scrolling instead of pushing native controls off-screen or shrinking fonts.
+    available_width, available_height = root.winfo_screenwidth(), root.winfo_screenheight()
+    if chrome.backend is not None:
+        try:
+            _monitor, work = chrome.backend.monitor(root.winfo_id())
+            available_width, available_height = work[2] - work[0], work[3] - work[1]
+        except (OSError, AttributeError):
+            pass  # Unsupported native queries retain the Tk screen fallback.
+    usable_width, usable_height = max(1, available_width - 48), max(1, available_height - 48)
+    root.minsize(min(800, usable_width), min(600, usable_height))
+    root.geometry('%dx%d' % (min(1040, usable_width), min(780, usable_height)))
     # Embedded components use the same persistent media/log context as children.
     import os
     os.environ['VZAIMOPULT_DATA_DIR'] = str(data)
@@ -253,7 +263,6 @@ def run_launcher(update_signal=None):
     update_button = ttk.Button(footer, text='Проверить обновления', width=0, style='DB.Sidebar.TButton', command=check_updates)
     update_button.pack(fill='x')
     sidebar_view.captions[update_button] = 'Проверить обновления'
-    ttk.Separator(shell, orient='vertical').pack(side='left', fill='y')
     workspace = ttk.Frame(shell, style='DB.TFrame')
     workspace.pack(side='left', fill='both', expand=True)
     header = ttk.Frame(workspace, style='DB.TFrame', padding=(20, 14))
@@ -285,7 +294,6 @@ def run_launcher(update_signal=None):
     def resize_header(event):
         status_label.configure(wraplength=max(100, event.width - 40))
     header.bind('<Configure>', resize_header, add='+')
-    ttk.Separator(workspace, orient='horizontal').pack(fill='x')
 
     def setup_page(parent):
         from android_setup import build_android_setup_page

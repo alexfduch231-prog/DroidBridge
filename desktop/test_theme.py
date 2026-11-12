@@ -32,11 +32,12 @@ class ThemeTests(unittest.TestCase):
         style = ttk.Style(root)
         self.assertEqual(style.theme_use(), 'clam')
         self.assertEqual(root.cget('background').lower(), '#f7f7f8')
-        self.assertEqual(style.lookup('DB.Primary.TButton', 'background'), '#1A63E7')
-        self.assertNotEqual(style.lookup('DB.Primary.TButton', 'background', ('disabled',)), '#1A63E7')
+        self.assertEqual(style.lookup('DB.Primary.TButton', 'background'), '#EEEEF0')
+        self.assertEqual(style.lookup('DB.Primary.TButton', 'foreground'), '#202024')
+        self.assertNotEqual(style.lookup('DB.Primary.TButton', 'background', ('disabled',)), '#EEEEF0')
         panel = theme.card(root)
         panel.pack()
-        self.assertEqual(style.lookup(panel.cget('style'), 'background'), '#FFFFFF')
+        self.assertEqual(style.lookup(panel.cget('style'), 'background').lower(), root.cget('background').lower())
         self.assertEqual(style.lookup('DB.Muted.TLabel', 'foreground'), '#606068')
         theme.apply_theme(root)  # Reapplying for an owned Toplevel must be safe.
         window = tk.Toplevel(root)
@@ -100,7 +101,7 @@ class ThemeTests(unittest.TestCase):
             def inspect(root):
                 try:
                     root.update()
-                    self.assertEqual((root.winfo_width(), root.winfo_height()), (940, 760))
+                    self.assertEqual((root.winfo_width(), root.winfo_height()), (1040, 780))
                     self.assertEqual(root.navigation.current_key, 'connection')
                     nav = next(w for w in descendants(root) if isinstance(w, ttk.Button) and ''.join(str(w.cget('text')).split()) == 'Подключение')
                     self.assertGreaterEqual(nav.master.winfo_width(), 196)

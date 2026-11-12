@@ -58,7 +58,7 @@ class RoundedButtonTests(unittest.TestCase):
                 controller.set_mode(mode)
                 self.assertEqual(set(root.tk.call('image', 'names')), names)
                 self.assertEqual(set(ttk.Style(root).element_names()), elements)
-                rgb = tuple(int(controller.palette['primary'][i:i+2], 16) for i in (1, 3, 5))
+                rgb = tuple(int(controller.palette['surface_alt'][i:i+2], 16) for i in (1, 3, 5))
                 self.assertEqual(image.get(center, center), rgb)
                 self.assertFalse(image.transparency_get(0, 0))
                 backdrop = tuple(int(controller.palette['surface'][i:i+2], 16) for i in (1, 3, 5))
@@ -75,7 +75,9 @@ class RoundedButtonTests(unittest.TestCase):
         images = first._droidbridge_button_images
         self.assertIsNot(images, second._droidbridge_button_images)
         theme._apply_styles(first, theme.palette_for('ocean'))
-        for root, expected in ((first, (23, 100, 155)), (second, (26, 99, 231))):
+        for root, mode in ((first, 'ocean'), (second, 'light')):
+            fill = theme.palette_for(mode)['surface_alt']
+            expected = tuple(int(fill[i:i+2], 16) for i in (1, 3, 5))
             image = root._droidbridge_button_images['primary', 'normal']
             self.assertEqual(image.get(image.width() // 2, image.height() // 2), expected)
         # Query the actual Tcl image element specification, not a parallel state table.
@@ -114,7 +116,8 @@ class RoundedButtonTests(unittest.TestCase):
         self.assertIsNone(reference())
         theme._apply_styles(survivor, theme.palette_for('forest'))
         image = survivor._droidbridge_button_images['primary', 'normal']
-        self.assertEqual(image.get(13, 13), (23, 107, 70))
+        fill = theme.palette_for('forest')['surface_alt']
+        self.assertEqual(image.get(13, 13), tuple(int(fill[i:i+2], 16) for i in (1, 3, 5)))
 
     def test_all_theme_states_are_distinct_and_enabled_captions_have_contrast(self):
         # Dark presets used to reuse the resting accent for hover and press.
