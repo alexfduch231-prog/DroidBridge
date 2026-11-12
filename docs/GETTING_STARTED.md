@@ -1,6 +1,6 @@
 # Первое подключение DroidBridge
 
-[На главную](../README.md) · [English](#english) · [Скачать Windows и Android](https://github.com/alexfduch231-prog/DroidBridge/releases/latest)
+[На главную](../README.md) · [Экраны с пояснениями](SCREENSHOTS.md) · [English](#english) · [Скачать Windows и Android](https://github.com/alexfduch231-prog/DroidBridge/releases/latest)
 
 ## Перед установкой
 

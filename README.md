@@ -45,6 +45,8 @@ Windows **1.0.7** — одно основное окно с разделами �
 
 ## Как выглядит / Screenshot
 
+[Все экраны с пояснениями / Screens and explanations](docs/SCREENSHOTS.md)
+
 Android **1.16** — реальный скриншот фрагмента кнопок управления. Настройки подключения и системная панель обрезаны. / Actual Android **1.16** screenshot, cropped to the control buttons; connection settings and the system bar are excluded.
 
 <img src="docs/images/android-current.png" alt="Реальный скриншот Android 1.16 — фрагмент кнопок управления / Actual Android 1.16 screenshot — control buttons" width="320">
