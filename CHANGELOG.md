@@ -1,12 +1,12 @@
 # Изменения / Changelog
 
-## 1.0.4 — готовится / Unreleased
+## 1.0.4 — 2026-11-12
 
-**Релиз ещё не опубликован.** Ниже описаны изменения готовящегося выпуска, а не подтверждение готовности установщика или проверки на всех устройствах. Windows и Android имеют отдельные номера версий; номер этого выпуска не означает, что APK обязательно имеет тот же номер.
+Windows **1.0.4**, Android **1.15**. Ниже — изменения выпуска и проверенные сценарии; это не гарантия совместимости со всеми устройствами.
 
 ### Для пользователя
 
-- **Видео и звук без отдельной установки инструментов.** Windows-установщик готовится со встроенными FFmpeg и ffplay. Обычному пользователю не понадобятся Python, изменение PATH или отдельный поиск FFmpeg. При обнаруженном комплекте главное окно сообщает, что дополнительная установка не нужна.
+- **Видео и звук без отдельной установки инструментов.** Windows-установщик поставляется со встроенными FFmpeg и ffplay. Обычному пользователю не понадобятся Python, изменение PATH или отдельный поиск FFmpeg. При обнаруженном комплекте главное окно сообщает, что дополнительная установка не нужна.
 - **Автоматический поиск медиакомплекта.** Учитываются ручной выбор, комплект рядом с приложением, PATH и стандартные места установки. Сам поиск не запускает найденные программы. Ручной выбор другой сборки остаётся дополнительной настройкой; запуск выбранных EXE для проверки требует подтверждения. Недоступная явно выбранная папка не должна незаметно подменяться другой.
 - **Проверка обновлений при запуске на Windows и Android.** При новой версии предлагаются «Позже» и «Обновить». Используется публичный подписанный список выпусков; учётная запись и личные ключи не нужны. Первую версию с этой функцией придётся установить вручную.
 - **Обновление Windows.** После согласия установщик скачивается и проверяется до закрытия собственных компонентов приложения. Повторное открытие главного окна — только после успешной установки, с сохранением пользовательских настроек. Отмена и ошибка не считаются успешным обновлением.
@@ -17,7 +17,7 @@
 
 ### Ограничения и проверка
 
-- Исходники зафиксированы после автоматических проверок: listener — 112 тестов, desktop — 77, packaging — 38, Android — 16, client — 16; все прошли. APK **1.15** собран с прежней подписью приложения. Это не заменяет проверку обновления готового Windows-установщика и испытание на реальном телефоне; публикация выпуска ещё не подтверждена.
+- Исходники зафиксированы после автоматических проверок: listener — 112 тестов, desktop — 77, packaging — 38, Android — 16, client — 16; все прошли. APK **1.15** собран с прежней подписью приложения. Проверено обновление установленного Windows-приложения до 1.0.4: настройки сохранились без изменений, сервер ответил на авторизованный запрос, комплектные FFmpeg/ffplay запустились и обнаружились без внешнего PATH или ручной настройки. Новые сценарии на реальном телефоне пока не проверены.
 - Медиакомплект проверен синтетическим кодированием **8 кадров через NVIDIA NVENC** и запуском ffplay с тестовым аудиовыходом. Это не проверка изображения и звука на реальном телефоне или совместимости со всеми устройствами. Телефон недоступен через ADB, поэтому новые сценарии на нём не заявлены как проверенные.
 - H.264 экрана ПК сейчас использует NVIDIA NVENC: нужны поддерживаемая видеокарта NVIDIA и подходящий драйвер. Комплектный FFmpeg не гарантирует поддержку каждого Windows-ПК.
 - Продолжение передачи требует папки приёма на NTFS или другом диске с поддержкой жёстких ссылок. FAT/exFAT не поддерживаются: новая передача отклоняется заранее с понятной ошибкой, нужно выбрать другую папку.
@@ -28,13 +28,13 @@
 
 ---
 
-## English — 1.0.4, unreleased
+## English — 1.0.4 — 2026-11-12
 
-**This release has not been published.** These are upcoming changes, not confirmation of final-installer readiness or universal device testing. Windows and Android use separate component version numbers.
+Windows **1.0.4**, Android **1.15**. These are release changes and verified scenarios, not a guarantee of compatibility with every device.
 
 ### User-facing changes
 
-- **Bundled video/audio tools.** The Windows installer is being prepared with FFmpeg and ffplay included. Normal installation will not need separate Python, PATH edits or an external FFmpeg download. When tools are available, the main window explains that no extra installation is necessary.
+- **Bundled video/audio tools.** The Windows installer includes FFmpeg and ffplay. Normal installation will not need separate Python, PATH edits or an external FFmpeg download. When tools are available, the main window explains that no extra installation is necessary.
 - **Automatic media discovery.** Selection considers the manual override, the app-local bundle, PATH and standard installation locations. Discovery does not execute found programs. Manual override remains optional; probing selected EXEs requires explicit approval. An unavailable explicit override must not silently select something else.
 - **Startup update checks on both platforms.** A newer version offers Later / Update using a fixed public, digitally signed release list. No account or personal key is needed. Install the first updater-capable version manually.
 - **Windows updating.** After approval, download and verify the installer before closing the app's own components. Reopen the main window only after successful installation, preserving user settings. Cancellation or failure is not success.
@@ -45,7 +45,7 @@
 
 ### Limitations and verification
 
-- Sources were frozen after automated checks: listener — 112 tests, desktop — 77, packaging — 38, Android — 16, client — 16; all passed. APK **1.15** was built with the existing app signing identity. This does not replace a packaged Windows-installer upgrade test or real-phone testing; release publication is not confirmed yet.
+- Sources were frozen after automated checks: listener — 112 tests, desktop — 77, packaging — 38, Android — 16, client — 16; all passed. APK **1.15** was built with the existing app signing identity. An installed Windows app was upgraded to 1.0.4: settings remained byte-identical, the server answered an authenticated request, and bundled FFmpeg/ffplay ran and were discovered without external PATH entries or a manual override. New scenarios on a real phone have not yet been tested.
 - Media checks encoded **8 synthetic frames through NVIDIA NVENC** and ran ffplay with a dummy audio output. These do not verify real-phone video/audio or universal compatibility. The phone is unavailable over ADB, so new scenarios on it are not claimed as tested.
 - PC-screen H.264 currently uses NVIDIA NVENC, requiring a supported NVIDIA GPU and driver. Bundled FFmpeg does not ensure compatibility with every Windows PC.
 - Resumable uploads require a destination on NTFS or another hard-link-capable disk. FAT/exFAT is unsupported: new transfers are rejected early with an explanation; choose another folder.
