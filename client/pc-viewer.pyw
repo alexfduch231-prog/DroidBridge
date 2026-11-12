@@ -47,9 +47,16 @@ LOG_PATH = os.path.join(DATA_DIR, "client.log")
 PID_PATH = os.path.join(DATA_DIR, "client.pid")
 DEFAULT_TOKEN = (os.path.join(DATA_DIR, "token.txt") if os.environ.get("VZAIMOPULT_DATA_DIR")
                  else os.path.join(HERE, "..", "listener", "token.txt"))
-_LOCAL = os.environ.get("LOCALAPPDATA", os.path.expanduser("~/AppData/Local"))
-FFPLAY_FALLBACK = os.path.join(_LOCAL, "Microsoft", "WinGet", "Links", "ffplay.exe")
-FFMPEG_FALLBACK = os.path.join(_LOCAL, "Microsoft", "WinGet", "Links", "ffmpeg.exe")
+_LISTENER_DIR = os.path.join(os.path.dirname(HERE), "listener")
+if _LISTENER_DIR not in sys.path:
+    sys.path.insert(0, _LISTENER_DIR)
+from media_tools import MediaTools, MediaToolsError, resolve_media_tools
+# Standalone viewer keeps its legacy token/data location; media settings are shared.
+_MEDIA_DATA_DIR = DATA_DIR if os.environ.get("VZAIMOPULT_DATA_DIR") else _LISTENER_DIR
+try:
+    MEDIA_TOOLS = resolve_media_tools(_MEDIA_DATA_DIR)
+except MediaToolsError:
+    MEDIA_TOOLS = MediaTools(None, None, "invalid")
 
 BG = "#0B0C0F"
 PANEL = "#14161A"
@@ -601,9 +608,9 @@ class Viewer(object):
             self._kill_decoder_locked()
             if not self.vw or not self.vh:
                 return None
-            exe = shutil.which("ffmpeg") or FFMPEG_FALLBACK
-            if not os.path.isfile(exe):
-                log("ffmpeg не найден, H.264 недоступен")
+            exe = MEDIA_TOOLS.ffmpeg
+            if not exe or not os.path.isfile(exe):
+                log("H.264 недоступен: настрой видео и звук на ПК и открой просмотр заново")
                 return None
             self.ow = min(self.vw, self.max_w)
             self.oh = max(2, int(round(self.vh * self.ow / float(self.vw))))
@@ -752,9 +759,9 @@ class Viewer(object):
                 self._stop_ffplay()
 
     def _start_ffplay(self):
-        exe = shutil.which("ffplay") or FFPLAY_FALLBACK
-        if not os.path.isfile(exe):
-            log("ffplay не найден, звук недоступен")
+        exe = MEDIA_TOOLS.ffplay
+        if not exe or not os.path.isfile(exe):
+            log("Звук недоступен: настрой видео и звук на ПК и открой просмотр заново")
             self.audio_enabled = False
             return
         layout = "mono" if self.ch == 1 else "stereo"

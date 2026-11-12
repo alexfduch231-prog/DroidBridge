@@ -36,6 +36,8 @@ def main():
                 import apps_panel
                 import upload_settings
                 import upload_panel
+                import media_tools
+                import media_setup
                 import qrcode
                 test_root = tk.Tk()
                 test_root.withdraw()
@@ -52,7 +54,7 @@ def main():
                 os.environ.pop('VZAIMOPULT_DATA_DIR', None)
             else:
                 os.environ['VZAIMOPULT_DATA_DIR'] = previous_data
-        Path(args.self_test).write_text(json.dumps({'ok': True, 'components_imported': ['server', 'viewer', 'pairing', 'apps', 'uploads'], 'python': sys.version.split()[0],
+        Path(args.self_test).write_text(json.dumps({'ok': True, 'components_imported': ['server', 'viewer', 'pairing', 'apps', 'uploads', 'media'], 'python': sys.version.split()[0],
             'pillow': Image.__version__, 'tls': ssl.OPENSSL_VERSION,
             'frozen': bool(getattr(sys, 'frozen', False))}), encoding='utf-8')
         return 0
@@ -117,15 +119,12 @@ def main():
             messagebox.showerror('Приём файлов недоступен',
                                  'Проверь локальную папку и настройки приёма файлов.', parent=root)
     ttk.Button(frame, text='Приём файлов / Received files', command=uploads).pack(anchor='w', pady=8)
-    import shutil
-    media_available = bool(shutil.which('ffmpeg') and shutil.which('ffplay')) or (Path(sys.executable).parent / 'media' / 'ffplay.exe').is_file()
-    if not media_available:
-        ttk.Label(frame, text='FFmpeg / ffplay не найдены. Видео H.264 и звук требуют отдельной установки. Ничего не скачивается автоматически.', wraplength=540).pack(anchor='w', pady=8)
-        def media_help():
-            import webbrowser
-            if messagebox.askyesno('Открыть сайт FFmpeg?', 'Откроется официальный сайт с вариантами установки. Установи ffmpeg и ffplay, добавь в PATH и перезапусти DroidBridge. Лицензия внешней сборки проверяется отдельно.', parent=root):
-                webbrowser.open('https://ffmpeg.org/download.html')
-        ttk.Button(frame, text='Как установить FFmpeg отдельно', command=media_help).pack(anchor='w')
+    def media_settings():
+        from media_setup import show_media_setup
+        show_media_setup(root, data_directory())
+    ttk.Button(frame, text='Настроить видео и звук', command=media_settings).pack(anchor='w', pady=8)
+    ttk.Label(frame, text='FFmpeg устанавливается отдельно. Выбери готовую папку bin — менять PATH не нужно. '
+              'Изменения действуют при новом запуске сервера и просмотра.', wraplength=540).pack(anchor='w')
     ttk.Separator(frame).pack(fill='x', pady=8)
     ttk.Label(frame, text='Экран телефона на ПК', font=('Segoe UI', 13, 'bold')).pack(anchor='w', pady=6)
     ttk.Label(frame, text='Включи трансляцию в приложении и введи IP телефона.').pack(anchor='w')

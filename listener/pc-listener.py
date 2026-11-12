@@ -61,7 +61,12 @@ CLIENT_SCRIPT = os.path.join(CLIENT_DIR, "pc-viewer.pyw")
 CLIENT_PID = os.path.join(CLIENT_DIR, "client.pid")
 LOCAL_APPDATA = os.environ.get("LOCALAPPDATA", os.path.join(os.path.expanduser("~"), "AppData", "Local"))
 CLIENT_PYTHONW = os.path.join(LOCAL_APPDATA, "Python", "bin", "pythonw.exe")
-FFMPEG_FALLBACK = os.path.join(LOCAL_APPDATA, "Microsoft", "WinGet", "Links", "ffmpeg.exe")
+from media_tools import MediaTools, MediaToolsError, resolve_media_tools
+try:
+    MEDIA_TOOLS = resolve_media_tools(DATA_DIR)
+except MediaToolsError:
+    # Explicit broken settings disable media rather than execute another installation.
+    MEDIA_TOOLS = MediaTools(None, None, "invalid")
 
 DETACHED_FLAGS = 0x00000008 | 0x00000200  # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
 CREATE_NO_WINDOW = 0x08000000
@@ -726,9 +731,9 @@ class Handler(http.server.BaseHTTPRequestHandler):
                     width = screen_w
                 height = int(round(screen_h * width / float(screen_w) / 2.0)) * 2
 
-                ffmpeg = shutil.which("ffmpeg") or FFMPEG_FALLBACK
-                if not os.path.isfile(ffmpeg):
-                    self.send(500, "нет ffmpeg")
+                ffmpeg = MEDIA_TOOLS.ffmpeg
+                if not ffmpeg or not os.path.isfile(ffmpeg):
+                    self.send(500, "Видео недоступно: настрой видео и звук на ПК и запусти сервер заново")
                     return
                 cmd = [ffmpeg, "-hide_banner", "-loglevel", "error",
                        "-f", "lavfi", "-i", "ddagrab=0:framerate=%d" % fps,

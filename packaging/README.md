@@ -2,7 +2,7 @@
 
 The launcher does not start services automatically: **Запустить сервер** starts the control listener; **Подключить телефон безопасно** separately starts a temporary HTTPS pairing listener on the selected private-LAN adapter (8767). It opens the existing viewer only on request. Closing the launcher asks to terminate only the children it launched. No startup task, service, router forwarding or firewall rule is created by setup. DroidBridge keeps legacy runtime data at `%LOCALAPPDATA%/VzaimoPult` for compatibility (`VZAIMOPULT_DATA_DIR` override remains supported); uninstall preserves it deliberately.
 
-Windows setup uses its own version **1.0.1**; the Android application currently uses **1.14**. These are independent component versions. Windows 1.0.1 adds the local **Received files / Приём файлов** folder selector; the existing Android APK is compatible.
+Windows setup uses its own version **1.0.2**; the Android application currently uses **1.14**. These are independent component versions. Windows 1.0.2 adds a local video/audio setup panel for selecting an extracted FFmpeg folder without editing PATH. The existing Android APK is compatible.
 
 ## Toolchain and repeatable recipe
 
@@ -16,7 +16,7 @@ python packaging/acquire_inno.py
 packaging/.venv-build/Scripts/python.exe packaging/build_windows.py --output packaging/.build/droidbridge-release-01 --iscc packaging/.build-tools/inno-7.1.1/ISCC.exe
 ```
 
-The default **slim setup excludes FFmpeg/ffplay** to avoid redistributing unreviewed static GPL binaries. Python, Tk, Pillow, QR and TLS dependencies are frozen: target users do not install Python. JPEG screenshots/control still work; H.264 and audio require separately user-managed `ffmpeg` + `ffplay` on PATH. The launcher provides an explicit official-site link, never an automatic download. For a local-only offline bundle add `--media-root X:/tools/ffmpeg-9.0.2-full_build`; its GPL release gate below still applies.
+The default **slim setup excludes FFmpeg/ffplay** to avoid redistributing unreviewed static GPL binaries. Python, Tk, Pillow, QR and TLS dependencies are frozen: target users do not install Python. JPEG screenshots/control still work; H.264 and audio require separately downloaded `ffmpeg` + `ffplay`. The launcher lets the user select their extracted folder (or its `bin` subfolder); editing PATH is not required. Only after local confirmation are both selected programs probed with `-version` on a worker thread, each with a five-second timeout. Selection is stored in the local data directory; restart an already running server/viewer to apply it. An invalid saved selection does not silently fall back to another installation. The launcher provides an explicit official-site link, never an automatic download. For a local-only offline bundle add `--media-root X:/tools/ffmpeg-9.0.2-full_build`; its GPL release gate below still applies.
 
 Inno Setup 7.1.1 is downloaded from the official GitHub release, SHA256-checked and unpacked with its supported `/PORTABLE=1`; no global installation. The downloaded compiler identifies itself as non-commercial-use only: obtain the appropriate Inno Setup license before using this build tool commercially (the compiler itself is not shipped to end users). The media root must already exist; the script never downloads ~436 MiB of FFmpeg binaries silently. `run_local_build.py` is a convenience probe using the approved installed FFmpeg from PATH. Use a fresh output for each build. Do not export `.build`, `.build-tools`, `.venv-build`, `__pycache__` as source.
 

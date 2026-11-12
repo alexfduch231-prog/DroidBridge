@@ -96,7 +96,7 @@ def main():
         (notices / 'THIRD-PARTY-NOTICES.txt').write_text(
             'This slim build does NOT distribute FFmpeg or ffplay.\n'
             'Optional media features require a separate user-managed FFmpeg installation.\n'
-            'Install both ffmpeg and ffplay from a trusted distribution, review its license, add to PATH and restart.\n'
+            'Obtain ffmpeg and ffplay from a trusted distribution, review its license, select their folder in Video and audio setup, then restart the server/viewer.\n'
             'No automatic download occurs. https://ffmpeg.org/download.html\n'
             'Python: PSF license; Pillow: MIT-CMU; qrcode: BSD; cryptography: Apache-2.0 OR BSD.\n'
             'PyInstaller: GPL-2.0-or-later with bootloader distribution exception.\n', encoding='utf-8')

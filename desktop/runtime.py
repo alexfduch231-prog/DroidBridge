@@ -49,8 +49,6 @@ def run_component(component, arguments):
     data = data_directory()
     data.mkdir(parents=True, exist_ok=True)
     os.environ['VZAIMOPULT_DATA_DIR'] = str(data)
-    media = Path(sys.executable).parent / 'media' if getattr(sys, 'frozen', False) else bundle_root() / 'media'
-    os.environ['PATH'] = str(media) + os.pathsep + os.environ.get('PATH', '')
     module = load_component(component)
     # Compatibility with versions predating the production environment override.
     if component == 'server':

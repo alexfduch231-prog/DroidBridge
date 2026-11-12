@@ -22,3 +22,4 @@ dist/
 **/apps.json
 pairing-tls/
 **/upload_settings.json
+**/media_settings.json
