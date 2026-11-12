@@ -1,4 +1,5 @@
 build/
+*.jar
 *.apk
 *.idsig
 *.keystore

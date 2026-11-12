@@ -1,0 +1,23 @@
+<resources>
+    <attr name="db_bg_screen" format="color" />
+    <attr name="db_bg_grad_top" format="color" />
+    <attr name="db_bg_grad_bottom" format="color" />
+    <attr name="db_header_tint" format="color" />
+    <attr name="db_header_tint_soft" format="color" />
+    <attr name="db_surface" format="color" />
+    <attr name="db_surface_alt" format="color" />
+    <attr name="db_primary" format="color" />
+    <attr name="db_on_primary" format="color" />
+    <attr name="db_danger" format="color" />
+    <attr name="db_on_danger" format="color" />
+    <attr name="db_wake_bg_top" format="color" />
+    <attr name="db_wake_bg_bottom" format="color" />
+    <attr name="db_wake_text" format="color" />
+    <attr name="db_text_primary" format="color" />
+    <attr name="db_text_secondary" format="color" />
+    <attr name="db_outline" format="color" />
+    <attr name="db_card_stroke" format="color" />
+    <attr name="db_ripple" format="color" />
+    <attr name="db_track" format="color" />
+    <attr name="db_ok" format="color" />
+</resources>

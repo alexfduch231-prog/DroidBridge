@@ -7,13 +7,35 @@
        Ночной вариант — в values-night/styles.xml, там тот же имя но тёмная база.
     -->
     <style name="AppTheme" parent="@android:style/Theme.Material.Light.NoActionBar">
+        <item name="db_bg_screen">#FFF1F3F8</item>
+        <item name="db_bg_grad_top">#FFF9FAFD</item>
+        <item name="db_bg_grad_bottom">#FFE8EDF6</item>
+        <item name="db_header_tint">#2E1A63E7</item>
+        <item name="db_header_tint_soft">#0A1A63E7</item>
+        <item name="db_surface">#FFFFFFFF</item>
+        <item name="db_surface_alt">#FFF7F8FC</item>
+        <item name="db_primary">#FF1A63E7</item>
+        <item name="db_on_primary">#FFFFFFFF</item>
+        <item name="db_danger">#FFCC2F23</item>
+        <item name="db_on_danger">#FFFFFFFF</item>
+        <item name="db_wake_bg_top">#FFA9EDC1</item>
+        <item name="db_wake_bg_bottom">#FF6BD992</item>
+        <item name="db_wake_text">#FF0B4A28</item>
+        <item name="db_text_primary">#FF16181D</item>
+        <item name="db_text_secondary">#FF5C6270</item>
+        <item name="db_outline">#FF8A909C</item>
+        <item name="db_card_stroke">#26000000</item>
+        <item name="db_ripple">#1F000000</item>
+        <item name="db_track">#14000000</item>
+        <item name="db_ok">#FF178A4C</item>
+
         <item name="android:windowBackground">@drawable/window_bg</item>
-        <item name="android:colorAccent">@color/primary</item>
-        <item name="android:textColorPrimary">@color/text_primary</item>
-        <item name="android:textColorSecondary">@color/text_secondary</item>
-        <item name="android:statusBarColor">@color/bg_screen</item>
-        <item name="android:navigationBarColor">@color/bg_screen</item>
-        <item name="android:colorControlHighlight">@color/ripple</item>
+        <item name="android:colorAccent">?attr/db_primary</item>
+        <item name="android:textColorPrimary">?attr/db_text_primary</item>
+        <item name="android:textColorSecondary">?attr/db_text_secondary</item>
+        <item name="android:statusBarColor">?attr/db_bg_screen</item>
+        <item name="android:navigationBarColor">?attr/db_bg_screen</item>
+        <item name="android:colorControlHighlight">?attr/db_ripple</item>
         <item name="android:buttonStyle">@style/AppButton</item>
         <item name="android:alertDialogTheme">@style/AppDialogTheme</item>
     </style>
@@ -24,25 +46,25 @@
         <item name="android:windowBackground">@android:color/black</item>
         <item name="android:statusBarColor">@android:color/black</item>
         <item name="android:navigationBarColor">@android:color/black</item>
-        <item name="android:colorAccent">@color/primary</item>
+        <item name="android:colorAccent">?attr/db_primary</item>
     </style>
 
     <style name="Title">
         <item name="android:textSize">24sp</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColor">?attr/db_text_primary</item>
         <item name="android:letterSpacing">0.01</item>
     </style>
 
     <style name="Subtitle">
         <item name="android:textSize">13sp</item>
-        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textColor">?attr/db_text_secondary</item>
     </style>
 
     <style name="SectionLabel">
         <item name="android:textSize">11sp</item>
         <item name="android:textStyle">bold</item>
-        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:textColor">?attr/db_text_secondary</item>
         <item name="android:letterSpacing">0.08</item>
         <item name="android:paddingBottom">4dp</item>
     </style>
@@ -50,8 +72,8 @@
     <style name="Field">
         <item name="android:textSize">15sp</item>
         <item name="android:importantForAutofill">no</item>
-        <item name="android:textColor">@color/text_primary</item>
-        <item name="android:textColorHint">@color/text_secondary</item>
+        <item name="android:textColor">?attr/db_text_primary</item>
+        <item name="android:textColorHint">?attr/db_text_secondary</item>
         <item name="android:background">@drawable/field_bg</item>
         <item name="android:paddingLeft">14dp</item>
         <item name="android:paddingRight">14dp</item>
@@ -117,13 +139,13 @@
 
     <style name="StatusText">
         <item name="android:textSize">13sp</item>
-        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColor">?attr/db_text_primary</item>
         <item name="android:lineSpacingExtra">3dp</item>
     </style>
 
     <!-- App-owned dialogs only; OS permission/installer UI uses its own theme. -->
     <style name="AppDialogTheme" parent="@android:style/Theme.Material.Light.Dialog.Alert">
-        <item name="android:colorAccent">@color/primary</item>
+        <item name="android:colorAccent">?attr/db_primary</item>
         <item name="android:buttonStyle">@style/AppButton</item>
         <item name="android:buttonBarButtonStyle">@style/BtnDialog</item>
         <item name="android:buttonBarPositiveButtonStyle">@style/BtnDialog</item>

@@ -1,6 +1,12 @@
 # Изменения / Changelog
 
-## 1.0.9 — в разработке / Unreleased
+## Android 1.19 — 2026-11-12
+
+Добавлены темы: системная, светлая, тёмная, «Океан», «Лес», «Слива». Выбор сохраняется на телефоне. В настройках появился встроенный сканер QR сопряжения: камера включается только на экране сканера, распознавание выполняется на устройстве, кадры не сохраняются и не отправляются. Подтверждение сопряжения на ПК остаётся обязательным; ручной ввод ссылки сохранён.
+
+Added system, light, dark, Ocean, Forest and Plum themes, saved locally on the phone. Settings now include an in-app pairing QR scanner. The camera is used only on the scanner screen; decoding stays on-device and frames are neither saved nor uploaded. PC-side pairing approval remains required; manual link entry is still available.
+
+## 1.0.9 — 2026-11-12
 
 В Windows видео прижато к правому краю и поднято к верхней строке сервера; углы изображения скруглены. Управление оформлено отдельными строками с переключателями, кнопками общей темы и полем отправки текста. В Android **1.18** просмотр экрана ПК получил полный экран и режимы «Вписать» / «Заполнить»; кнопка «Назад» сначала выходит из полного экрана.
 

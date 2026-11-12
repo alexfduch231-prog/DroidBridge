@@ -359,7 +359,7 @@ public class MainActivity extends Activity {
     @Override
     protected void attachBaseContext(Context newBase) {
         int mode = newBase.getSharedPreferences(PREFS, MODE_PRIVATE).getInt(K_THEME, THEME_AUTO);
-        super.attachBaseContext(withNightMode(AppLocale.wrap(newBase), mode));
+        super.attachBaseContext(AppAppearance.wrap(AppLocale.wrap(newBase)));
     }
 
     /**
@@ -391,8 +391,9 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         prefs = getSharedPreferences(PREFS, MODE_PRIVATE);
-        themeMode = prefs.getInt(K_THEME, THEME_AUTO);
+        themeMode = AppAppearance.mode(this);
         super.onCreate(savedInstanceState);
+        AppAppearance.apply(this);
         setContentView(R.layout.main);
 
         editMac = (EditText) findViewById(R.id.edit_mac);
@@ -483,6 +484,13 @@ public class MainActivity extends Activity {
         editBcast.addTextChangedListener(discoveryEdits);
         editKey.addTextChangedListener(discoveryEdits);
         btnTheme.setText(themeLabel(themeMode));
+        Button scanButton=new Button(this,null,0,R.style.BtnOutline);
+        scanButton.setText(R.string.scan_qr);
+        languageParent.addView(scanButton,languageParent.indexOfChild(languageButton)+1);
+        scanButton.setOnClickListener(new View.OnClickListener(){public void onClick(View view){
+            startActivity(new Intent(MainActivity.this,QrScannerActivity.class));
+        }});
+
 
         btnSave.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) { savePrefs(); }
@@ -1041,7 +1049,7 @@ public class MainActivity extends Activity {
         icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
         if(bitmap==null){
             icon.setImageResource(R.drawable.ic_program);
-            icon.setColorFilter(getResources().getColor(R.color.primary));
+            icon.setColorFilter(AppAppearance.color(this,R.attr.db_primary));
         }else{
             icon.clearColorFilter();
             icon.setImageBitmap(bitmap);
@@ -1121,7 +1129,7 @@ public class MainActivity extends Activity {
         ImageView icon = (ImageView) tile.findViewById(R.id.tile_icon);
         icon.setImageResource(ACT_ICONS[index]);
         // Башмак — зелёный, как кнопка «Включить»; остальные команды — акцентные.
-        int tint = getResources().getColor(index == 0 ? R.color.wake_text : R.color.primary);
+        int tint = AppAppearance.color(this,index == 0 ? R.attr.db_wake_text : R.attr.db_primary);
         icon.setColorFilter(tint);
         TextView label = (TextView) tile.findViewById(R.id.tile_label);
         label.setText(ACT_LABELS[index]);
@@ -1210,6 +1218,9 @@ public class MainActivity extends Activity {
     private static int themeLabelRes(int mode) {
         if (mode == THEME_DAY) return R.string.theme_day;
         if (mode == THEME_NIGHT) return R.string.theme_night;
+        if (mode == 3) return R.string.theme_ocean;
+        if (mode == 4) return R.string.theme_forest;
+        if (mode == 5) return R.string.theme_plum;
         return R.string.theme_auto;
     }
 
@@ -1218,10 +1229,19 @@ public class MainActivity extends Activity {
     }
 
     private void cycleTheme() {
-        themeMode = (themeMode + 1) % 3;
-        prefs.edit().putInt(K_THEME, themeMode).apply();
-        log(getString(R.string.theme_changed_fmt, themeLabel(themeMode)));
-        recreate();
+        final String[] labels=new String[6];
+        for(int i=0;i<labels.length;i++)labels[i]=themeLabel(i);
+        new AlertDialog.Builder(this).setTitle(R.string.theme_choose)
+            .setSingleChoiceItems(labels,themeMode,new android.content.DialogInterface.OnClickListener(){
+                public void onClick(android.content.DialogInterface dialog,int selected){
+                    dialog.dismiss();
+                    if(selected==themeMode)return;
+                    savePrefsIfNeeded();
+                    themeMode=selected;
+                    prefs.edit().putInt(K_THEME,themeMode).apply();
+                    recreate();
+                }
+            }).setNegativeButton(android.R.string.cancel,null).show();
     }
 
     // ---------- Wake-on-LAN ----------

@@ -5,9 +5,9 @@
     android:viewportWidth="24"
     android:viewportHeight="24">
     <path
-        android:fillColor="@color/primary"
+        android:fillColor="?attr/db_primary"
         android:pathData="M5.5,6 L13,12 L5.5,18 Z" />
     <path
-        android:fillColor="@color/primary"
+        android:fillColor="?attr/db_primary"
         android:pathData="M15,6 H17.2 V18 H15 Z" />
 </vector>

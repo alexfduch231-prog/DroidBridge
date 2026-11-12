@@ -73,7 +73,7 @@ public class Probe {
   with tempfile.TemporaryDirectory() as d:
    p=pathlib.Path(d); r=p/'R.java'
    r.write_text('package ru.alexv.pcmote; public final class R {'+''.join('public static final class '+kind+' {'+''.join('public static final int '+name+'='+str(i+1)+';' for i,name in enumerate(sorted(names)))+'}' for kind,names in refs.items())+'}',encoding='utf-8')
-   result=subprocess.run([shutil.which('javac'),'-encoding','UTF-8','-nowarn','-parameters','-source','8','-target','8','-bootclasspath',str(jar),'-d',d,str(r)]+[str(x) for x in sources],capture_output=True,text=True)
+   result=subprocess.run([shutil.which('javac'),'-encoding','UTF-8','-nowarn','-parameters','-source','8','-target','8','-bootclasspath',str(jar),'-classpath',str(ROOT/'zxing-core-3.3.3.jar'),'-d',d,str(r)]+[str(x) for x in sources],capture_output=True,text=True)
    self.assertEqual(result.returncode,0,result.stderr)
    for source in [SRC/'StartupUpdate.java',SRC/'UpdateManifest.java',SRC/'UpdateProvider.java',SRC/'UpdateReplacedReceiver.java']:
     self.assertNotIn('->',source.read_text(encoding='utf-8'),'No lambdas: direct D8 build has no desugaring')
@@ -86,7 +86,7 @@ public class Probe {
    self.assertIn(s,p)
   self.assertNotIn('setDefaultSSLSocketFactory',u); self.assertNotIn('setHostnameVerifier',u)
   manifest=(ROOT/'AndroidManifest.xml').read_text(encoding='utf-8')
-  for s in ['versionCode="28"','versionName="1.18"','REQUEST_INSTALL_PACKAGES','MY_PACKAGE_REPLACED','android:grantUriPermissions="true"']:
+  for s in ['versionCode="29"','versionName="1.19"','REQUEST_INSTALL_PACKAGES','MY_PACKAGE_REPLACED','android:grantUriPermissions="true"']:
    self.assertIn(s,manifest)
   main=(SRC/'MainActivity.java').read_text(encoding='utf-8')
   for s in ['startupUpdate.onResume()','startupUpdate.onPause()','startupUpdate.dispose()']:

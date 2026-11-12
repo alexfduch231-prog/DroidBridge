@@ -31,5 +31,5 @@
         android:ellipsize="end"
         android:textSize="11sp"
         android:textStyle="bold"
-        android:textColor="@color/text_primary" />
+        android:textColor="?attr/db_text_primary" />
 </ru.alexv.pcmote.SquareLayout>

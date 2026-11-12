@@ -231,4 +231,14 @@
     <string name="screen_exit_fullscreen">Exit fullscreen</string>
     <string name="screen_fit">Fit</string>
     <string name="screen_fill">Fill</string>
+    <string name="theme_choose">Choose theme</string>
+    <string name="theme_ocean">Ocean</string>
+    <string name="theme_forest">Forest</string>
+    <string name="theme_plum">Plum</string>
+    <string name="scan_qr">Scan QR</string>
+    <string name="scan_instructions">Point the camera at the pairing QR in DroidBridge on your PC</string>
+    <string name="scan_permission">Allow camera access or paste the link manually in the pairing screen</string>
+    <string name="scan_unavailable">Camera unavailable. Close other camera apps and try again</string>
+    <string name="scan_invalid">Not a DroidBridge pairing QR</string>
+    <string name="scan_retry">Retry / allow camera</string>
 </resources>

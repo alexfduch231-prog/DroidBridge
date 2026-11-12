@@ -54,7 +54,7 @@ class ButtonTests(unittest.TestCase):
                 # One-argument native Buttons inherit AppTheme/ScreenTheme buttonStyle.
                 args = match.group(1).replace(' ', '')
                 self.assertTrue(args in ('this', 'activity') or 'R.style.Btn' in args, str(file))
-        self.assertEqual(count, 6, 'Review newly added programmatic buttons for themed context')
+        self.assertEqual(count, 9, 'Review newly added programmatic buttons for themed context')
         desktop = (ROOT / 'src/ru/alexv/pcmote/DesktopControl.java').read_text(encoding='utf-8')
         pairing = (ROOT / 'src/ru/alexv/pcmote/PairingActivity.java').read_text(encoding='utf-8')
         self.assertIn('new Button(activity, null, 0, R.style.BtnToolbar)', desktop)
@@ -67,7 +67,7 @@ class ButtonTests(unittest.TestCase):
                 if node.get(A + 'id', '').startswith('@+id/nav_'):
                     # Preserve the reviewed drawer's selected/ripple presentation.
                     self.assertEqual(node.get(A + 'background'), '@drawable/nav_item')
-                    self.assertEqual(node.get(A + 'textColor'), '@color/text_primary')
+                    self.assertEqual(node.get(A + 'textColor'), '?attr/db_text_primary')
                 else:
                     self.assertIsNone(node.get(A + 'background'), str(file))
                     self.assertIsNone(node.get(A + 'textColor'), str(file))

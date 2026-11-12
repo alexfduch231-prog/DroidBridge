@@ -24,9 +24,10 @@ public final class PairingActivity extends Activity {
     private Button connect;
     private String requestId, sessionSecret;
     private long deadline;
-    @Override protected void attachBaseContext(Context base){super.attachBaseContext(AppLocale.wrap(base));}
+    @Override protected void attachBaseContext(Context base){super.attachBaseContext(AppAppearance.wrap(AppLocale.wrap(base)));}
     @Override public void onCreate(Bundle state) {
         super.onCreate(state);
+        AppAppearance.apply(this);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
         setTitle(R.string.pair_title);
         LinearLayout content=new LinearLayout(this);content.setOrientation(LinearLayout.VERTICAL);

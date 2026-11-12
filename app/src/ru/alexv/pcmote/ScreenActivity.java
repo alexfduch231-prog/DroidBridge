@@ -73,12 +73,13 @@ public class ScreenActivity extends Activity {
 
     @Override
     protected void attachBaseContext(android.content.Context base) {
-        super.attachBaseContext(AppLocale.wrap(base));
+        super.attachBaseContext(AppAppearance.wrap(AppLocale.wrap(base)));
     }
 
     @Override
     protected void onCreate(Bundle saved) {
         super.onCreate(saved);
+        AppAppearance.apply(this);
         setContentView(R.layout.screen_view);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 

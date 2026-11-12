@@ -69,6 +69,12 @@ The output is `pc-remote.apk`; the temporary `build` directory is recreated. A m
 
 Minimum Android is API 21; control gestures require API 24 and playback-audio capture API 29 plus an app that allows capture. System consent and protected-screen restrictions still apply.
 
+### QR dependency / Зависимость QR
+
+Android uses ZXing core **3.3.3** (Apache-2.0), pinned for the API-21 Java build. The build downloads it from Maven Central and requires SHA-256 `5820f81e943e4bce0329306621e2d6255d2930b0a6ce934c5c23c0d6d3f20599`. The JAR is not committed; run the build once before Java decoder tests. The license is included in `app/assets/ZXING-LICENSE.txt` and the APK. This older version is not a claim of a security audit; dependency upgrades require API-21 device/build testing. Scanner inputs accept only validated DroidBridge pairing links, not arbitrary actions or URLs.
+
+Android использует ZXing core **3.3.3**, Apache-2.0. Сборка скачивает закреплённый JAR из Maven Central и проверяет SHA-256; бинарник не хранится в Git. Перед Java-тестами декодера сначала запусти сборку. Лицензия включена в APK. Версия выбрана для совместимости с текущей сборкой API 21; это не заявление о независимом аудите безопасности. Сканер принимает только проверенные ссылки сопряжения DroidBridge.
+
 ## Windows installer
 
 Следуй [проверяемому рецепту упаковки](../packaging/README.md), а не копируй рабочую папку в дистрибутив. **Windows-установщик 1.0.4** включает FFmpeg/ffplay с автоматическим выбором, Python и UI/TLS/QR-зависимости. Проверен frozen self-test; это не универсальная аппаратная проверка и не тест новых сценариев на реальном телефоне. Ранее распространявшиеся slim-выпуски не включали медиакомплект.

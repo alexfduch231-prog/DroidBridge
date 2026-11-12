@@ -7,10 +7,10 @@
     <!-- иконка переключения темы: обводка круга + залитая правая половина -->
     <path
         android:pathData="M12,4.5 A7.5,7.5 0 1 1 12,19.5 A7.5,7.5 0 1 1 12,4.5 Z"
-        android:strokeColor="@color/primary"
+        android:strokeColor="?attr/db_primary"
         android:strokeWidth="1.8"
         android:fillColor="#00000000" />
     <path
         android:pathData="M12,4.5 A7.5,7.5 0 0 1 12,19.5 Z"
-        android:fillColor="@color/primary" />
+        android:fillColor="?attr/db_primary" />
 </vector>

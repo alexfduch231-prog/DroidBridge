@@ -1,19 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <style name="AppTheme" parent="@android:style/Theme.Material.NoActionBar">
+        <item name="db_bg_screen">#FF000000</item>
+        <item name="db_bg_grad_top">#FF000000</item>
+        <item name="db_bg_grad_bottom">#FF000000</item>
+        <item name="db_header_tint">#2E8AB4F8</item>
+        <item name="db_header_tint_soft">#0D8AB4F8</item>
+        <item name="db_surface">#FF0B0C0F</item>
+        <item name="db_surface_alt">#FF14161A</item>
+        <item name="db_primary">#FF8AB4F8</item>
+        <item name="db_on_primary">#FF0B1220</item>
+        <item name="db_danger">#FFF28B82</item>
+        <item name="db_on_danger">#FF2A0C09</item>
+        <item name="db_wake_bg_top">#FF287A4A</item>
+        <item name="db_wake_bg_bottom">#FF257444</item>
+        <item name="db_wake_text">#FFC9FFDB</item>
+        <item name="db_text_primary">#FFE9ECEF</item>
+        <item name="db_text_secondary">#FF9BA3AF</item>
+        <item name="db_outline">#FF6A717D</item>
+        <item name="db_card_stroke">#33FFFFFF</item>
+        <item name="db_ripple">#33FFFFFF</item>
+        <item name="db_track">#1FFFFFFF</item>
+        <item name="db_ok">#FF6DD58C</item>
+
         <item name="android:windowBackground">@drawable/window_bg</item>
-        <item name="android:colorAccent">@color/primary</item>
-        <item name="android:textColorPrimary">@color/text_primary</item>
-        <item name="android:textColorSecondary">@color/text_secondary</item>
-        <item name="android:statusBarColor">@color/bg_screen</item>
-        <item name="android:navigationBarColor">@color/bg_screen</item>
-        <item name="android:colorControlHighlight">@color/ripple</item>
+        <item name="android:colorAccent">?attr/db_primary</item>
+        <item name="android:textColorPrimary">?attr/db_text_primary</item>
+        <item name="android:textColorSecondary">?attr/db_text_secondary</item>
+        <item name="android:statusBarColor">?attr/db_bg_screen</item>
+        <item name="android:navigationBarColor">?attr/db_bg_screen</item>
+        <item name="android:colorControlHighlight">?attr/db_ripple</item>
         <item name="android:buttonStyle">@style/AppButton</item>
         <item name="android:alertDialogTheme">@style/AppDialogTheme</item>
     </style>
     <!-- App-owned dialogs only; OS permission/installer UI uses its own theme. -->
     <style name="AppDialogTheme" parent="@android:style/Theme.Material.Dialog.Alert">
-        <item name="android:colorAccent">@color/primary</item>
+        <item name="android:colorAccent">?attr/db_primary</item>
         <item name="android:buttonStyle">@style/AppButton</item>
         <item name="android:buttonBarButtonStyle">@style/BtnDialog</item>
         <item name="android:buttonBarPositiveButtonStyle">@style/BtnDialog</item>

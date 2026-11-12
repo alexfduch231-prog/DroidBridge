@@ -1,0 +1,117 @@
+<resources>
+    <style name="Appearance.Light" parent="">
+        <item name="db_bg_screen">#F7F7F8</item>
+        <item name="db_bg_grad_top">#F7F7F8</item>
+        <item name="db_bg_grad_bottom">#F7F7F8</item>
+        <item name="db_header_tint">#2E1A63E7</item>
+        <item name="db_header_tint_soft">#0A1A63E7</item>
+        <item name="db_surface">#F7F7F8</item>
+        <item name="db_surface_alt">#EEEEF0</item>
+        <item name="db_primary">#404048</item>
+        <item name="db_on_primary">#FFFFFF</item>
+        <item name="db_danger">#FFCC2F23</item>
+        <item name="db_on_danger">#FFFFFFFF</item>
+        <item name="db_wake_bg_top">#FFA9EDC1</item>
+        <item name="db_wake_bg_bottom">#FF6BD992</item>
+        <item name="db_wake_text">#FF0B4A28</item>
+        <item name="db_text_primary">#202024</item>
+        <item name="db_text_secondary">#606068</item>
+        <item name="db_outline">#FF8A909C</item>
+        <item name="db_card_stroke">#26000000</item>
+        <item name="db_ripple">#1F000000</item>
+        <item name="db_track">#14000000</item>
+        <item name="db_ok">#FF178A4C</item>
+    </style>
+    <style name="Appearance.Dark" parent="">
+        <item name="db_bg_screen">#1B1B1B</item>
+        <item name="db_bg_grad_top">#1B1B1B</item>
+        <item name="db_bg_grad_bottom">#1B1B1B</item>
+        <item name="db_header_tint">#2D2D2D</item>
+        <item name="db_header_tint_soft">#1B1B1B</item>
+        <item name="db_surface">#1B1B1B</item>
+        <item name="db_surface_alt">#2D2D2D</item>
+        <item name="db_primary">#C1CAD8</item>
+        <item name="db_on_primary">#1B1B1B</item>
+        <item name="db_danger">#CC2F23</item>
+        <item name="db_on_danger">#FFFFFF</item>
+        <item name="db_wake_bg_top">#FFA9EDC1</item>
+        <item name="db_wake_bg_bottom">#FF6BD992</item>
+        <item name="db_wake_text">#FF0B4A28</item>
+        <item name="db_text_primary">#F5F7FC</item>
+        <item name="db_text_secondary">#C1CAD8</item>
+        <item name="db_outline">#81818A</item>
+        <item name="db_card_stroke">#3048484E</item>
+        <item name="db_ripple">#30FFFFFF</item>
+        <item name="db_track">#30FFFFFF</item>
+        <item name="db_ok">#83DFAD</item>
+    </style>
+    <style name="Appearance.Ocean" parent="">
+        <item name="db_bg_screen">#081D30</item>
+        <item name="db_bg_grad_top">#081D30</item>
+        <item name="db_bg_grad_bottom">#081D30</item>
+        <item name="db_header_tint">#18394F</item>
+        <item name="db_header_tint_soft">#081D30</item>
+        <item name="db_surface">#081D30</item>
+        <item name="db_surface_alt">#18394F</item>
+        <item name="db_primary">#C1CAD8</item>
+        <item name="db_on_primary">#081D30</item>
+        <item name="db_danger">#CC2F23</item>
+        <item name="db_on_danger">#FFFFFF</item>
+        <item name="db_wake_bg_top">#FFA9EDC1</item>
+        <item name="db_wake_bg_bottom">#FF6BD992</item>
+        <item name="db_wake_text">#FF0B4A28</item>
+        <item name="db_text_primary">#F5F7FC</item>
+        <item name="db_text_secondary">#C1CAD8</item>
+        <item name="db_outline">#81818A</item>
+        <item name="db_card_stroke">#3048484E</item>
+        <item name="db_ripple">#30FFFFFF</item>
+        <item name="db_track">#30FFFFFF</item>
+        <item name="db_ok">#83DFAD</item>
+    </style>
+    <style name="Appearance.Forest" parent="">
+        <item name="db_bg_screen">#10231C</item>
+        <item name="db_bg_grad_top">#10231C</item>
+        <item name="db_bg_grad_bottom">#10231C</item>
+        <item name="db_header_tint">#214133</item>
+        <item name="db_header_tint_soft">#10231C</item>
+        <item name="db_surface">#10231C</item>
+        <item name="db_surface_alt">#214133</item>
+        <item name="db_primary">#C1CAD8</item>
+        <item name="db_on_primary">#10231C</item>
+        <item name="db_danger">#CC2F23</item>
+        <item name="db_on_danger">#FFFFFF</item>
+        <item name="db_wake_bg_top">#FFA9EDC1</item>
+        <item name="db_wake_bg_bottom">#FF6BD992</item>
+        <item name="db_wake_text">#FF0B4A28</item>
+        <item name="db_text_primary">#F5F7FC</item>
+        <item name="db_text_secondary">#C1CAD8</item>
+        <item name="db_outline">#81818A</item>
+        <item name="db_card_stroke">#3048484E</item>
+        <item name="db_ripple">#30FFFFFF</item>
+        <item name="db_track">#30FFFFFF</item>
+        <item name="db_ok">#83DFAD</item>
+    </style>
+    <style name="Appearance.Plum" parent="">
+        <item name="db_bg_screen">#24152F</item>
+        <item name="db_bg_grad_top">#24152F</item>
+        <item name="db_bg_grad_bottom">#24152F</item>
+        <item name="db_header_tint">#412B4D</item>
+        <item name="db_header_tint_soft">#24152F</item>
+        <item name="db_surface">#24152F</item>
+        <item name="db_surface_alt">#412B4D</item>
+        <item name="db_primary">#C1CAD8</item>
+        <item name="db_on_primary">#24152F</item>
+        <item name="db_danger">#CC2F23</item>
+        <item name="db_on_danger">#FFFFFF</item>
+        <item name="db_wake_bg_top">#FFA9EDC1</item>
+        <item name="db_wake_bg_bottom">#FF6BD992</item>
+        <item name="db_wake_text">#FF0B4A28</item>
+        <item name="db_text_primary">#F5F7FC</item>
+        <item name="db_text_secondary">#C1CAD8</item>
+        <item name="db_outline">#81818A</item>
+        <item name="db_card_stroke">#3048484E</item>
+        <item name="db_ripple">#30FFFFFF</item>
+        <item name="db_track">#30FFFFFF</item>
+        <item name="db_ok">#83DFAD</item>
+    </style>
+</resources>

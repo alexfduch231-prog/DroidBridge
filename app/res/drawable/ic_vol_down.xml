@@ -5,11 +5,11 @@
     android:viewportWidth="24"
     android:viewportHeight="24">
     <path
-        android:fillColor="@color/primary"
+        android:fillColor="?attr/db_primary"
         android:pathData="M3,9.2 H6 L10,5.4 V18.6 L6,14.8 H3 Z" />
     <path
         android:fillColor="#00000000"
-        android:strokeColor="@color/primary"
+        android:strokeColor="?attr/db_primary"
         android:strokeWidth="1.8"
         android:strokeLineCap="round"
         android:pathData="M13.2,9.6 C14.2,10.6 14.2,13.4 13.2,14.4" />

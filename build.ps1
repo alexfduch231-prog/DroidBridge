@@ -12,6 +12,12 @@ $APP   = "$ROOT\app"
 $BUILD = "$ROOT\build"
 $OUT   = "$ROOT\pc-remote.apk"
 
+$ZXING = Join-Path $APP "zxing-core-3.3.3.jar"
+if (-not (Test-Path $ZXING)) {
+    Invoke-WebRequest -UseBasicParsing "https://repo.maven.apache.org/maven2/com/google/zxing/core/3.3.3/core-3.3.3.jar" -OutFile $ZXING
+}
+if ((Get-FileHash $ZXING -Algorithm SHA256).Hash.ToLowerInvariant() -ne "5820f81e943e4bce0329306621e2d6255d2930b0a6ce934c5c23c0d6d3f20599") { throw "ZXing checksum mismatch" }
+
 function Step($name) { Write-Host ("==> " + $name) }
 function Chk($code, $name) {
     if ($code -ne 0) { throw ("FAILED: " + $name + " (exit " + $code + ")") }
@@ -30,7 +36,7 @@ Step "aapt2 link"
 & "$BT\aapt2.exe" link -I "$AJAR" `
     --manifest "$APP\AndroidManifest.xml" `
     --min-sdk-version 21 --target-sdk-version 34 `
-    --auto-add-overlay `
+    --auto-add-overlay -A "$APP\assets" `
     --java "$BUILD\gen" `
     -o "$BUILD\unaligned.apk" `
     "$BUILD\res.zip" 2>&1 | ForEach-Object { "$_" }
@@ -44,7 +50,7 @@ $srcs += (Get-ChildItem -Recurse "$APP\src" -Filter *.java | ForEach-Object { $_
 # atribut MethodParameters s pustym imenem (name_index=0), a D8 iz build-tools 34 na etom
 # padayet s vnitrennim NullPointerException ("String.length() ... <parameter1> is null").
 & "$JDK\javac.exe" -encoding UTF-8 -nowarn -parameters -source 8 -target 8 `
-    -bootclasspath "$AJAR" -d "$BUILD\classes" $srcs 2>&1 | ForEach-Object { "$_" }
+    -bootclasspath "$AJAR" -classpath "$ZXING" -d "$BUILD\classes" $srcs 2>&1 | ForEach-Object { "$_" }
 Chk $LASTEXITCODE "javac"
 
 Step "d8 (class -> dex)"
@@ -52,7 +58,7 @@ Step "d8 (class -> dex)"
 # v imeni (MainActivity$1.class). Gradle vsegda peredayot jar - delaem tak zhe.
 & "$JDK\jar.exe" -c -f "$BUILD\classes.jar" -C "$BUILD\classes" . 2>&1 | ForEach-Object { "$_" }
 Chk $LASTEXITCODE "jar"
-& "$BT\d8.bat" --min-api 21 --lib "$AJAR" --output "$BUILD" "$BUILD\classes.jar" 2>&1 | ForEach-Object { "$_" }
+& "$BT\d8.bat" --min-api 21 --lib "$AJAR" --output "$BUILD" "$BUILD\classes.jar" "$ZXING" 2>&1 | ForEach-Object { "$_" }
 Chk $LASTEXITCODE "d8"
 
 Step "aapt add classes.dex"

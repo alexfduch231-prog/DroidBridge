@@ -231,4 +231,14 @@
     <string name="screen_exit_fullscreen">Выйти из полного экрана</string>
     <string name="screen_fit">Вписать</string>
     <string name="screen_fill">Заполнить</string>
+    <string name="theme_choose">Выбери тему</string>
+    <string name="theme_ocean">Океан</string>
+    <string name="theme_forest">Лес</string>
+    <string name="theme_plum">Слива</string>
+    <string name="scan_qr">Сканировать QR</string>
+    <string name="scan_instructions">Наведи камеру на QR сопряжения в DroidBridge на ПК</string>
+    <string name="scan_permission">Разреши доступ к камере или вставь ссылку вручную в экране сопряжения</string>
+    <string name="scan_unavailable">Камера недоступна. Закрой другие приложения камеры и попробуй снова</string>
+    <string name="scan_invalid">Это не QR сопряжения DroidBridge</string>
+    <string name="scan_retry">Повторить / разрешить камеру</string>
 </resources>
