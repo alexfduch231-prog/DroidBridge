@@ -43,6 +43,7 @@ def main():
                 import media_tools
                 import media_setup
                 import android_setup
+                import wol_setup
                 import desktop.navigation
                 import update_protocol
                 import update_manager
@@ -98,6 +99,7 @@ def run_launcher(update_signal=None):
     host = tk.StringVar(root, value='')
     status = tk.StringVar(root, value='Сервер ещё не запущен. Автозапуска нет.')
     tick_timer, update_timer, mirror_timer = [None], [None], [None]
+    wol_start_timer, wol_poll_timer = [None], [None]
     from desktop.mirror_handoff import GuiMirrorHandoff
     mirror_handoff = GuiMirrorHandoff(data)
     try:
@@ -131,6 +133,13 @@ def run_launcher(update_signal=None):
 
     ttk.Button(controls, text='Запустить сервер', style='DB.Primary.TButton', command=start_server).pack(side='left')
     ttk.Button(controls, text='Остановить', style='DB.TButton', command=stop_server).pack(side='left', padx=(8, 0))
+    wol_status = tk.StringVar(root, value='Включение ПК по сети: проверка Windows скоро начнётся. Настройки не меняются.')
+    root.wol_status = wol_status
+    wol_summary = ttk.Label(header, textvariable=wol_status, style='DB.Muted.TLabel', wraplength=720)
+    wol_summary.pack(fill='x', pady=(8, 0))
+    def resize_summary(event):
+        wol_summary.configure(wraplength=max(100, event.width - 40))
+    header.bind('<Configure>', resize_summary, add='+')
     shell = ttk.Frame(root, style='DB.TFrame')
     shell.pack(fill='both', expand=True, padx=(20, 12), pady=(0, 12))
     sidebar = ttk.Frame(shell, style='DB.TFrame')
@@ -180,14 +189,21 @@ def run_launcher(update_signal=None):
         entry = ttk.Entry(content, textvariable=host)
         entry.pack(fill='x', pady=(4, 12))
         active_viewer = [None]
+        active_endpoint = [None]
+        def matches_viewer(address, port):
+            current = active_viewer[0]
+            return (active_endpoint[0] == (address, port) and current is not None
+                    and current.winfo_exists() and not current.viewer.stop.is_set())
+        page.matches_viewer = matches_viewer
         def dispose_viewer():
             current, active_viewer[0] = active_viewer[0], None
+            active_endpoint[0] = None
             if current is not None:
                 current.dispose()
                 if current.winfo_exists():
                     current.destroy()
         page.dispose = dispose_viewer
-        def viewer(port=8768):
+        def viewer(port=8768, *, auto_control=False):
             try:
                 from runtime import load_component
                 address = phone_address(host.get())
@@ -198,7 +214,9 @@ def run_launcher(update_signal=None):
                 if not token:
                     raise ValueError('Ключ подключения пуст. Выполни сопряжение заново.')
                 dispose_viewer()
-                active_viewer[0] = component.build_viewer_page(page, address, port, token)
+                active_viewer[0] = component.build_viewer_page(
+                    page, address, port, token, auto_control=auto_control)
+                active_endpoint[0] = (address, port)
                 content.master.master.destroy()  # Remove the setup viewport, not this page.
                 active_viewer[0].pack(fill='both', expand=True)
             except (ImportError, OSError, ValueError) as error:
@@ -221,9 +239,13 @@ def run_launcher(update_signal=None):
         from media_setup import build_media_page
         return build_media_page(parent, data)
 
+    def wol_page(parent):
+        from wol_setup import build_wol_page
+        return build_wol_page(parent, data)
+
     navigation = PageHost(shell, {'connection': connection_page, 'screen': screen_page,
                                   'apps': applications_page, 'uploads': uploads_page,
-                                  'settings': settings_page})
+                                  'settings': settings_page, 'wol': wol_page})
     navigation.pack(side='left', fill='both', expand=True)
     root.navigation = navigation
     buttons = {}
@@ -241,9 +263,9 @@ def run_launcher(update_signal=None):
             messagebox.showerror('Раздел недоступен', str(error), parent=root)
             return None
     for key, title in (('connection', 'Подключение'), ('screen', 'Экран телефона'),
-                       ('apps', 'Программы'), ('uploads', 'Приём файлов'), ('settings', 'Настройки')):
+                       ('apps', 'Программы'), ('uploads', 'Приём файлов'), ('wol', 'Включение ПК'), ('settings', 'Настройки')):
         button = ttk.Button(sidebar, text=title, style='DB.TButton', command=lambda key=key: show_section(key))
-        button.pack(fill='x', pady=(0, 8))
+        button.pack(fill='x', pady=(0, 4))
         buttons[key] = button
     # Direct navigation is also used by integration tests and explicit page actions.
     root.show_section = show_section
@@ -256,6 +278,49 @@ def run_launcher(update_signal=None):
                        else 'Сервер завершён (код %s). См. listener.log в папке данных.' % code)
         tick_timer[0] = root.after(1000, tick)
 
+    import queue
+    wol_results = queue.Queue(maxsize=8)
+    wol_started = [False]
+    def poll_wol():
+        wol_poll_timer[0] = None
+        if closing[0]:
+            return
+        finished = False
+        from wol_setup import progress_text
+        for _ in range(8):
+            try:
+                kind, result = wol_results.get_nowait()
+            except queue.Empty:
+                break
+            if kind == 'progress' and result in (1, 2, 3):
+                wol_status.set('Включение ПК: ' + progress_text(result, 'Проверяем Windows без изменений'))
+            elif kind == 'done':
+                state = {'enabled': 'Magic Packet включён', 'disabled': 'Magic Packet выключен',
+                         'unsupported': 'драйвер не поддерживает Magic Packet', 'unknown': 'настройка Windows неизвестна'}
+                detail = state.get(result.magic_packet, state['unknown']) if result.adapter_name else 'адаптер не найден'
+                wol_status.set('Включение ПК: ' + detail + '. Пробуждение не проверено. Подробнее — в разделе слева.')
+                finished = True
+            elif kind == 'error':
+                wol_status.set('Включение ПК: проверка Windows не завершена. Открой раздел «Включение ПК».')
+                finished = True
+            if finished:
+                break
+        if not finished:
+            wol_poll_timer[0] = root.after(100, poll_wol)
+    def start_wol():
+        wol_start_timer[0] = None
+        if closing[0] or wol_started[0]:
+            return
+        wol_started[0] = True
+        from wol_setup import start_diagnostics
+        try:
+            start_diagnostics(wol_results)
+        except Exception:
+            wol_status.set('Включение ПК: проверка Windows недоступна. Открой раздел «Включение ПК».')
+            return
+        poll_wol()
+    wol_start_timer[0] = root.after(1500, start_wol)
+
     def cleanup(event):
         if event.widget is not root or closing[0]:
             return
@@ -264,7 +329,7 @@ def run_launcher(update_signal=None):
             mirror_handoff.close()
         except OSError:
             pass
-        for timer in (tick_timer, update_timer, mirror_timer):
+        for timer in (tick_timer, update_timer, mirror_timer, wol_start_timer, wol_poll_timer):
             if timer[0] is not None:
                 root.after_cancel(timer[0])
                 timer[0] = None
@@ -309,9 +374,16 @@ def run_launcher(update_signal=None):
                 if not 1 <= port <= 65535:
                     raise ValueError('Invalid viewer port')
                 host.set(address)
+                current = navigation.pages.get('screen')
+                # Android retries a handoff when its HTTP response was lost.
+                # Never tear down the matching connection (even before hello),
+                # nor override a user's control opt-out on an existing viewer.
+                if (navigation.current_key == 'screen' and current is not None
+                        and current.matches_viewer(address, port)):
+                    return
                 page = show_section('screen', refresh=True)
                 if page is not None:
-                    page.start_viewer(port=port)
+                    page.start_viewer(port=port, auto_control=True)
         except (OSError, ValueError, TypeError, AttributeError):
             pass  # Ignore stale/unreadable handoffs; the next poll can recover.
         finally:

@@ -117,7 +117,7 @@ def peak_percent(chunk):
 
 
 class Viewer(object):
-    def __init__(self, root, host, port, token, audio=True, embedded=False):
+    def __init__(self, root, host, port, token, audio=True, embedded=False, *, auto_control=False):
         self.embedded = embedded
         self.root = tk.Frame(root, bg=BG) if embedded else root
         self._closed = False
@@ -134,6 +134,8 @@ class Viewer(object):
         self.authenticated = False
         self.control_capable = False
         self.control_enabled = False
+        # Only a phone-initiated GUI handoff may opt in, once per viewer lifetime.
+        self.auto_control_pending = auto_control is True
         self.control_epoch = 0
         self.connection_epoch = 0
         self.ui_connection_epoch = 0
@@ -315,6 +317,7 @@ class Viewer(object):
             self.authenticated = False
             self.control_capable = False
             self.control_enabled = False
+            self.auto_control_pending = False
             self.last_rendered = 0.0
             detached_sock, self.sock = self.sock, None
             self.connection_epoch += 1
@@ -323,6 +326,7 @@ class Viewer(object):
 
     def _toggle_control(self):
         with self.control_lock:
+            self.auto_control_pending = False
             self._clear_controls_locked()
             self.control_enabled = control_allowed(
                 self.authenticated, self.control_capable, bool(self.control_var.get()))
@@ -439,8 +443,8 @@ class Viewer(object):
             self.rendered_size = None
             self.photo = None
             self.image_label.configure(image="")
+        self.control_var.set(enabled)
         if not enabled:
-            self.control_var.set(False)
             self.gesture = None
         self.control_toggle.configure(state="normal" if available else "disabled")
         fresh = self._frame_fresh()
@@ -577,11 +581,17 @@ class Viewer(object):
         self.sr = int(info.get("sr") or 44100)
         self.ch = int(info.get("ch") or 2)
         with self.control_lock:
+            if self.stop.is_set():
+                self.auto_control_pending = False
+                return
             self.authenticated = True
             self.control_capable = info.get("control") is True
-            self.control_enabled = False
+            self.control_enabled = self.auto_control_pending and self.control_capable
+            self.auto_control_pending = False
+            enabled = self.control_enabled
             self._clear_controls_locked()
-        self._control_status("управление выключено — включи явно" if self.control_capable else
+        self._control_status("управление включено" if enabled else
+                             "управление выключено — включи явно" if self.control_capable else
                              "управление недоступно: включи службу на телефоне и переподключись")
         log("поток: %s %sx%s, видео %s, звук %s Гц x%s" % (
             self.device_name, info.get("w"), info.get("h"), self.codec,
@@ -914,13 +924,14 @@ class Viewer(object):
     kbps = 0.0
 
 
-def build_viewer_page(parent, host, port, token, audio=True):
+def build_viewer_page(parent, host, port, token, audio=True, *, auto_control=False):
     """Return an unpacked Frame with .viewer and an idempotent .dispose().
 
     The caller owns geometry management and the application window. Disposing
     this page (or destroying its parent) stops its workers and Tk timers only.
     """
-    return Viewer(parent, host, port, token, audio=audio, embedded=True).root
+    return Viewer(parent, host, port, token, audio=audio, embedded=True,
+                  auto_control=auto_control).root
 
 
 def main():

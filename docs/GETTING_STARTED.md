@@ -10,7 +10,7 @@ DroidBridge не подключается через облако. Основн�
 
 Эта инструкция описывает готовящийся Windows-интерфейс **1.0.6** и Android **1.16** (сборка **26**). Android **1.15** остаётся совместимым для прежних функций, но для значков программ нужны обе новые версии. До публикации 1.0.6 ссылка загрузки ведёт на последнюю доступную версию, интерфейс которой может отличаться. Обычный Windows-установщик содержит FFmpeg и ffplay; у прежних slim-установщиков медиакомплект отсутствует. Проверка новых сценариев на реальном телефоне пока не подтверждена.
 
-В 1.0.6 работа идёт в одном основном окне: слева **«Подключение»**, **«Экран телефона»**, **«Программы»**, **«Приём файлов»** и **«Настройки»**. Установка Android-приложения, сопряжение и просмотр телефона открываются внутри этих разделов. Выбор файлов, подтверждения и системные запросы разрешений могут оставаться отдельными диалогами.
+В 1.0.6 работа идёт в одном основном окне: слева **«Подключение»**, **«Экран телефона»**, **«Программы»**, **«Приём файлов»**, **«Включение ПК»** и **«Настройки»**. Установка Android-приложения, сопряжение и просмотр телефона открываются внутри этих разделов. Выбор файлов, подтверждения и системные запросы разрешений могут оставаться отдельными диалогами.
 
 ## 1. Установи приложения
 
@@ -77,13 +77,13 @@ H.264 экрана ПК сейчас использует **NVIDIA NVENC**: ну
 
 ### Экран телефона на ПК
 
-Оставь основное окно DroidBridge на ПК открытым и запусти сервер. На Android нажми **«Трансляция на ПК»** и подтверди системный запрос на захват экрана. Запрос с телефона направляется в уже открытое основное окно, чтобы показать трансляцию внутри раздела **«Экран телефона»**, а не запустить отдельное окно просмотра. Если главное окно закрыто, открой DroidBridge и повтори запрос с телефона: один сервер без интерфейса может обслуживать команды, но не встроенный просмотр.
+Оставь основное окно DroidBridge на ПК открытым и запусти сервер. На уже сопряжённом телефоне нажми **«Трансляция на ПК»** и подтверди системный запрос Android на захват экрана. В готовящемся 1.0.6 этого достаточно: на ПК откроется встроенный раздел **«Экран телефона»**; адрес берётся из проверенного запроса телефона, вводить IP вручную не нужно. Если главное окно закрыто, открой DroidBridge и повтори запрос с телефона: один сервер без интерфейса может обслуживать команды, но не встроенный просмотр.
 
 Для ручного подключения открой слева **«Экран телефона»**, введи локальный IP телефона и нажми **«Открыть экран телефона»**. Адрес телефона можно посмотреть в настройках текущей Wi-Fi-сети Android.
 
 Для отключения просмотра перейди в другой раздел. Чтобы подключиться снова, вернись в **«Экран телефона»** и повтори открытие. Закрытие просмотра на ПК не заменяет остановку трансляции на Android: закончив работу, нажми на телефоне **«Остановить трансляцию»** или используй его уведомление.
 
-Для управления телефоном отдельно открой **«Разрешить управление телефоном с ПК»** в Android, прочитай объяснение и включи службу **«Управление телефоном с ПК»** в системных специальных возможностях. Для жестов нужен Android 7+. Перезапусти трансляцию и включи управление в разделе просмотра на ПК. Разрешение можно отозвать в тех же системных настройках.
+При запуске с телефона управление включится в просмотре автоматически **только если** ты уже разрешил службу **«Управление телефоном с ПК»** в специальных возможностях Android. Иначе доступен только просмотр. Чтобы разрешить управление, отдельно открой **«Разрешить управление телефоном с ПК»** на Android, прочитай объяснение и включи службу в системных настройках, затем заново запусти трансляцию с телефона. Приложение не выдаёт себе это разрешение. Для жестов нужен Android 7+; разрешение можно отозвать в тех же системных настройках. Автовключение относится к новому запуску с телефона, а не к каждому ручному подключению или восстановлению связи; фоновая работа и автоматическое восстановление управления не гарантируются.
 
 Звук приложений доступен с Android 10+, после выдачи запрошенного разрешения на запись аудио и только если само приложение разрешает захват воспроизведения. Это не обещание передачи звука любого приложения. Защищённые экраны могут быть чёрными. После обновления APK, включения службы управления или поворота экрана перезапусти трансляцию. Остановить её можно кнопкой **«Остановить трансляцию»** или через уведомление Android.
 
@@ -98,7 +98,17 @@ H.264 экрана ПК сейчас использует **NVIDIA NVENC**: ну
 
 ### Включение и выключение ПК
 
-**«Включить»** использует Wake-on-LAN: эта функция должна поддерживаться и быть включена в BIOS/UEFI и настройках сетевой карты. Обычно надёжнее проводное подключение. Сначала подключи включённый ПК, чтобы телефон сохранил его сетевые данные. Выключенный компьютер не отвечает на автопоиск; отправка команды пробуждения не гарантирует запуск.
+**«Включить»** на телефоне отправляет Wake-on-LAN — сетевой пакет пробуждения. Эта функция зависит от сетевой карты, питания, BIOS/UEFI и состояния компьютера; приложение не может гарантировать включение.
+
+В готовящемся Windows 1.0.6:
+
+1. Пока ПК включён, открой **«Включение ПК»**. При запуске DroidBridge читает настройки сетевых адаптеров без изменений. Результат проверки — не испытание пробуждения.
+2. Выбери свою физическую сетевую карту. **«Настроить Windows»** сначала запросит явное подтверждение, затем системное разрешение администратора UAC. Действие включает только поддерживаемую настройку **WakeOnMagicPacket** выбранной карты; неподдерживаемую возможность добавить не сможет. Можно отказаться. Сетевой адаптер не перезапускается автоматически (**NoRestart**), поэтому не считай, что изменение уже вступило в силу.
+3. Если требуется, самостоятельно открой BIOS/UEFI по инструкции производителя. Ищи **Wake-on-LAN**, **Power On by PCI-E / PCIe** или похожий пункт. **ErP / Deep Sleep** иногда отключает питание сетевой карты после выключения; проверь руководство своей платы, прежде чем менять настройку. DroidBridge не меняет BIOS автоматически.
+4. Обычно нужен подключённый Ethernet-кабель. Пробуждение по Wi-Fi зависит от конкретного оборудования и драйвера и поддерживается не везде. Сначала подключи телефон к включённому ПК, чтобы сохранить его сетевые данные.
+5. Проверь пробуждение вручную в подходящее время: сохрани работу, сам переведи ПК в нужный режим и нажми **«Включить»** на телефоне. Приложение не выключает компьютер ради проверки. Успех из сна не гарантирует включение после полного выключения.
+
+**100% означает завершённые проверки или настройку, а не подтверждённое получение пакета и не гарантию пробуждения.** Пока ПК уже выключен, приложение не может исправить на нём настройки Windows или BIOS. Выключенный компьютер не отвечает на автопоиск. Проверка пробуждения на реальном оборудовании пока не подтверждена.
 
 После **«Выключить»** или **«Перезагрузить»** есть 20 секунд для **«Отменить команду»**. Сохрани документы заранее. Если ответ потерялся, команда всё равно могла дойти: не нажимай её многократно.
 
@@ -123,7 +133,7 @@ H.264 экрана ПК сейчас использует **NVIDIA NVENC**: ну
 
 This guide describes the upcoming Windows **1.0.6** interface and Android **1.16** (build **26**). Android **1.15** remains compatible with existing features, but program icons require both new versions. Until 1.0.6 is published, the download link opens the latest available release, whose interface may differ. The standard Windows installer includes FFmpeg/ffplay; earlier slim installers do not. Verification of new scenarios on a real phone is not yet confirmed.
 
-In 1.0.6, one main window contains **«Подключение»** (Connection), **«Экран телефона»** (Phone screen), **«Программы»** (Applications), **«Приём файлов»** (Received files) and **«Настройки»** (Settings). Android download, pairing and phone viewing open inside these sections. File pickers, confirmations and system permission prompts can still open dialogs. The sidebar currently uses Russian labels.
+In 1.0.6, one main window contains **«Подключение»** (Connection), **«Экран телефона»** (Phone screen), **«Программы»** (Applications), **«Приём файлов»** (Received files), **«Включение ПК»** (Wake PC) and **«Настройки»** (Settings). Android download, pairing and phone viewing open inside these sections. File pickers, confirmations and system permission prompts can still open dialogs. The sidebar currently uses Russian labels.
 
 ## Before installing
 
@@ -181,8 +191,8 @@ Manual updating from the release page remains available. A digitally signed rele
 ## Using it
 
 - **PC screen:** tap **View PC screen** on Android and enable control in that screen for clicks and text. Tap for left click, hold for right click, move to drag. Scroll buttons and text input are available. Windows UAC/elevated windows are not bypassed.
-- **Phone screen:** keep the DroidBridge main window open and start its server. Tap **Cast phone to PC** on Android and approve the system screen-capture prompt. The request is handed to the already-open main window to show the stream inside **«Экран телефона»** (Phone screen), rather than launching a separate viewer. If the main window is closed, open DroidBridge and retry on the phone; a server alone can handle commands, but not embedded viewing. For manual connection, open Phone screen, enter the phone's local IP and click **«Открыть экран телефона»** (Open phone screen). Find the phone IP in Android's current Wi-Fi network details. Navigating to another section closes the viewer connection; return and open it again to reconnect. Closing the PC viewer does not replace stopping Android casting: when finished, tap **Stop casting** on the phone or use its notification.
-- **Phone control:** separately open **Allow phone control from PC** on Android and read the explanation. Enable **Control phone from PC** in system Accessibility settings, restart mirroring, then enable control in the PC viewer. Gestures require Android 7+. Revoke access in the same system settings at any time.
+- **Phone screen:** keep the DroidBridge main window open and start its server. On the already-paired phone, tap **Cast phone to PC** and approve Android's system screen-capture prompt. In upcoming 1.0.6, this opens the embedded **«Экран телефона»** (Phone screen) section on the PC; its address comes from the authenticated phone request, so you do not need to type an IP. If the main window is closed, open DroidBridge and retry on the phone; a server alone can handle commands, but not embedded viewing. Manual connection is still available: open Phone screen, enter the phone's local IP and click **«Открыть экран телефона»** (Open phone screen). Find the phone IP in Android's current Wi-Fi network details. Navigating to another section closes the viewer connection; return and open it again to reconnect. Closing the PC viewer does not replace stopping Android casting: when finished, tap **Stop casting** on the phone or use its notification.
+- **Phone control:** a phone-initiated session enables control automatically **only if** you have already enabled **Control phone from PC** in Android Accessibility settings. Otherwise it is view-only. To grant control, separately open **Allow phone control from PC** on Android, read the explanation and enable the service in system settings, then start casting again from the phone. The app cannot grant itself this permission. Gestures require Android 7+; revoke access in the same settings at any time. Automatic enabling applies to a new phone-initiated session, not every manual connection or reconnection; background operation and automatic control recovery are not guaranteed.
 - **Phone audio:** requires Android 10+, the requested audio permission and an app that allows playback capture. Not every app allows it. Protected screens may appear black. Restart mirroring after an APK update, phone rotation or enabling Accessibility. Stop it with **Stop casting** or the Android notification.
 - **Files:** choose **Upload file to PC** on Android. The maximum is 50 GiB. The app reads the source for an integrity check before sending, so preparing a large file may take time before any bytes are shown as sent.
 - **Resumable transfers are implemented in 1.0.4; real-phone verification is not yet confirmed.** Use **Pause**, then **Continue**; **Later** postpones resuming. After a brief Wi-Fi outage, the app will try to recover; if that fails, reconnect to the same PC and resume manually. A pending transfer will be offered again after restarting the app. The original file must remain accessible and unchanged: do not delete, move or edit it, or revoke the app's access before completion. If the selected provider cannot retain access, the app will ask you to choose a different provider. Checking the original file again when resuming can also take time.
@@ -190,8 +200,21 @@ Manual updating from the release page remains available. A digitally signed rele
 - Resumable uploads require a destination disk that supports hard links, such as **NTFS**. **FAT/exFAT disks are unsupported** and will be rejected before a new transfer starts. Choose a folder on NTFS; do not format a disk just for this feature.
 - On Windows, open **Приём файлов / Received files → Choose folder…** to select a destination, or **Reset to Downloads**. Changes affect the next upload, not the current one or its resumed transfer. An unavailable folder causes an error, not a silent save elsewhere. Existing files are not overwritten.
 - **Programs:** open **Программы / Applications → Add…** on Windows, choose a local EXE or LNK shortcut and name it. Tap **Refresh programs** on Android if needed. Upcoming Windows **1.0.6** and Android **1.16** (build **26**) send these program icons from the PC to the phone. If an icon is unknown or cannot be extracted, a generic program icon is shown; launching is unchanged. With an older version on either side, the list and launching remain available without the new icons.
-- **Wake-on-LAN:** enable it in the PC's BIOS/UEFI and network adapter settings if supported. Connect to the PC while it is on first, so the phone saves network details. A powered-off PC cannot answer discovery. Wired Ethernet is generally more reliable; sending a wake packet does not guarantee startup.
 - **Shutdown/restart:** save work first. You have 20 seconds to tap **Cancel command**. A lost response does not mean the command failed; avoid repeating it blindly.
+
+### Waking and shutting down the PC
+
+**Wake** on the phone sends a Wake-on-LAN packet. Success depends on the adapter, power, BIOS/UEFI and PC state; the app cannot guarantee startup.
+
+In upcoming Windows 1.0.6:
+
+1. While the PC is on, open **«Включение ПК»** (Wake PC). At startup, DroidBridge reads network-adapter settings without changing them. This check is not a wake test.
+2. Select your physical network adapter. **«Настроить Windows»** (Configure Windows) asks for explicit confirmation, followed by Windows administrator approval through UAC. It enables only the selected adapter's supported **WakeOnMagicPacket** setting; it cannot add unsupported hardware capabilities. You can decline. The adapter is not restarted automatically (**NoRestart**), so do not assume the change has already taken effect.
+3. If needed, open BIOS/UEFI yourself using the manufacturer's instructions. Look for **Wake-on-LAN**, **Power On by PCI-E / PCIe** or a similar option. **ErP / Deep Sleep** may remove adapter power after shutdown; consult your motherboard's manual before changing it. DroidBridge does not change BIOS automatically.
+4. A connected Ethernet cable is usually needed. Wi-Fi waking depends on the hardware and driver and is not universally supported. Connect the phone while the PC is on first, so it saves network details.
+5. Test waking manually at a convenient time: save your work, put the PC into the intended state yourself, then tap **Wake** on the phone. The app does not shut the PC down to test it. Waking from sleep does not prove that waking after a full shutdown will work.
+
+**100% means checks or configuration have completed, not verified packet delivery or guaranteed waking.** An already-powered-off PC cannot have its Windows or BIOS settings fixed by the app and cannot answer discovery. Waking on real hardware is not yet confirmed as tested.
 
 ## Cannot connect?
 

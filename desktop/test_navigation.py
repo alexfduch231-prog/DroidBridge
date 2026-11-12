@@ -180,9 +180,17 @@ class LauncherNavigationTests(unittest.TestCase):
                     (data / 'token.txt').write_text('test-token')
                     from types import SimpleNamespace
                     disposed = []
-                    def build_viewer(parent, address, port, token, audio=True):
-                        self.assertEqual((address, port, token), ('192.168.1.20', 8768, 'test-token'))
+                    automatic = []
+                    endpoints = []
+                    viewers = []
+                    def build_viewer(parent, address, port, token, audio=True, *, auto_control=False):
+                        automatic.append(auto_control)
+                        self.assertEqual(token, 'test-token')
+                        endpoints.append((address, port))
                         page = ttk.Frame(parent)
+                        import threading
+                        page.viewer = SimpleNamespace(stop=threading.Event())
+                        viewers.append(page)
                         ttk.Label(page, text='Embedded viewer active').pack()
                         def dispose():
                             disposed.append(True)
@@ -200,6 +208,23 @@ class LauncherNavigationTests(unittest.TestCase):
                     mirror.consume.return_value = SimpleNamespace(host='192.168.1.20', port=8768)
                     with patch('runtime.load_component', side_effect=load):
                         root.poll_mirror_requests()
+                    self.assertEqual(automatic, [True], 'phone handoff must enable one-shot control intent')
+                    with patch('runtime.load_component', side_effect=load):
+                        # A lost HTTP response can cause a duplicate before hello.
+                        root.poll_mirror_requests()
+                        self.assertEqual(endpoints, [('192.168.1.20', 8768)])
+                        self.assertEqual(disposed, [])
+                        viewers[0].viewer.authenticated = True
+                        root.poll_mirror_requests()
+                        self.assertEqual(disposed, [], 'healthy viewer must survive duplicate')
+                        mirror.consume.return_value = SimpleNamespace(host='192.168.1.21', port=8769)
+                        root.poll_mirror_requests()
+                        self.assertEqual(endpoints[-1], ('192.168.1.21', 8769))
+                        self.assertEqual(disposed, [True])
+                        viewers[-1].viewer.stop.set()
+                        root.poll_mirror_requests()
+                        self.assertEqual(len(endpoints), 3, 'stopped viewer may be replaced')
+                        self.assertEqual(disposed, [True, True])
                     mirror.consume.return_value = None
                     # File-system failures must not kill polling or strand callbacks.
                     for method in (mirror.heartbeat, mirror.consume):
@@ -215,7 +240,7 @@ class LauncherNavigationTests(unittest.TestCase):
                     self.assertTrue(any(isinstance(w, ttk.Label) and w.cget('text') == 'Embedded viewer active' for w in descendants(root)))
                     root.navigation.show_page('connection')
                     root.update()
-                    self.assertEqual(disposed, [True])
+                    self.assertEqual(disposed, [True, True, True])
                     next(w for w in descendants(root) if isinstance(w, ttk.Button) and w.cget('text') == 'Запустить сервер').invoke()
                     self.assertEqual(starts, [('server',)])
                     self.assertFalse(any(isinstance(w, tk.Toplevel) for w in descendants(root)))

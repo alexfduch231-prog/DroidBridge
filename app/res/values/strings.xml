@@ -79,7 +79,9 @@
     <string name="mirror_no_host">Сначала укажи IP-адрес ПК.</string>
     <string name="mirror_offline">Не удалось связаться с ПК: %1$s</string>
     <string name="mirror_client_failed">Клиент на ПК не открылся: %1$s</string>
-    <string name="mirror_started">Трансляция идёт. Экран и звук — в окне на ПК.</string>
+    <string name="mirror_started">Запускаю трансляцию. Статус подключения — в уведомлении.</string>
+    <string name="mirror_view_only">Пока доступен только просмотр. Для управления нажми «Разрешить управление телефоном с ПК» и включи службу вручную.</string>
+    <string name="mirror_pc_unreachable">ПК не открыл трансляцию. Проверь подключение и ключ; останови трансляцию и попробуй снова.</string>
     <string name="mirror_stopping">Останавливаю трансляцию…</string>
     <string name="mirror_notif_channel">Трансляция на ПК</string>
     <string name="mirror_notif_title">DroidBridge · трансляция</string>

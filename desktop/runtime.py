@@ -66,6 +66,9 @@ def run_component(component, arguments):
         def mirror(ip, port):
             return request_mirror(data, ip, port)
         module.start_mirror_client = mirror
+        # Embedded GUI sessions have no standalone PID. Always deliver the
+        # authenticated request, even if an old client.pid points to a live PID.
+        module.client_alive = lambda: False
     else:
         module.LOG_PATH = str(data / 'client.log')
         module.PID_PATH = str(data / 'client.pid')

@@ -103,6 +103,7 @@ class ViewerControlTests(unittest.TestCase):
         viewer.control_lock = threading.Lock()
         viewer.control_q = queue.Queue(maxsize=2)
         viewer.control_status_q = queue.Queue(maxsize=2)
+        viewer.auto_control_pending = False
         viewer.control_epoch = 0
         viewer.connection_epoch = 0
         viewer.authenticated = viewer.control_capable = viewer.control_enabled = True
@@ -151,6 +152,66 @@ class ViewerControlTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             v._on_hello(b'{"token":"wrong","control":true}')
         self.assertFalse(v.authenticated)
+
+    def handoff_viewer(self):
+        import queue
+        v = self.make_viewer()
+        v.authenticated = v.control_capable = v.control_enabled = False
+        v.auto_control_pending = True
+        v.token = "secret"
+        v.status_q = queue.Queue()
+        v.last_rendered = 0.0
+        return v
+
+    def test_phone_handoff_auto_control_waits_for_valid_hello_and_fresh_frame(self):
+        import time
+        v = self.handoff_viewer()
+        command = {"action": "global", "name": "back"}
+        self.assertFalse(v._queue_control(command))
+        with self.assertRaises(ValueError):
+            v._on_hello(b'{"token":"wrong","control":true}')
+        self.assertFalse(v.control_enabled)
+        v._on_hello(b'{"token":"secret","control":true}')
+        self.assertTrue(v.control_enabled)
+        self.assertFalse(v._queue_control(command))
+        v.last_rendered = time.monotonic()
+        self.assertTrue(v._queue_control(command))
+        v.last_rendered -= 2.0
+        self.assertFalse(v._queue_control(command))
+
+    def test_handoff_capability_must_be_boolean_and_intent_is_one_shot(self):
+        for capability in (False, "true", 1, None):
+            with self.subTest(capability=capability):
+                v = self.handoff_viewer()
+                v._on_hello(json.dumps({"token": "secret", "control": capability}).encode())
+                self.assertFalse(v.control_enabled)
+                v._on_hello(b'{"token":"secret","control":true}')
+                self.assertFalse(v.control_enabled)
+
+    def test_handoff_optout_and_reconnect_never_restore_control(self):
+        from unittest.mock import Mock
+        v = self.handoff_viewer()
+        v._on_hello(b'{"token":"secret","control":true}')
+        self.assertTrue(v.control_enabled)
+        v.control_var = Mock()
+        v.control_var.get.return_value = False
+        v._toggle_control()
+        self.assertFalse(v.control_enabled)
+        v._on_hello(b'{"token":"secret","control":true}')
+        self.assertFalse(v.control_enabled)
+        v._invalidate_connection(v.sock)
+        v.sock = object()
+        v._on_hello(b'{"token":"secret","control":true}')
+        self.assertFalse(v.control_enabled)
+
+    def test_stopped_handoff_cannot_accept_late_hello(self):
+        v = self.handoff_viewer()
+        v.stop.set()
+        v._invalidate_connection()
+        v._on_hello(b'{"token":"secret","control":true}')
+        self.assertFalse(v.authenticated)
+        self.assertFalse(v.control_enabled)
+        self.assertFalse(v.auto_control_pending)
 
     def test_serial_worker_drops_expired_command_before_fresh_one(self):
         import time

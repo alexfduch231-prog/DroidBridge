@@ -74,7 +74,9 @@
     <string name="mirror_no_host">Enter your PC IP address first.</string>
     <string name="mirror_offline">Cannot connect to PC: %1$s</string>
     <string name="mirror_client_failed">PC client did not open: %1$s</string>
-    <string name="mirror_started">Casting. Phone screen and audio are in the PC window.</string>
+    <string name="mirror_started">Starting cast. See the notification for connection status.</string>
+    <string name="mirror_view_only">View only for now. To control the phone, tap “Allow phone control from PC” and enable the service manually.</string>
+    <string name="mirror_pc_unreachable">PC did not open the cast. Check the connection and key; stop casting and try again.</string>
     <string name="mirror_stopping">Stopping cast…</string>
     <string name="mirror_notif_channel">Cast to PC</string>
     <string name="mirror_notif_title">DroidBridge · casting</string>

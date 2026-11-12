@@ -68,6 +68,7 @@ public class MirrorService extends Service {
     public static final String EXTRA_CODE = "result_code";
     public static final String EXTRA_DATA = "result_data";
     public static final String EXTRA_KEY = "key";
+    public static final String EXTRA_HOST = "host";
     public static final String EXTRA_PORT = "port";
 
     public static final int DEFAULT_PORT = 8768;
@@ -115,6 +116,9 @@ public class MirrorService extends Service {
     private Socket socket;
     private DataOutputStream out;
     private Thread netThread;
+    private Thread pcNotifyThread;
+    private final MirrorPcNotifier notifier = new MirrorPcNotifier();
+    private volatile boolean pcConnected;
     private Thread videoThread;
     private Thread audioThread;
     private String lastError;
@@ -133,25 +137,29 @@ public class MirrorService extends Service {
             stopSelf();
             return START_NOT_STICKY;
         }
+        // Ignore duplicate/null starts without tearing down a healthy projection.
+        if (running || stopped.get()) return START_NOT_STICKY;
         if (intent == null) {
             stopSelf();
             return START_NOT_STICKY;
         }
-
-        // A second start must not create a second authenticated reader/projection.
-        if (running || stopped.get()) return START_NOT_STICKY;
         startForegroundCompat(getString(R.string.mirror_notif_wait));
         running = true;
 
         int code = intent.getIntExtra(EXTRA_CODE, 0);
         Intent data = parcelable(intent);
         String key = intent.getStringExtra(EXTRA_KEY);
+        String host = intent.getStringExtra(EXTRA_HOST);
         int port = intent.getIntExtra(EXTRA_PORT, DEFAULT_PORT);
         if (data == null || key == null || key.isEmpty()) {
             fail(getString(R.string.mirror_no_key));
             return START_NOT_STICKY;
         }
-        Log.i(TAG, "старт: порт " + port + ", ключ " + (key.isEmpty() ? "нет" : "есть"));
+        if (host == null || host.isEmpty()) {
+            fail(getString(R.string.mirror_no_host));
+            return START_NOT_STICKY;
+        }
+        Log.i(TAG, "старт: порт " + port);
 
         MediaProjectionManager mgr = (MediaProjectionManager) getSystemService(MEDIA_PROJECTION_SERVICE);
         try {
@@ -173,7 +181,7 @@ public class MirrorService extends Service {
         }, new Handler(Looper.getMainLooper()));
 
         netThread = new Thread(new Runnable() {
-            public void run() { serve(key, port); }
+            public void run() { serve(key, port, host); }
         }, "mirror-net");
         netThread.start();
         return START_NOT_STICKY;
@@ -187,14 +195,37 @@ public class MirrorService extends Service {
 
     // ---------- сеть ----------
 
-    private void serve(String key, int port) {
+    private void startPcNotifier(final String host, final String key, final int port) {
+        pcNotifyThread = new Thread(new Runnable() {
+            public void run() {
+                boolean accepted = notifier.notifyPc(host, 8765, key, port, new MirrorPcNotifier.Alive() {
+                    public boolean isAlive() { return running && !stopped.get() && !pcConnected; }
+                });
+                // A lost HTTP response must never tear down an already authenticated viewer.
+                if (!accepted && running && !stopped.get() && !pcConnected) {
+                    Log.w(TAG, "PC cast request failed after bounded retries");
+                    MirrorService.this.notify(getString(R.string.mirror_pc_unreachable));
+                }
+            }
+        }, "mirror-pc-notify");
+        pcNotifyThread.start();
+    }
+
+    private void serve(String key, int port, String host) {
+        ServerSocket listener = null;
+        Socket accepted = null;
         try {
-            server = new ServerSocket();
-            server.setReuseAddress(true);
-            server.bind(new InetSocketAddress(port));
-            server.setSoTimeout(30000);
+            listener = new ServerSocket();
+            server = listener;
+            if (stopped.get() || !running) return;
+            listener.setReuseAddress(true);
+            listener.bind(new InetSocketAddress(port));
+            listener.setSoTimeout(30000);
+            if (stopped.get() || !running) return;
             notify(getString(R.string.mirror_notif_wait));
-            Socket s = server.accept();
+            startPcNotifier(host, key, port);
+            accepted = listener.accept();
+            Socket s = accepted;
             s.setTcpNoDelay(true);
             socket = s;
             s.setSoTimeout(10000); // Bound authentication, not idle viewing.
@@ -217,6 +248,9 @@ public class MirrorService extends Service {
             }
 
             if (stopped.get() || !running) return;
+            pcConnected = true;
+            notifier.cancel();
+            if (pcNotifyThread != null) pcNotifyThread.interrupt();
             android.view.Display physical = ((WindowManager) getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
             Point physicalSize = new Point();
             physical.getRealSize(physicalSize);
@@ -264,8 +298,15 @@ public class MirrorService extends Service {
             s.setSoTimeout(0);
             readControls(in);
         } catch (Exception e) {
-            lastError = e.getMessage();
-            fail(describe(e));
+            if (!stopped.get() && running) {
+                lastError = e.getMessage();
+                fail(describe(e));
+            }
+        } finally {
+            // cleanup() may run before this worker publishes either field. Local ownership
+            // closes late-created sockets even on an early stop/permission-revocation return.
+            try { if (accepted != null) accepted.close(); } catch (IOException ignored) { }
+            try { if (listener != null) listener.close(); } catch (IOException ignored) { }
         }
     }
 
@@ -523,6 +564,8 @@ public class MirrorService extends Service {
     private void cleanup() {
         stopped.set(true);
         running = false;
+        notifier.cancel();
+        if (pcNotifyThread != null) pcNotifyThread.interrupt();
         revokeControlSession();
         try {
             if (record != null) {

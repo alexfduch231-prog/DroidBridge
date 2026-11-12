@@ -158,7 +158,12 @@ class MirrorHandoffTests(unittest.TestCase):
         class Module:
             @staticmethod
             def main():
+                if Module.client_alive():
+                    return True, 'stale viewer pid skipped handoff'
                 return Module.start_mirror_client('192.168.1.3', 8768)
+            @staticmethod
+            def client_alive():
+                return True  # An unrelated/stale standalone viewer must not suppress GUI requests.
         self.gui.heartbeat()
         with patch.object(runtime, 'data_directory', return_value=self.data), patch.object(runtime, 'load_component', return_value=Module), patch.object(runtime, 'create_update_signal', return_value=None), patch.object(runtime, 'start_child') as spawn, patch.object(runtime.sys, 'argv', ['runtime']):
             self.assertEqual(runtime.run_component('server', []), (True, ''))

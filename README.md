@@ -27,9 +27,11 @@
 
 ## Одно основное окно
 
-В готовящемся 1.0.6 разделы **«Подключение»**, **«Экран телефона»**, **«Программы»**, **«Приём файлов»** и **«Настройки»** открываются внутри одного окна. Скачивание Android-приложения и сопряжение находятся в подключении; просмотр телефона — в своём разделе. Для просмотра телефона главное окно DroidBridge должно быть открыто: запрос с телефона направляется в него, а не запускает отдельное окно просмотра. Один сервер без основного окна может обслуживать команды, но не встроенный просмотр телефона. Системные запросы разрешений, выбор файлов и подтверждения по-прежнему могут открывать диалоги.
+В готовящемся 1.0.6 разделы **«Подключение»**, **«Экран телефона»**, **«Программы»**, **«Приём файлов»**, **«Включение ПК»** и **«Настройки»** открываются внутри одного окна. Скачивание Android-приложения и сопряжение находятся в подключении; просмотр телефона — в своём разделе. Для просмотра телефона оставь главное окно DroidBridge открытым и запусти сервер. На сопряжённом телефоне нажми **«Трансляция на ПК»** и подтверди системный запрос Android: экран откроется здесь без ручного ввода IP. Управление включится автоматически только при уже разрешённой службе специальных возможностей Android; приложение не выдаёт это разрешение за тебя. Ручное подключение по IP остаётся доступным. Один сервер без основного окна может обслуживать команды, но не встроенный просмотр телефона. Системные запросы разрешений, выбор файлов и подтверждения по-прежнему могут открывать диалоги.
 
 При уходе со страницы сопряжения временный QR перестаёт действовать: вернись в **«Подключение»** и создай новый. При уходе с просмотра телефона подключение просмотра закрывается. Сервер запускается только по твоей команде; его статус не доказывает доступность ПК с телефона.
+
+В разделе **«Включение ПК»** можно проверить настройки Wake-on-LAN. Проверка ничего не меняет; **«Настроить Windows»** запрашивает подтверждение и права администратора и включает только поддерживаемую настройку выбранной физической сетевой карты. BIOS/UEFI настраивается вручную. Даже **100%** не доказывает, что ПК проснётся: нужен отдельный ручной тест. [Подробности](docs/GETTING_STARTED.md#включение-и-выключение-пк).
 
 ## Обновления
 
@@ -87,9 +89,11 @@ The standard Windows installer **includes FFmpeg and ffplay and selects them aut
 
 ## One main window
 
-Upcoming 1.0.6 has **«Подключение»** (Connection), **«Экран телефона»** (Phone screen), **«Программы»** (Applications), **«Приём файлов»** (Received files) and **«Настройки»** (Settings) inside one main window. Android download and pairing belong to Connection; phone viewing has its own section. Keep the DroidBridge main window open for phone viewing: the phone's request is handed to it instead of launching a separate viewer. A server running alone can handle commands, but not embedded phone viewing. System permission prompts, file pickers and confirmations can still open dialogs. The sidebar currently uses Russian labels.
+Upcoming 1.0.6 has **«Подключение»** (Connection), **«Экран телефона»** (Phone screen), **«Программы»** (Applications), **«Приём файлов»** (Received files), **«Включение ПК»** (Wake PC) and **«Настройки»** (Settings) inside one main window. Android download and pairing belong to Connection; phone viewing has its own section. Keep the DroidBridge main window open and its server running. On the paired phone, tap **Cast phone to PC** and approve Android's system capture prompt: the screen opens here without typing an IP. Control enables automatically only if you have already enabled the Android Accessibility service; the app does not grant that permission for you. Manual IP connection remains available. A server running alone can handle commands, but not embedded phone viewing. System permission prompts, file pickers and confirmations can still open dialogs. The sidebar currently uses Russian labels.
 
 Leaving pairing invalidates its temporary QR: return to Connection and create a new one. Leaving phone viewing closes the viewer connection. The server starts only when you request it; its status does not establish network reachability.
+
+**«Включение ПК»** (Wake PC) checks Wake-on-LAN settings without changing them. **«Настроить Windows»** (Configure Windows) asks for confirmation and administrator approval and enables only the supported setting on the selected physical network adapter. Configure BIOS/UEFI manually. Even **100%** does not prove that waking works: test it manually. [Details](docs/GETTING_STARTED.md#waking-and-shutting-down-the-pc).
 
 ## Updates
 

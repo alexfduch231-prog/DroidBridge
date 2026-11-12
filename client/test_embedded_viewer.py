@@ -1,6 +1,8 @@
 """Real Tk lifecycle checks, with all external workers and connections blocked."""
 import ast
 import json
+import hmac
+from control_geometry import control_allowed, encode_control
 import os
 import queue
 import struct
@@ -25,6 +27,7 @@ def load_viewer():
              or (isinstance(node, ast.FunctionDef) and node.name == "build_viewer_page")]
     namespace = dict(tk=tk, threading=threading, queue=queue, socket=socket, time=time,
                      json=json, struct=struct, os=os, subprocess=subprocess,
+                     hmac=hmac, control_allowed=control_allowed, encode_control=encode_control,
                      CREATE_NO_WINDOW=0x08000000, TYPE_HELLO=0, OK="#187645",
                      MEDIA_TOOLS=SimpleNamespace(ffplay=None, ffmpeg=None),
                      BG=PALETTE["background"], PANEL=PALETTE["surface"],
@@ -70,6 +73,29 @@ class EmbeddedViewerTests(unittest.TestCase):
         page.pack(fill="both", expand=True)
         self.root.update()
         return page
+
+    def test_manual_page_does_not_auto_enable_after_capable_hello(self):
+        viewer = self.page().viewer
+        viewer._on_hello(b'{"token":"test-token","control":true}')
+        viewer._refresh_controls()
+        self.assertTrue(viewer.authenticated)
+        self.assertFalse(viewer.control_enabled)
+        self.assertFalse(viewer.control_var.get())
+
+    def test_handoff_checkbox_tracks_authenticated_auto_control_and_optout(self):
+        page = self.module.build_viewer_page(self.root, '127.0.0.1', 8768,
+                                             'test-token', audio=False, auto_control=True)
+        viewer = page.viewer
+        self.assertFalse(viewer.control_enabled)
+        viewer._on_hello(b'{"token":"test-token","control":true}')
+        viewer._refresh_controls()
+        self.assertTrue(viewer.control_var.get())
+        viewer.control_toggle.invoke()
+        self.assertFalse(viewer.control_enabled)
+        viewer._refresh_controls()
+        self.assertFalse(viewer.control_var.get())
+        page.dispose()
+        self.assertFalse(viewer.auto_control_pending)
 
     def test_embedding_keeps_single_shell_and_owns_only_frame(self):
         page = self.page()

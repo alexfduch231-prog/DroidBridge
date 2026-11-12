@@ -638,41 +638,20 @@ public class MainActivity extends Activity {
         final Intent grant = data;
         final String host = prefs.getString(K_HOST, DEF_HOST);
         final String key = prefs.getString(K_KEY, "");
+        if (host.isEmpty()) { log(getString(R.string.mirror_no_host)); return; }
+        if (key.isEmpty()) { log(getString(R.string.mirror_no_key)); return; }
         log(getString(R.string.mirror_starting));
-        new Thread(new Runnable() {
-            public void run() {
-                String reply;
-                boolean ok = false;
-                try {
-                    String url = "http://" + host + ":" + PORT + "/mirror?port="
-                            + MIRROR_PORT + "&key=" + urlEncode(key);
-                    reply = httpGet(url, new String[1]);
-                    ok = reply.contains("клиент");
-                } catch (Exception e) {
-                    reply = describe(e);
-                }
-                final boolean good = ok;
-                final String text = reply;
-                runOnUiThread(new Runnable() {
-                    public void run() {
-                        if (isFinishing()) return;
-                        if (!good) {
-                            log(getString(R.string.mirror_client_failed, text));
-                            return;
-                        }
-                        startMirrorService(code, grant, key);
-                    }
-                });
-            }
-        }).start();
+        if (!PhoneControlService.isAvailable()) log(getString(R.string.mirror_view_only));
+        startMirrorService(code, grant, key, host);
     }
 
-    private void startMirrorService(int code, Intent grant, String key) {
+    private void startMirrorService(int code, Intent grant, String key, String host) {
         Intent svc = new Intent(this, MirrorService.class)
                 .setAction(MirrorService.ACTION_START)
                 .putExtra(MirrorService.EXTRA_CODE, code)
                 .putExtra(MirrorService.EXTRA_DATA, grant)
                 .putExtra(MirrorService.EXTRA_KEY, key)
+                .putExtra(MirrorService.EXTRA_HOST, host)
                 .putExtra(MirrorService.EXTRA_PORT, MIRROR_PORT);
         if (Build.VERSION.SDK_INT >= 26) startForegroundService(svc);
         else startService(svc);

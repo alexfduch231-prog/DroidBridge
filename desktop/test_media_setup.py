@@ -1,4 +1,5 @@
 """Media discovery, opt-in validation and non-blocking local setup."""
+import gc
 import json
 import os
 from pathlib import Path
@@ -24,6 +25,14 @@ class MediaSetupTests(unittest.TestCase):
         self.addCleanup(temp.cleanup)
         self.root = Path(temp.name)
         self.data = self.root / 'data'
+        # Prior real-Tk tests can leave unreachable widget/Variable cycles.
+        # Collect them on the Tk owner thread, never in a validation worker.
+        gc.collect()
+        previous_gc = gc.isenabled()
+        gc.disable()
+        self.addCleanup(gc.collect)
+        if previous_gc:
+            self.addCleanup(gc.enable)
 
     def pair(self, name='FFmpeg с пробелами', nested=False):
         folder = self.root / name
@@ -156,14 +165,16 @@ class MediaSetupTests(unittest.TestCase):
                 self.assertNotEqual(seen, [owner])
             finally:
                 release.set()
-                worker.join(2)
+                worker.join(5)
+                self.assertFalse(worker.is_alive(), 'validation worker did not finish after release')
         self.assertEqual(results.get_nowait(), (True, 'saved'))
 
     def test_worker_failure_is_generic(self):
         results = queue.Queue()
         with patch.object(media_setup, 'save_media_directory', side_effect=OSError('secret')):
             worker = media_setup.start_media_setup(self.data, 'folder', results)
-            worker.join(2)
+            worker.join(5)
+            self.assertFalse(worker.is_alive(), 'validation failure worker did not finish')
         success, message = results.get_nowait()
         self.assertFalse(success)
         self.assertNotIn('secret', message)
@@ -258,13 +269,22 @@ class MediaSetupTests(unittest.TestCase):
                     choose.invoke()
                     start.assert_not_called()
         entered, release = threading.Event(), threading.Event()
+        workers = []
+        start = media_setup.start_media_setup
+
+        def track_worker(*args):
+            worker = start(*args)
+            workers.append(worker)
+            return worker
+
         def save(*args):
             entered.set()
             release.wait(3)
             return media_tools.MediaTools(None, None, 'path')
         with patch('tkinter.filedialog.askdirectory', return_value=str(self.root)):
             with patch('tkinter.messagebox.askyesno', return_value=True):
-                with patch.object(media_setup, 'save_media_directory', side_effect=save):
+                with patch.object(media_setup, 'save_media_directory', side_effect=save), \
+                     patch.object(media_setup, 'start_media_setup', side_effect=track_worker):
                     choose.invoke()
                     try:
                         self.assertTrue(entered.wait(1))
@@ -273,6 +293,9 @@ class MediaSetupTests(unittest.TestCase):
                         self.assertTrue(window.winfo_exists())
                     finally:
                         release.set()
+                        for worker in workers:
+                            worker.join(5)
+                            self.assertFalse(worker.is_alive(), 'UI validation worker did not finish')
                     deadline = time.monotonic() + 2
                     while str(choose.cget('state')) == 'disabled' and time.monotonic() < deadline:
                         root.update()
