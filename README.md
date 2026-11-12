@@ -4,8 +4,6 @@
 
 **[Windows и Android — скачать](https://github.com/alexfduch231-prog/DroidBridge/releases/latest)** · [English](#english)
 
-Windows **1.0.7** — одно основное окно с разделами слева. Android **1.16** (сборка **26**): вместе с Windows **1.0.7** он показывает значки программ из настроенных на ПК EXE и ярлыков LNK. Если значок получить не удалось или одна из сторон старой версии, останется обычный значок программы. Android **1.15** остаётся совместимым для прежних функций.
-
 ## Что можно делать
 
 - Смотреть экран ПК с телефона, нажимать, прокручивать и вводить текст.
@@ -64,8 +62,6 @@ DroidBridge сделан с помощью ИИ изначально для се
 Use your phone as a remote for your Windows PC, or view your phone on the computer. DroidBridge works on the same local network, without a cloud service.
 
 **[Windows and Android — download](https://github.com/alexfduch231-prog/DroidBridge/releases/latest)**
-
-Windows **1.0.7** has one main window with sidebar sections. Android **1.16** (build **26**), together with Windows **1.0.7**, shows program icons from the EXE files and LNK shortcuts configured on the PC. If an icon cannot be obtained or either side is older, a generic program icon remains. Android **1.15** remains compatible with existing features.
 
 ## What you can do
 
