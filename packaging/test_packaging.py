@@ -12,6 +12,55 @@ def load(name, path):
     return module
 
 class PackagingTests(unittest.TestCase):
+    def test_custom_icon_is_positive_allowlisted_and_hash_staged(self):
+        p = load('build_support_icon', ROOT / 'packaging' / 'build_support.py')
+        self.assertIn('assets/droidbridge.ico', p.SOURCE_FILES)
+        with tempfile.TemporaryDirectory() as tmp:
+            source, target = Path(tmp) / 'source', Path(tmp) / 'staged'
+            for relative in p.SOURCE_FILES:
+                file = source / relative
+                file.parent.mkdir(parents=True, exist_ok=True)
+                file.write_bytes(b'public fixture')
+            icon = source / 'assets/droidbridge.ico'
+            icon.write_bytes(b'\x00\x00\x01\x00custom icon')
+            (icon.parent / 'private.ico').write_bytes(b'private sentinel')
+            p.stage_sources(source, target)
+            self.assertEqual(p.inventory(target)['assets/droidbridge.ico'], p.inventory(source)['assets/droidbridge.ico'])
+            self.assertFalse((target / 'assets/private.ico').exists())
+
+    def test_build_passes_custom_icon_and_asset_to_freezer(self):
+        import sys
+        from unittest.mock import patch
+        sys.path.insert(0, str(ROOT / 'packaging'))
+        p = load('windows_icon_build_test', ROOT / 'packaging' / 'build_windows.py')
+        support = load('support_icon_build_test', ROOT / 'packaging' / 'build_support.py')
+        with tempfile.TemporaryDirectory() as tmp:
+            source, output = Path(tmp) / 'source', Path(tmp) / 'build'
+            for relative in support.SOURCE_FILES:
+                file = source / relative
+                file.parent.mkdir(parents=True, exist_ok=True)
+                file.write_text('# public fixture', encoding='utf-8')
+            arguments = ['build_windows.py', '--source', str(source), '--output', str(output)]
+            with patch.object(sys, 'argv', arguments), patch.object(sys, 'prefix', 'test-venv'):
+                with patch.object(p.subprocess, 'run', side_effect=RuntimeError('STOP freezer')) as run:
+                    with self.assertRaisesRegex(RuntimeError, 'STOP freezer'):
+                        p.main()
+            command = run.call_args.args[0]
+            self.assertIn('--icon', command)
+            self.assertEqual(command[command.index('--icon') + 1], str(output / 'source/assets/droidbridge.ico'))
+            import os
+            self.assertIn(str(output / 'source/assets/droidbridge.ico') + os.pathsep + 'assets', command)
+
+    def test_installer_command_uses_explicit_absolute_custom_icon(self):
+        import sys
+        sys.path.insert(0, str(ROOT / 'packaging'))
+        p = load('windows_icon_installer_test', ROOT / 'packaging' / 'build_windows.py')
+        icon = Path('stage/assets/droidbridge.ico')
+        command = p.installer_command(Path('ISCC.exe'), Path('payload'), Path('artifacts'), icon)
+        self.assertIn('/DIconFile=' + str(icon.resolve()), command)
+        recipe = (ROOT / 'packaging/installer.iss').read_text(encoding='utf-8')
+        self.assertIn('SetupIconFile={#IconFile}', recipe)
+
     def test_shared_desktop_theme_is_in_frozen_sources(self):
         support = load('build_support_theme', ROOT / 'packaging' / 'build_support.py')
         self.assertIn('desktop/theme.py', support.SOURCE_FILES)
@@ -85,7 +134,7 @@ class PackagingTests(unittest.TestCase):
         p = load('build_support', ROOT / 'packaging' / 'build_support.py')
         modules = {'desktop/update_protocol.py', 'desktop/update_manager.py', 'desktop/update_helper.py'}
         self.assertTrue(modules <= set(p.SOURCE_FILES))
-        self.assertEqual(len(p.SOURCE_FILES), 22)
+        self.assertEqual(len(p.SOURCE_FILES), 23)
         with tempfile.TemporaryDirectory() as tmp:
             source, target = Path(tmp) / 'source', Path(tmp) / 'staged'
             for relative in p.SOURCE_FILES:

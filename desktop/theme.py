@@ -4,7 +4,9 @@ apply_theme only changes appearance. It never owns window geometry, bindings,
 application state, or lifecycle. Native Tk cannot reproduce Android's rounded
 Material cards; white surfaces and spacing provide the same visual hierarchy.
 """
-from tkinter import font, ttk
+from pathlib import Path
+import sys
+from tkinter import TclError, font, ttk
 
 PALETTE = {
     'primary': '#1A63E7', 'background': '#F1F3F8', 'surface': '#FFFFFF',
@@ -20,6 +22,13 @@ def apply_theme(window) -> None:
     family = 'Segoe UI' if 'Segoe UI' in font.families(window) else font.nametofont('TkDefaultFont', root=window).actual('family')
     p = PALETTE
     window.configure(background=p['background'])
+    asset_root = Path(getattr(sys, '_MEIPASS', Path(__file__).resolve().parents[1]))
+    try:
+        window.iconbitmap(str(asset_root / 'assets' / 'droidbridge.ico'))
+    except TclError:
+        # Source checkouts may not contain the asset yet; non-Windows Tk may
+        # reject ICO. Neither case should prevent the actual window opening.
+        pass
     style.configure('.', font=(family, 10), background=p['surface'],
                     foreground=p['text'], bordercolor=p['line'],
                     lightcolor=p['surface'], darkcolor=p['line'],

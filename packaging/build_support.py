@@ -4,6 +4,7 @@ import hashlib
 import shutil
 
 SOURCE_FILES = (
+    'assets/droidbridge.ico',
     'desktop/launcher.py', 'desktop/runtime.py', 'desktop/theme.py',
     'desktop/pairing_panel.py', 'desktop/apps_panel.py',
     'desktop/upload_panel.py', 'listener/upload_settings.py',

@@ -37,6 +37,31 @@ class ThemeTests(unittest.TestCase):
         theme.apply_theme(window)
         self.assertEqual(window.cget('background').lower(), '#f1f3f8')
 
+    def test_window_icon_uses_source_or_frozen_assets_for_roots_and_dialogs(self):
+        theme = importlib.import_module('desktop.theme')
+        root = tk.Tk()
+        self.addCleanup(root.destroy)
+        window = tk.Toplevel(root)
+        source_icon = Path(theme.__file__).resolve().parents[1] / 'assets' / 'droidbridge.ico'
+        for target in (root, window):
+            with self.subTest(window=type(target).__name__), patch.object(target, 'iconbitmap') as assigned:
+                theme.apply_theme(target)
+                assigned.assert_called_once_with(str(source_icon))
+        with tempfile.TemporaryDirectory() as bundled:
+            with patch.object(sys, '_MEIPASS', bundled, create=True), \
+                 patch.object(window, 'iconbitmap') as assigned:
+                theme.apply_theme(window)
+                assigned.assert_called_once_with(str(Path(bundled) / 'assets' / 'droidbridge.ico'))
+
+    def test_missing_or_unsupported_icon_does_not_break_window_styling(self):
+        theme = importlib.import_module('desktop.theme')
+        root = tk.Tk()
+        self.addCleanup(root.destroy)
+        with patch.object(root, 'iconbitmap', side_effect=tk.TclError('missing or unsupported icon')):
+            theme.apply_theme(root)
+        self.assertEqual(root.cget('background').lower(), '#f1f3f8')
+        self.assertEqual(ttk.Style(root).theme_use(), 'clam')
+
     def test_launcher_cards_resize_and_scroll_without_starting_network_or_children(self):
         # Fixed minimum sizing or an unscrollable body would hide actions at 800x600.
         desktop_path = str(Path(__file__).resolve().parent)

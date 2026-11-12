@@ -1,6 +1,9 @@
 #ifndef PayloadDir
   #error PayloadDir must be supplied by build_windows.py
 #endif
+#ifndef IconFile
+  #error IconFile must be supplied by build_windows.py
+#endif
 #ifndef ArtifactDir
   #error ArtifactDir must be supplied by build_windows.py
 #endif
@@ -20,6 +23,7 @@ OutputBaseFilename=DroidBridge-1.0.5-windows-x64-setup
 Compression=lzma2/normal
 SolidCompression=yes
 WizardStyle=modern
+SetupIconFile={#IconFile}
 DisableProgramGroupPage=yes
 UninstallDisplayIcon={app}\DroidBridge.exe
 CloseApplications=no

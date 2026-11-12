@@ -15,6 +15,12 @@ from build_support import stage_sources, inventory
 from media_bundle import stage_media_bundle, validate_media_bundle
 
 
+def installer_command(iscc: Path, payload: Path, artifacts: Path, icon: Path) -> list[str]:
+    return [str(iscc.resolve()), '/DPayloadDir=' + str(payload.resolve()),
+            '/DArtifactDir=' + str(artifacts.resolve()), '/DIconFile=' + str(icon.resolve()),
+            str(Path(__file__).with_name('installer.iss'))]
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--source', type=Path, default=Path(__file__).resolve().parents[1])
@@ -32,8 +38,10 @@ def main():
     media_proof = validate_media_bundle(media_root) if media_root else None
     stage = output / 'source'
     stage_sources(args.source.resolve(), stage)
+    icon = stage / 'assets' / 'droidbridge.ico'
     command = [sys.executable, '-m', 'PyInstaller', '--noconfirm', '--clean', '--onedir', '--windowed',
-               '--noupx', '--name', 'DroidBridge', '--distpath', str(output / 'dist'),
+               '--noupx', '--name', 'DroidBridge', '--icon', str(icon),
+               '--add-data', str(icon) + os.pathsep + 'assets', '--distpath', str(output / 'dist'),
                '--workpath', str(output / 'work'), '--specpath', str(output),
                '--paths', str(stage), '--paths', str(stage / 'desktop'), '--paths', str(stage / 'listener'),
                '--paths', str(stage / 'client')]
@@ -117,8 +125,7 @@ def main():
         artifacts = output / 'artifacts'
         artifacts.mkdir()
         with (output / 'installer.log').open('w', encoding='utf-8') as log:
-            subprocess.run([str(args.iscc.resolve()), '/DPayloadDir=' + str(payload), '/DArtifactDir=' + str(artifacts),
-                            str(Path(__file__).with_name('installer.iss'))], check=True,
+            subprocess.run(installer_command(args.iscc, payload, artifacts, icon), check=True,
                            stdout=log, stderr=subprocess.STDOUT)
         (artifacts / 'SHA256SUMS.json').write_text(json.dumps(inventory(artifacts), indent=2), encoding='utf-8')
     print(output)
