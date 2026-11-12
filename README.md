@@ -4,7 +4,7 @@
 
 **[Windows и Android — релиз 1.0.4](https://github.com/alexfduch231-prog/DroidBridge/releases/tag/v1.0.4)** · [English](#english)
 
-Версия 1.0.4 включает Windows-установщик со встроенными FFmpeg и ffplay и Android-приложение 1.15. Обновление Windows поверх прежней установки проверено: настройки сохранены, сервер и комплектные инструменты запускаются. Новые сценарии на реальном телефоне пока не проверены. В предыдущих slim-установщиках инструменты видео и звука нужно было выбирать отдельно.
+Версия 1.0.4 включает Windows-установщик со встроенными FFmpeg и ffplay и Android-приложение 1.15. Новые сценарии на реальном телефоне пока не проверены. В предыдущих slim-установщиках инструменты видео и звука нужно было выбирать отдельно.
 
 ## Что можно делать
 
@@ -56,7 +56,7 @@ Use your phone as a remote for your Windows PC, or view your phone on the comput
 
 **[Windows and Android — release 1.0.4](https://github.com/alexfduch231-prog/DroidBridge/releases/tag/v1.0.4)**
 
-Version 1.0.4 includes the Windows installer with bundled FFmpeg/ffplay and Android app 1.15. An in-place Windows upgrade was verified: settings were preserved, and the server and bundled tools run. New scenarios have not yet been tested on a real phone. Earlier slim installers required a separate media-tool selection.
+Version 1.0.4 includes the Windows installer with bundled FFmpeg/ffplay and Android app 1.15. New scenarios have not yet been tested on a real phone. Earlier slim installers required a separate media-tool selection.
 
 ## What you can do
 

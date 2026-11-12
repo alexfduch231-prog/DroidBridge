@@ -17,7 +17,7 @@ Windows **1.0.4**, Android **1.15**. Ниже — изменения выпус�
 
 ### Ограничения и проверка
 
-- Исходники зафиксированы после автоматических проверок: listener — 112 тестов, desktop — 77, packaging — 38, Android — 16, client — 16; все прошли. APK **1.15** собран с прежней подписью приложения. Проверено обновление установленного Windows-приложения до 1.0.4: настройки сохранились без изменений, сервер ответил на авторизованный запрос, комплектные FFmpeg/ffplay запустились и обнаружились без внешнего PATH или ручной настройки. Новые сценарии на реальном телефоне пока не проверены.
+- Исходники зафиксированы после автоматических проверок: listener — 112 тестов, desktop — 77, packaging — 38, Android — 16, client — 16; все прошли. APK **1.15** собран с прежней подписью приложения. Новые сценарии на реальном телефоне пока не проверены.
 - Медиакомплект проверен синтетическим кодированием **8 кадров через NVIDIA NVENC** и запуском ffplay с тестовым аудиовыходом. Это не проверка изображения и звука на реальном телефоне или совместимости со всеми устройствами. Телефон недоступен через ADB, поэтому новые сценарии на нём не заявлены как проверенные.
 - H.264 экрана ПК сейчас использует NVIDIA NVENC: нужны поддерживаемая видеокарта NVIDIA и подходящий драйвер. Комплектный FFmpeg не гарантирует поддержку каждого Windows-ПК.
 - Продолжение передачи требует папки приёма на NTFS или другом диске с поддержкой жёстких ссылок. FAT/exFAT не поддерживаются: новая передача отклоняется заранее с понятной ошибкой, нужно выбрать другую папку.
@@ -45,7 +45,7 @@ Windows **1.0.4**, Android **1.15**. These are release changes and verified scen
 
 ### Limitations and verification
 
-- Sources were frozen after automated checks: listener — 112 tests, desktop — 77, packaging — 38, Android — 16, client — 16; all passed. APK **1.15** was built with the existing app signing identity. An installed Windows app was upgraded to 1.0.4: settings remained byte-identical, the server answered an authenticated request, and bundled FFmpeg/ffplay ran and were discovered without external PATH entries or a manual override. New scenarios on a real phone have not yet been tested.
+- Sources were frozen after automated checks: listener — 112 tests, desktop — 77, packaging — 38, Android — 16, client — 16; all passed. APK **1.15** was built with the existing app signing identity. New scenarios on a real phone have not yet been tested.
 - Media checks encoded **8 synthetic frames through NVIDIA NVENC** and ran ffplay with a dummy audio output. These do not verify real-phone video/audio or universal compatibility. The phone is unavailable over ADB, so new scenarios on it are not claimed as tested.
 - PC-screen H.264 currently uses NVIDIA NVENC, requiring a supported NVIDIA GPU and driver. Bundled FFmpeg does not ensure compatibility with every Windows PC.
 - Resumable uploads require a destination on NTFS or another hard-link-capable disk. FAT/exFAT is unsupported: new transfers are rejected early with an explanation; choose another folder.

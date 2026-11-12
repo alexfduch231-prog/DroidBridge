@@ -8,7 +8,7 @@
 
 DroidBridge не подключается через облако. Основные команды, видео и файлы передаются без транспортного шифрования. Используй приложение только на своих устройствах или с согласия владельца и **не пробрасывай порты роутера в Интернет**.
 
-Эта инструкция описывает Windows-установщик **1.0.4** со встроенными FFmpeg и ffplay и Android **1.15**. Обновление Windows с сохранением настроек проверено; новые сценарии на реальном телефоне пока не проверены. У прежних slim-установщиков медиакомплект отсутствует.
+Эта инструкция описывает Windows-установщик **1.0.4** со встроенными FFmpeg и ffplay и Android **1.15**. Новые сценарии на реальном телефоне пока не проверены. У прежних slim-установщиков медиакомплект отсутствует.
 
 ## 1. Установи приложения
 
@@ -58,7 +58,7 @@ H.264 экрана ПК сейчас использует **NVIDIA NVENC**: ну
 
 ## Обновления
 
-**Функция включена в 1.0.4.** Установка обновления Windows с сохранением настроек проверена. Обновление на реальном телефоне пока не проверено. Первую версию с проверкой обновлений установи вручную со страницы релиза поверх текущей; старое приложение само эту возможность не получит. Не удаляй приложение ради обновления: удаление может стереть настройки.
+**Функция включена в 1.0.4.** Обновление на реальном телефоне пока не проверено. Первую версию с проверкой обновлений установи вручную со страницы релиза поверх текущей; старое приложение само эту возможность не получит. Не удаляй приложение ради обновления: удаление может стереть настройки.
 
 - При запуске Windows- и Android-приложение проверят наличие новой версии через Интернет. Для этого используется фиксированный публичный адрес со списком версий и цифровой подписью; учётная запись, личный ключ или настройка сервера тебе не нужны. Это отдельная проверка обновлений, не облачный канал управления устройствами.
 - Если есть новая версия, появятся **«Позже»** и **«Обновить»**. **«Позже»** оставляет текущую версию. Если Интернет недоступен или проверка не удалась, обновление не устанавливается; можно продолжить работу и попробовать позже.
@@ -115,7 +115,7 @@ H.264 экрана ПК сейчас использует **NVIDIA NVENC**: ну
 
 [README](../README.md#english) · [Download Windows and Android](https://github.com/alexfduch231-prog/DroidBridge/releases/tag/v1.0.4)
 
-This guide describes the Windows **1.0.4** installer with bundled FFmpeg/ffplay and Android **1.15**. A Windows upgrade preserving settings was verified; new scenarios on a real phone have not yet been tested. Earlier slim installers do not contain the media bundle.
+This guide describes the Windows **1.0.4** installer with bundled FFmpeg/ffplay and Android **1.15**. New scenarios on a real phone have not yet been tested. Earlier slim installers do not contain the media bundle.
 
 ## Before installing
 
@@ -161,7 +161,7 @@ Bundled-component licenses and corresponding sources belong in distribution prep
 
 ## Updates
 
-**This feature is included in 1.0.4.** Installing the Windows upgrade while preserving settings was verified. Updating on a real phone has not yet been tested. Install the first updater-capable version manually from the release page over your current installation; an older app cannot acquire the feature by itself. Do not uninstall just to update: uninstalling may erase settings.
+**This feature is included in 1.0.4.** Updating on a real phone has not yet been tested. Install the first updater-capable version manually from the release page over your current installation; an older app cannot acquire the feature by itself. Do not uninstall just to update: uninstalling may erase settings.
 
 - At startup, both Windows and Android will check for a newer version over the Internet using a fixed public, digitally signed release list. You do not need an account, personal key or server setup. This update check is separate from device control; it is not a cloud relay.
 - If an update exists, choose **Later** or **Update**. **Later** keeps the current version. If the Internet is unavailable or verification fails, no update is installed; you can keep using the app and retry later.
