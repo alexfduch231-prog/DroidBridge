@@ -104,6 +104,16 @@ public class MainActivity extends Activity {
     private volatile HttpURLConnection appsConnection;
     private volatile Thread appsThread;
     private boolean appsLoaded;
+    private AppIconClient appIconClient;
+    private Thread appIconThread;
+    // Activity-private, pairing/catalog-scoped memory only; never persisted or exported.
+    private final android.util.LruCache<String, android.graphics.Bitmap> appIcons =
+            new android.util.LruCache<String, android.graphics.Bitmap>(2 * 1024 * 1024) {
+                protected int sizeOf(String id, android.graphics.Bitmap bitmap) {
+                    return bitmap.getByteCount();
+                }
+            };
+    private final java.util.Map<String, ImageView> iconViews = new java.util.HashMap<String, ImageView>();
 
     // Быстрые команды: ключ совпадает с action/маршрутом на слушателе.
     private static final String[] ACT_KEYS = {
@@ -473,6 +483,7 @@ public class MainActivity extends Activity {
         if (startupUpdate != null) startupUpdate.onPause();
         discoveryResumed = false;
         appsGeneration++;
+        cancelAppIcons();
         HttpURLConnection catalogConnection=appsConnection;if(catalogConnection!=null)catalogConnection.disconnect();
         Thread catalogThread=appsThread;if(catalogThread!=null)catalogThread.interrupt();
         discoveryGeneration++;
@@ -838,6 +849,8 @@ public class MainActivity extends Activity {
     private void loadApps() {
         final String host=prefs.getString(K_HOST,DEF_HOST),key=prefs.getString(K_KEY,"");
         final int generation=++appsGeneration;
+        cancelAppIcons();
+        appIcons.evictAll();
         HttpURLConnection previous=appsConnection;if(previous!=null)previous.disconnect();
         Thread previousThread=appsThread;if(previousThread!=null)previousThread.interrupt();
         remoteApps.clear();appsLoaded=false;buildAppTiles();
@@ -872,13 +885,58 @@ public class MainActivity extends Activity {
             }catch(Exception ignored){}finally{if(connection!=null)connection.disconnect();if(appsConnection==connection)appsConnection=null;}
             final boolean loaded=success;
             runOnUiThread(new Runnable(){public void run(){if(!discoveryResumed || isFinishing() || generation!=appsGeneration || !host.equals(prefs.getString(K_HOST,"")) || !key.equals(prefs.getString(K_KEY,"")))return;
-                remoteApps.clear();if(loaded)remoteApps.addAll(found);appsLoaded=loaded;buildAppTiles();}});
+                remoteApps.clear();if(loaded)remoteApps.addAll(found);appsLoaded=loaded;buildAppTiles();
+                if(loaded)startAppIcons(host,key,generation,new ArrayList<RemoteApp>(found));}});
         }},"pc-app-catalog");appsThread.start();
+    }
+
+    private void cancelAppIcons() {
+        if(appIconClient!=null)appIconClient.cancel();
+        appIconClient=null;
+        if(appIconThread!=null)appIconThread.interrupt();
+        appIconThread=null;
+    }
+
+    private void startAppIcons(final String host,final String key,final int generation,final List<RemoteApp> catalog) {
+        final AppIconClient client=new AppIconClient();
+        appIconClient=client;
+        appIconThread=new Thread(new Runnable(){public void run(){
+            // Exactly one request/decode at a time, at most the validated 100 catalog entries.
+            for(final RemoteApp app:catalog){
+                if(Thread.currentThread().isInterrupted())return;
+                byte[] bytes=client.fetch(host,key,app.id);
+                if(Thread.currentThread().isInterrupted())return;
+                final android.graphics.Bitmap bitmap=AppIconBitmap.decode(bytes);
+                if(bitmap==null)continue;
+                runOnUiThread(new Runnable(){public void run(){
+                    if(!discoveryResumed || isFinishing() || generation!=appsGeneration || appIconClient!=client
+                            || !host.equals(prefs.getString(K_HOST,"")) || !key.equals(prefs.getString(K_KEY,""))) {
+                        bitmap.recycle();return;
+                    }
+                    ImageView icon=iconViews.get(app.id);
+                    if(icon==null || icon.getTag()!=app){bitmap.recycle();return;}
+                    appIcons.put(app.id,bitmap);
+                    showAppIcon(icon,bitmap);
+                }});
+            }
+        }},"pc-app-icons");
+        appIconThread.start();
+    }
+
+    private void showAppIcon(ImageView icon,android.graphics.Bitmap bitmap) {
+        icon.setScaleType(ImageView.ScaleType.FIT_CENTER);
+        if(bitmap==null){
+            icon.setImageResource(R.drawable.ic_program);
+            icon.setColorFilter(getResources().getColor(R.color.primary));
+        }else{
+            icon.clearColorFilter();
+            icon.setImageBitmap(bitmap);
+        }
     }
 
     private void buildAppTiles() {
         LinearLayout grid=(LinearLayout)findViewById(R.id.apps_grid);if(grid==null)return;
-        grid.removeAllViews();appTiles.clear();
+        grid.removeAllViews();appTiles.clear();iconViews.clear();
         if(remoteApps.isEmpty()){
             TextView empty=new TextView(this);empty.setText(appsLoaded?R.string.apps_empty:R.string.apps_unavailable);grid.addView(empty);
             Button refresh=new Button(this);refresh.setText(R.string.apps_refresh);refresh.setOnClickListener(new View.OnClickListener(){public void onClick(View v){loadApps();}});grid.addView(refresh);return;
@@ -896,7 +954,8 @@ public class MainActivity extends Activity {
     private void addTile(LinearLayout row,final RemoteApp app,boolean left,int gap){
         View tile=getLayoutInflater().inflate(R.layout.tile_app,row,false);
         LinearLayout.LayoutParams lp=new LinearLayout.LayoutParams(0,-2,1f);lp.setMargins(left?0:gap,0,left?gap:0,0);tile.setLayoutParams(lp);
-        ImageView icon=(ImageView)tile.findViewById(R.id.tile_icon);icon.setImageResource(R.drawable.ic_program);icon.setColorFilter(getResources().getColor(R.color.primary));
+        ImageView icon=(ImageView)tile.findViewById(R.id.tile_icon);
+        icon.setTag(app);iconViews.put(app.id,icon);showAppIcon(icon,appIcons.get(app.id));
         ((TextView)tile.findViewById(R.id.tile_label)).setText(app.name);
         tile.setOnClickListener(new View.OnClickListener(){public void onClick(View v){log(getString(R.string.launch_fmt,app.name));sendRequest("/app?id="+urlEncode(app.id),"app");}});
         if(app.canClose)tile.setOnLongClickListener(new View.OnLongClickListener(){public boolean onLongClick(View v){confirmClose(app);return true;}});

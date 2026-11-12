@@ -7,14 +7,16 @@
 - Основные действия Windows перенесены в одно основное окно с разделами слева: **«Подключение»**, **«Экран телефона»**, **«Программы»**, **«Приём файлов»** и **«Настройки»**. Выбор файлов, подтверждения и системные запросы могут оставаться диалогами.
 - QR скачивания Android-приложения и сопряжение находятся внутри **«Подключение»**. При уходе со страницы сопряжения временное подключение закрывается и QR перестаёт действовать; для повтора нужно создать новый.
 - Просмотр телефона встраивается в раздел **«Экран телефона»**. Запрос трансляции с телефона направляется в уже открытое основное окно вместо запуска отдельного просмотра. Если окно закрыто, нужно открыть DroidBridge и повторить запрос. При переходе в другой раздел подключение просмотра закрывается; остановка трансляции на Android по-прежнему выполняется на телефоне.
-- Инструкции RU/EN обновлены под разделы единого окна. Совместимое Android-приложение — **1.15**. Новые сценарии на реальном телефоне пока не заявлены как проверенные.
+- В готовящемся Android **1.16** (сборка **26**) кнопки программ показывают значки выбранных на ПК EXE или ярлыков LNK. Нужен Windows **1.0.6**; если значок недоступен или одна из сторон старой версии, используется обычный значок программы.
+- Инструкции RU/EN обновлены под разделы единого окна. Android **1.15** остаётся совместимым для прежних функций. Новые сценарии на реальном телефоне пока не заявлены как проверенные.
 
 Upcoming release, not published yet. These instructions describe the new interface; use the [release page](https://github.com/alexfduch231-prog/DroidBridge/releases/latest) for the latest available build.
 
 - Windows tasks move into one main window with sidebar sections: **«Подключение»** (Connection), **«Экран телефона»** (Phone screen), **«Программы»** (Applications), **«Приём файлов»** (Received files) and **«Настройки»** (Settings). File pickers, confirmations and system prompts can remain dialogs.
 - The Android download QR and pairing are inside Connection. Leaving pairing closes its temporary session and invalidates the QR; create a new one to retry.
 - Phone viewing is being embedded in Phone screen. Casting requests are handed to the already-open main window instead of launching a separate viewer. If it is closed, open DroidBridge and retry. Navigating away closes the viewer connection; stopping Android casting still happens on the phone.
-- RU/EN instructions now follow the single-window sections. Android **1.15** remains compatible. New scenarios on a real phone are not claimed as verified.
+- Upcoming Android **1.16** (build **26**) shows program icons from the EXE files or LNK shortcuts selected on the PC. This requires Windows **1.0.6**; unavailable icons or an older app on either side use a generic program icon.
+- RU/EN instructions now follow the single-window sections. Android **1.15** remains compatible with existing features. New scenarios on a real phone are not claimed as verified.
 
 ## 1.0.5 — 2026-11-12
 

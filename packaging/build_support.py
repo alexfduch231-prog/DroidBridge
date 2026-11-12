@@ -11,7 +11,7 @@ SOURCE_FILES = (
     'desktop/media_setup.py', 'listener/media_tools.py',
     'desktop/android_setup.py',
     'desktop/update_protocol.py', 'desktop/update_manager.py', 'desktop/update_helper.py',
-    'listener/pairing.py', 'listener/app_catalog.py',
+    'listener/pairing.py', 'listener/app_catalog.py', 'listener/app_icons.py',
     'listener/pc-listener.py', 'listener/file_upload.py', 'listener/resumable_upload.py',
     'listener/remote_input.py', 'listener/lan_discovery.py',
     'client/pc-viewer.pyw', 'client/control_geometry.py',

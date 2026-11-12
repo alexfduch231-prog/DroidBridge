@@ -500,7 +500,11 @@ class Handler(http.server.BaseHTTPRequestHandler):
                                "или /app?id=... с ?key=...")
                 return
 
-            if not self.authed(query):
+            icon_bearer = (cmd == "app-icon" and bool(self.server.token)
+                           and hmac.compare_digest(
+                               self.headers.get("Authorization", "").encode("utf-8"),
+                               ("Bearer " + self.server.token).encode("utf-8")))
+            if not (icon_bearer or self.authed(query)):
                 log("ОТКАЗ: %s запросил /%s без правильного ключа" % (who, cmd))
                 self.send(403, "ключ не подошёл")
                 return
@@ -579,6 +583,16 @@ class Handler(http.server.BaseHTTPRequestHandler):
                 else:
                     log("ОТМЕНА не сработала: rc=%d %s" % (rc, err))
                     self.send(400, "отменять нечего: %s" % (err or ("rc=%d" % rc)))
+                return
+
+            if cmd == "app-icon":
+                from app_icons import get_icon
+                ids = query.get("id") or []
+                data = get_icon(APPS_FILE, ids[0]) if len(ids) == 1 else None
+                if data is None:
+                    self.send(404, "Icon unavailable")
+                else:
+                    self.send_bytes(200, "image/png", data)
                 return
 
             if cmd == "apps":

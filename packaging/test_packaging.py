@@ -12,6 +12,10 @@ def load(name, path):
     return module
 
 class PackagingTests(unittest.TestCase):
+    def test_catalog_icon_extractor_is_frozen(self):
+        support = load('app_icons_support', ROOT / 'packaging' / 'build_support.py')
+        self.assertIn('listener/app_icons.py', support.SOURCE_FILES)
+
     def test_mirror_handoff_is_frozen(self):
         support = load('mirror_handoff_support', ROOT / 'packaging' / 'build_support.py')
         self.assertIn('desktop/mirror_handoff.py', support.SOURCE_FILES)
@@ -142,7 +146,7 @@ class PackagingTests(unittest.TestCase):
         p = load('build_support', ROOT / 'packaging' / 'build_support.py')
         modules = {'desktop/update_protocol.py', 'desktop/update_manager.py', 'desktop/update_helper.py'}
         self.assertTrue(modules <= set(p.SOURCE_FILES))
-        self.assertEqual(len(p.SOURCE_FILES), 25)
+        self.assertEqual(len(p.SOURCE_FILES), 26)
         with tempfile.TemporaryDirectory() as tmp:
             source, target = Path(tmp) / 'source', Path(tmp) / 'staged'
             for relative in p.SOURCE_FILES:

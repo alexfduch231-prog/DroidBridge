@@ -4,7 +4,7 @@
 
 **[Windows и Android — скачать](https://github.com/alexfduch231-prog/DroidBridge/releases/latest)** · [English](#english)
 
-Здесь описывается готовящийся Windows-интерфейс **1.0.6**: одно основное окно с разделами слева. Пока выпуск не опубликован, ссылка выше ведёт на последнюю доступную версию; её интерфейс может отличаться. Совместимая версия Android — **1.15**. Проверка новых сценариев на реальном телефоне пока не подтверждена.
+Здесь описывается готовящийся Windows-интерфейс **1.0.6**: одно основное окно с разделами слева. Пока выпуск не опубликован, ссылка выше ведёт на последнюю доступную версию; её интерфейс может отличаться. Готовится Android **1.16** (сборка **26**): вместе с Windows **1.0.6** он показывает значки программ из настроенных на ПК EXE и ярлыков LNK. Если значок получить не удалось или одна из сторон старой версии, останется обычный значок программы. Android **1.15** остаётся совместимым для прежних функций. Проверка новых сценариев на реальном телефоне пока не подтверждена.
 
 ## Что можно делать
 
@@ -64,7 +64,7 @@ Use your phone as a remote for your Windows PC, or view your phone on the comput
 
 **[Windows and Android — download](https://github.com/alexfduch231-prog/DroidBridge/releases/latest)**
 
-This page describes the upcoming Windows **1.0.6** interface: one main window with sidebar sections. Until it is published, the link above opens the latest available release, whose interface may differ. Android **1.15** remains compatible. Verification of new scenarios on a real phone is not yet confirmed.
+This page describes the upcoming Windows **1.0.6** interface: one main window with sidebar sections. Until it is published, the link above opens the latest available release, whose interface may differ. Upcoming Android **1.16** (build **26**), together with Windows **1.0.6**, shows program icons from the EXE files and LNK shortcuts configured on the PC. If an icon cannot be obtained or either side is older, a generic program icon remains. Android **1.15** remains compatible with existing features. Verification of new scenarios on a real phone is not yet confirmed.
 
 ## What you can do
 
