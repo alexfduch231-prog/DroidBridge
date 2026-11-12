@@ -1,5 +1,11 @@
 # DroidBridge
 
+## Скачать / Download
+
+**[Скачать готовые приложения для Windows и Android →](https://github.com/alexfduch231-prog/DroidBridge/releases/tag/v1.0.1)**
+
+На странице релиза — установщик Windows, Android APK и короткая инструкция подключения. Архивы исходников обычным пользователям не нужны. / The release page contains the Windows installer, Android APK and quick-start instructions. Source archives are for developers.
+
 **Русский ниже · [English](#english)**
 
 ## По-честному
