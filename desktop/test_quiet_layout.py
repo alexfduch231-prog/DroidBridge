@@ -29,6 +29,20 @@ class QuietLayoutTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ), patch.object(launcher, 'data_directory', return_value=Path(directory)), patch('update_manager.start_startup_check'), patch('desktop.mirror_handoff.GuiMirrorHandoff'), patch('desktop.window_chrome._Win32.monitor', return_value=(workarea, workarea)), patch.object(tk.Tk, 'winfo_screenwidth', return_value=workarea[2] - workarea[0]), patch.object(tk.Tk, 'winfo_screenheight', return_value=workarea[3] - workarea[1]), patch.object(tk.Tk, 'mainloop', mainloop):
             self.assertEqual(launcher.run_launcher(), 0)
 
+    def test_screen_page_reclaims_header_height_on_right(self):
+        def inspect(root):
+            page = root.navigation.show_page('screen')
+            from types import SimpleNamespace
+            container = ttk.Frame(page)
+            container.viewer = SimpleNamespace(control_panel=ttk.Frame(container))
+            root.navigation.event_generate('<<DroidBridgePageChanged>>')
+            root.update()
+            self.assertLessEqual(page.winfo_rooty() - root.navigation.master.winfo_rooty(), 2)
+            root.navigation.show_page('connection')
+            root.update()
+            self.assertEqual(root.navigation_header.winfo_manager(), 'pack')
+        self.run_shell(inspect)
+
     def test_default_window_leaves_space_for_normal_dpi_content(self):
         def inspect(root):
             self.assertGreaterEqual(root.winfo_width(), 1040)

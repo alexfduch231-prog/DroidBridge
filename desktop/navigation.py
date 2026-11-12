@@ -37,6 +37,7 @@ class PageHost(ttk.Frame):
         self.pages[key] = page
         self.current_key = key
         page.pack(fill='both', expand=True)
+        self.event_generate('<<DroidBridgePageChanged>>')
         return page
 
     def _clear(self):

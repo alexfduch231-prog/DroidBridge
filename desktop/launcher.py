@@ -397,6 +397,7 @@ def run_launcher(update_signal=None, single_instance=None):
                 active_endpoint[0] = (address, port)
                 content.master.master.destroy()  # Remove the setup viewport, not this page.
                 active_viewer[0].pack(fill='both', expand=True)
+                arrange_page_header()
             except (ImportError, OSError, ValueError) as error:
                 messagebox.showerror('Не удалось открыть экран', str(error), parent=root)
         page.start_viewer = viewer
@@ -426,6 +427,34 @@ def run_launcher(update_signal=None, single_instance=None):
                                   'settings': settings_page, 'wol': wol_page})
     navigation.pack(side='left', fill='both', expand=True)
     root.navigation = navigation
+    header_timer = [None]
+    def arrange_page_header(event=None):
+        if header_timer[0] is not None:
+            root.after_cancel(header_timer[0])
+            header_timer[0] = None
+        screen = navigation.pages.get('screen')
+        has_viewer = screen is not None and any(hasattr(child, 'viewer') for child in screen.winfo_children())
+        if navigation.current_key == 'screen' and has_viewer:
+            header.pack_forget()
+            header.place(x=0, y=0, width=280)
+            header.lift()
+            def reserve_controls():
+                header_timer[0] = None
+                if closing[0] or navigation.current_key != 'screen':
+                    return
+                page = navigation.pages.get('screen')
+                if page is not None:
+                    viewers = [child for child in page.winfo_children() if hasattr(child, 'viewer')]
+                    for child in viewers:
+                        panel = getattr(child.viewer, 'control_panel', None)
+                        if panel is not None and panel.winfo_exists():
+                            panel.pack_configure(pady=(header.winfo_reqheight() + 8, 8))
+            header_timer[0] = root.after_idle(reserve_controls)
+        else:
+            header.place_forget()
+            header.pack(side='top', fill='x', before=navigation)
+    navigation.bind('<<DroidBridgePageChanged>>', arrange_page_header, add='+')
+    root.navigation_header = header
     buttons = {}
     def show_section(key, *, refresh=False):
         try:
@@ -482,7 +511,7 @@ def run_launcher(update_signal=None, single_instance=None):
             mirror_handoff.close()
         except OSError:
             pass
-        for timer in (tick_timer, update_timer, mirror_timer):
+        for timer in (tick_timer, update_timer, mirror_timer, header_timer):
             if timer[0] is not None:
                 root.after_cancel(timer[0])
                 timer[0] = None

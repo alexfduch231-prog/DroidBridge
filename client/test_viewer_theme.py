@@ -18,6 +18,9 @@ class Widget:
     def configure(self, **options):
         self.options.update(options)
 
+    def cget(self, key):
+        return self.options.get(key, '')
+
     def pack(self, **options):
         self.packing = options
 
@@ -27,6 +30,9 @@ class Widget:
     def bind(self, event, callback, add=None):
         self.bindings[event] = callback
         return event
+
+    def winfo_children(self):
+        return self.children
 
     def winfo_toplevel(self):
         return self.parent.winfo_toplevel() if self.parent else self
@@ -68,7 +74,10 @@ class ViewerThemeTests(unittest.TestCase):
                   and any(isinstance(t, ast.Name) and t.id in
                           {"BG", "PANEL", "TEXT", "MUTED", "OK", "BAD", "PRIMARY"}
                           for t in n.targets)]
-        cls.namespace = dict(PALETTE=PALETTE, apply_theme=lambda root: None, font_family=lambda root: 'Segoe UI',
+        from PIL import Image, ImageDraw
+        cls.namespace = dict(Image=Image, ImageDraw=ImageDraw,
+                             ImageTk=SimpleNamespace(PhotoImage=lambda image, master=None: image),
+                             ttk=SimpleNamespace(Button=Widget), PALETTE=PALETTE, apply_theme=lambda root: None, font_family=lambda root: 'Segoe UI',
                              tk=SimpleNamespace(Frame=Widget, Label=Widget, Checkbutton=Widget,
                                                 Button=Widget, Entry=Widget, BooleanVar=Variable))
         exec(compile(ast.Module(body=colors + [viewer], type_ignores=[]),
@@ -99,23 +108,29 @@ class ViewerThemeTests(unittest.TestCase):
         for control in [self.viewer.control_toggle, *self.viewer.control_widgets]:
             with self.subTest(label=control.options.get("text", "entry")):
                 self.assertEqual(control.options["state"], "disabled")
-                self.assertEqual(control.options.get("disabledforeground"), "#5C6270")
+                if control is self.viewer.control_toggle or control is self.viewer.text_entry:
+                    self.assertEqual(control.options.get("disabledforeground"), "#5C6270")
         self.assertEqual(self.viewer.text_entry.options.get("disabledbackground"), "#F1F3F8")
 
     def test_buttons_and_checkboxes_have_visible_keyboard_focus(self):
         controls = [self.viewer.control_toggle, *self.viewer.control_widgets]
-        controls += [w for w in self.descendants() if w.options.get("text") in ("Звук", "Поверх")]
+        controls += [w for w in self.descendants() if "variable" in w.options and w.options.get("text") in ("Звук", "Поверх")]
         for control in controls:
             with self.subTest(label=control.options.get("text", "entry")):
                 self.assertTrue(control.options.get("takefocus"))
-                self.assertGreaterEqual(control.options.get("highlightthickness", 0), 1)
-                self.assertEqual(control.options.get("highlightcolor"), "#1A63E7")
+                if "style" in control.options:
+                    self.assertEqual(control.options["style"], "DB.Sidebar.TButton")
+                else:
+                    self.assertGreaterEqual(control.options.get("highlightthickness", 0), 1)
+                    self.assertEqual(control.options.get("highlightcolor"), "#1A63E7")
 
     def test_checkmarks_are_dark_on_light_not_dark_on_dark(self):
         checks = [w for w in self.descendants() if "variable" in w.options]
         self.assertEqual(len(checks), 3)
         for check in checks:
-            self.assertEqual(check.options["selectcolor"], "#FFFFFF")
+            self.assertEqual(check.options["selectcolor"], PALETTE["surface_alt"])
+            self.assertFalse(check.options["indicatoron"])
+            self.assertIsNotNone(check.options["image"])
             self.assertEqual(check.options["fg"], "#16181D")
 
     def test_viewport_stays_black_and_window_geometry_unchanged(self):
@@ -213,12 +228,15 @@ class LiveViewerThemeTests(unittest.TestCase):
                 self.assertEqual(viewer.status_label.cget("fg"), muted)
                 self.assertEqual(viewer.control_label.cget("fg"), muted)
                 self.assertEqual(viewer.control_toggle.cget("fg"), text)
-                self.assertEqual(viewer.control_toggle.cget("selectcolor"), surface)
+                self.assertEqual(viewer.control_toggle.cget("selectcolor"), self.controller.palette["surface_alt"])
                 self.assertEqual(viewer.text_entry.cget("insertbackground"), text)
                 self.assertEqual(viewer.text_entry.cget("selectforeground"), "#FFFFFF")
-                for widget in [viewer.control_toggle, *viewer.control_widgets]:
+                for widget in [viewer.control_toggle, viewer.text_entry]:
                     self.assertEqual(widget.cget("highlightcolor"), primary)
                     self.assertEqual(widget.cget("disabledforeground"), muted)
+                for widget in viewer.control_widgets:
+                    if widget is not viewer.text_entry:
+                        self.assertEqual(widget.cget("style"), "DB.Sidebar.TButton")
                 self.assertEqual(viewer.image_label.cget("bg"), "#000000")
                 self.assertEqual(viewer.text_entry.get(), "unsent text")
                 self.assertEqual(viewer.text_entry.cget("state"), "normal")
@@ -249,7 +267,7 @@ class LiveViewerThemeTests(unittest.TestCase):
                         p = palette_for(mode)
                         self.assertEqual(viewer.root.cget("bg"), p["background"])
                         self.assertEqual(viewer.text_entry.cget("fg"), p["text"])
-                        self.assertEqual(viewer.control_toggle.cget("selectcolor"), p["surface"])
+                        self.assertEqual(viewer.control_toggle.cget("selectcolor"), p["surface_alt"])
                         self.assertEqual(viewer.image_label.cget("bg"), "#000000")
                         viewer.status_color = self.module.BAD
                         viewer._pump()

@@ -2,6 +2,10 @@
 
 ## 1.0.9 — в разработке / Unreleased
 
+В Windows видео прижато к правому краю и поднято к верхней строке сервера; углы изображения скруглены. Управление оформлено отдельными строками с переключателями, кнопками общей темы и полем отправки текста. В Android **1.18** просмотр экрана ПК получил полный экран и режимы «Вписать» / «Заполнить»; кнопка «Назад» сначала выходит из полного экрана.
+
+On Windows, video aligns to the right edge and the server header's top level, with rounded image corners. Controls use labeled switch rows, themed buttons and a text field. Android **1.18** adds fullscreen PC viewing with Fit / Fill modes; Back first exits fullscreen.
+
 Просмотр телефона сохраняет портретные пропорции и занимает отдельную правую колонку на всю доступную высоту. Управление, звук и ввод текста сгруппированы слева; шрифт и цвета соответствуют приложению. Исправлено создание декодера с размером 1×2 при открытии ещё не показанной страницы. Воспроизведение звука использует явный pipe:0, поддерживаемый комплектным проигрывателем. Устранена гонка при выключении звука, из-за которой аудиопоток мог завершиться.
 
 The phone view preserves its portrait aspect ratio in a separate right-hand column using the full available height. Controls, audio and text input are grouped on the left with the app's fonts and colors. Fixed a 1×2 decoder size caused by opening an unmapped page. Audio uses explicit pipe:0 supported by the bundled player. Fixed an audio-toggle race that could terminate the audio worker.

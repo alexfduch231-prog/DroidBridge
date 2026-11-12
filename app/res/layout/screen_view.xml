@@ -36,6 +36,7 @@
         android:textSize="11sp" />
 
     <LinearLayout
+        android:id="@+id/screen_input_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom"
@@ -88,5 +89,16 @@
             android:textAllCaps="false"
             android:textSize="14sp"
             android:textStyle="bold" />
+    </LinearLayout>
+    <LinearLayout
+        android:layout_width="wrap_content" android:layout_height="wrap_content"
+        android:layout_gravity="top|end" android:layout_marginTop="82dp"
+        android:background="@drawable/meta_bg" android:orientation="horizontal">
+        <Button android:id="@+id/screen_scale" style="@style/BtnToolbar"
+            android:layout_width="wrap_content" android:layout_height="48dp"
+            android:text="@string/screen_fit" />
+        <Button android:id="@+id/screen_fullscreen" style="@style/BtnToolbar"
+            android:layout_width="wrap_content" android:layout_height="48dp"
+            android:text="@string/screen_fullscreen" />
     </LinearLayout>
 </FrameLayout>

@@ -226,4 +226,9 @@
     <string name="update_incompatible">Новая версия пока не поддерживает эту версию Android.</string>
     <string name="update_check_failed">Не удалось проверить обновления. Проверь интернет и попробуй ещё раз.</string>
     <string name="update_busy">Обновление уже проверяется или загружается.</string>
+
+    <string name="screen_fullscreen">Полный экран</string>
+    <string name="screen_exit_fullscreen">Выйти из полного экрана</string>
+    <string name="screen_fit">Вписать</string>
+    <string name="screen_fill">Заполнить</string>
 </resources>

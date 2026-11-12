@@ -73,6 +73,7 @@ final class DesktopControl implements View.OnTouchListener {
     private void keyButton(LinearLayout row,String title,final String name){
         button(row,title,new Runnable(){public void run(){key(name);}});
     }
+    void setToolbarVisible(boolean visible){bar.setVisibility(visible ? View.VISIBLE : View.GONE);gesture=false;}
     void live(boolean value){ live=value; if(!value){generation++;worker.getQueue().clear();gesture=false;} }
     void pause(){enabled=false;live(false);toggle.setText(activity.getString(R.string.control_off));}
     void close(){disposed=true; pause(); worker.shutdownNow(); HttpURLConnection c=connection;if(c!=null)c.disconnect();}

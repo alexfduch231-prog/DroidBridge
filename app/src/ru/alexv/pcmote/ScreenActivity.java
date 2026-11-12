@@ -66,6 +66,10 @@ public class ScreenActivity extends Activity {
     private DesktopControl control;
     private String baseUrl;
     private String key;
+    private boolean fullscreen, fillScreen;
+    private int sourceWidth = 1920, sourceHeight = 1080;
+    private View inputBar;
+    private Button fullscreenButton, scaleButton;
 
     @Override
     protected void attachBaseContext(android.content.Context base) {
@@ -78,6 +82,17 @@ public class ScreenActivity extends Activity {
         setContentView(R.layout.screen_view);
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
+        fullscreen = saved != null && saved.getBoolean("fullscreen", false);
+        fillScreen = saved != null && saved.getBoolean("fillScreen", false);
+        inputBar = findViewById(R.id.screen_input_bar);
+        fullscreenButton = (Button) findViewById(R.id.screen_fullscreen);
+        scaleButton = (Button) findViewById(R.id.screen_scale);
+        fullscreenButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { fullscreen = !fullscreen; applyPresentation(); }
+        });
+        scaleButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { fillScreen = !fillScreen; applyPresentation(); }
+        });
         video = (SurfaceView) findViewById(R.id.video);
         message = (TextView) findViewById(R.id.shot_message);
         meta = (TextView) findViewById(R.id.shot_meta);
@@ -130,7 +145,40 @@ public class ScreenActivity extends Activity {
             }
         });
 
+        ((View) video.getParent()).addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
+            public void onLayoutChange(View v, int l, int t, int r, int b, int ol, int ot, int or, int ob) {
+                fitSurface(sourceWidth, sourceHeight);
+            }
+        });
+        applyPresentation();
         startStream();
+    }
+
+    private void applyPresentation() {
+        int flags = View.SYSTEM_UI_FLAG_LAYOUT_STABLE;
+        if (fullscreen) flags |= View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
+        getWindow().getDecorView().setSystemUiVisibility(flags);
+        inputBar.setVisibility(fullscreen ? View.GONE : View.VISIBLE);
+        meta.setVisibility(fullscreen ? View.GONE : View.VISIBLE);
+        if (control != null) control.setToolbarVisible(!fullscreen);
+        fullscreenButton.setText(fullscreen ? R.string.screen_exit_fullscreen : R.string.screen_fullscreen);
+        scaleButton.setText(fillScreen ? R.string.screen_fill : R.string.screen_fit);
+        fitSurface(sourceWidth, sourceHeight);
+    }
+
+    @Override public void onWindowFocusChanged(boolean focused) {
+        super.onWindowFocusChanged(focused);
+        if (focused && video != null) applyPresentation();
+    }
+    @Override public void onBackPressed() {
+        if (fullscreen) { fullscreen = false; applyPresentation(); return; }
+        super.onBackPressed();
+    }
+    @Override protected void onSaveInstanceState(Bundle out) {
+        out.putBoolean("fullscreen", fullscreen);
+        out.putBoolean("fillScreen", fillScreen);
+        super.onSaveInstanceState(out);
     }
 
     // ---------- удалённый ввод ----------
@@ -287,23 +335,22 @@ public class ScreenActivity extends Activity {
     }
 
     private void fitSurface(int w, int h) {
+        sourceWidth = w; sourceHeight = h;
         DisplayMetrics dm = getResources().getDisplayMetrics();
         View parent = (View) video.getParent();
         int parentW = parent.getWidth() > 0 ? parent.getWidth() : dm.widthPixels;
         int parentH = parent.getHeight() > 0 ? parent.getHeight() : dm.heightPixels;
-        int top = Math.round(82 * dm.density);
-        int bottom = Math.round(84 * dm.density);
-        int availW = parentW;
+        int top = fullscreen ? 0 : Math.round(132 * dm.density);
+        int bottom = fullscreen ? 0 : Math.round(84 * dm.density);
         int availH = Math.max(1, parentH - top - bottom);
-        double k = Math.min(availW / (double) w, availH / (double) h);
+        ScreenGeometry rect = ScreenGeometry.calculate(w, h, parentW, availH, fillScreen);
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) video.getLayoutParams();
-        int vw = Math.max(1, (int) Math.round(w * k));
-        int vh = Math.max(1, (int) Math.round(h * k));
-        if (lp.width == vw && lp.height == vh) return;
-        lp.width = vw;
-        lp.height = vh;
-        lp.gravity = Gravity.TOP | Gravity.CENTER_HORIZONTAL;
-        lp.topMargin = top + Math.max(0, (availH - vh) / 2);
+        int y = top + rect.top;
+        if (lp.width == rect.width && lp.height == rect.height
+                && lp.leftMargin == rect.left && lp.topMargin == y) return;
+        lp.width = rect.width; lp.height = rect.height;
+        lp.gravity = Gravity.TOP | Gravity.LEFT;
+        lp.leftMargin = rect.left; lp.topMargin = y;
         video.setLayoutParams(lp);
     }
 

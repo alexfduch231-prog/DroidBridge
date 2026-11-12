@@ -17,6 +17,8 @@ import unittest
 from unittest.mock import Mock, patch
 
 from test_viewer_theme import PALETTE
+from tkinter import ttk
+from PIL import Image, ImageTk, ImageDraw
 
 
 def load_viewer():
@@ -25,7 +27,7 @@ def load_viewer():
     nodes = [node for node in tree.body
              if (isinstance(node, ast.ClassDef) and node.name == "Viewer")
              or (isinstance(node, ast.FunctionDef) and node.name == "build_viewer_page")]
-    namespace = dict(tk=tk, threading=threading, queue=queue, socket=socket, time=time,
+    namespace = dict(tk=tk, ttk=ttk, Image=Image, ImageTk=ImageTk, ImageDraw=ImageDraw, threading=threading, queue=queue, socket=socket, time=time,
                      json=json, struct=struct, os=os, subprocess=subprocess,
                      hmac=hmac, control_allowed=control_allowed, encode_control=encode_control,
                      CREATE_NO_WINDOW=0x08000000, TYPE_HELLO=0, OK="#187645",
@@ -77,13 +79,36 @@ class EmbeddedViewerTests(unittest.TestCase):
     def test_viewer_controls_stay_grouped_on_left(self):
         viewer = self.page().viewer
         audio = next(w for w in viewer._theme_checks if w.cget('text') == 'Звук')
-        self.assertEqual(audio.pack_info()['side'], 'left')
+        self.assertEqual(audio.pack_info()['side'], 'right')
         self.assertEqual(viewer.text_entry.pack_info()['expand'], 0)
         self.assertEqual(viewer.image_label.place_info()['anchor'], 'nw')
         self.assertLessEqual(int(viewer.status_label.cget('wraplength')), 240)
         self.assertGreater(viewer.viewport.winfo_x(), viewer.status_label.winfo_rootx() - viewer.root.winfo_rootx())
         self.assertGreater(viewer.image_label.winfo_height(), 600)
         self.assertGreater(viewer.image_label.winfo_width(), 270)
+
+    def test_video_rounding_preserves_center_and_size(self):
+        viewer = self.page().viewer
+        image = Image.new('RGB', (100, 200), '#FF0000')
+        rounded = viewer._rounded_video(image)
+        self.assertEqual(rounded.size, image.size)
+        self.assertEqual(rounded.getpixel((50, 100)), (255, 0, 0))
+        self.assertNotEqual(rounded.getpixel((0, 0)), (255, 0, 0))
+
+    def test_controls_have_settings_rows_and_switches(self):
+        viewer = self.page().viewer
+        self.assertEqual(int(viewer.control_toggle.cget('indicatoron')), 0)
+        self.assertTrue(viewer.control_toggle.cget('image'))
+        self.assertTrue(viewer.control_toggle.cget('selectimage'))
+        self.assertEqual(viewer.control_toggle.pack_info()['side'], 'right')
+        self.assertGreater(int(viewer.text_entry.cget('highlightthickness')), 0)
+
+    def test_phone_surface_is_right_aligned(self):
+        viewer = self.page().viewer
+        viewer._layout_phone_surface()
+        self.root.update()
+        right = viewer.image_label.winfo_x() + viewer.image_label.winfo_width()
+        self.assertAlmostEqual(right, viewer.viewport.winfo_width(), delta=2)
 
     def test_phone_surface_tracks_portrait_and_landscape_aspect(self):
         viewer = self.page().viewer

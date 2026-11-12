@@ -226,4 +226,9 @@
     <string name="update_incompatible">The new version does not support this Android version yet.</string>
     <string name="update_check_failed">Could not check for updates. Check your internet connection and try again.</string>
     <string name="update_busy">An update check or download is already in progress.</string>
+
+    <string name="screen_fullscreen">Fullscreen</string>
+    <string name="screen_exit_fullscreen">Exit fullscreen</string>
+    <string name="screen_fit">Fit</string>
+    <string name="screen_fill">Fill</string>
 </resources>

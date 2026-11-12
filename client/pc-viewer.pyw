@@ -27,7 +27,7 @@ import threading
 import time
 import tkinter as tk
 
-from PIL import Image, ImageTk
+from PIL import Image, ImageTk, ImageDraw
 from control_geometry import image_point, gesture_command, encode_control, control_allowed
 
 TYPE_HELLO = 0
@@ -63,6 +63,7 @@ _PROJECT_DIR = os.path.dirname(HERE)
 if _PROJECT_DIR not in sys.path:
     sys.path.insert(0, _PROJECT_DIR)
 from desktop.theme import PALETTE, apply_theme, font_family
+from tkinter import ttk
 
 BG = PALETTE["background"]
 PANEL = PALETTE["surface"]
@@ -207,6 +208,8 @@ class Viewer(object):
                                          ("background", "surface", "text", "muted", "primary"))
         self.root.configure(bg=BG)
         self._theme_checks = []
+        self._switch_rows = []
+        self._switch_images = []
 
         self.control_panel = tk.Frame(self.root, bg=PANEL, width=240)
         self.control_panel.pack(side="left", fill="y", padx=(8, 16), pady=8)
@@ -238,23 +241,31 @@ class Viewer(object):
             self._theme_checks.append(on_top)
 
         self.audio_var = tk.BooleanVar(value=self.audio_enabled)
-        audio = tk.Checkbutton(top, text="Звук", variable=self.audio_var,
+        audio_row = tk.Frame(top, bg=p["surface_alt"], padx=12, pady=10)
+        audio_row.pack(fill="x", pady=2)
+        tk.Label(audio_row, text="Звук", font=(family, 10), bg=p["surface_alt"], fg=TEXT).pack(side="left")
+        audio = tk.Checkbutton(audio_row, text="Звук", variable=self.audio_var,
                                command=self._toggle_audio, **check_style)
-        audio.pack(side="left", padx=(0, 6))
+        audio.pack(side="right")
+        self._switch_rows.append(audio_row)
         self._theme_checks.append(audio)
 
         controls = tk.Frame(self.control_panel, bg=PANEL)
         controls.pack(side="top", fill="x")
         self.control_var = tk.BooleanVar(value=False)
+        control_row = tk.Frame(controls, bg=p["surface_alt"], padx=12, pady=10)
+        control_row.pack(fill="x", pady=2)
+        tk.Label(control_row, text="Управление", font=(family, 10), bg=p["surface_alt"], fg=TEXT).pack(side="left")
+        self._switch_rows.append(control_row)
         self.control_toggle = tk.Checkbutton(
-            controls, text="Управлять", variable=self.control_var, command=self._toggle_control,
+            control_row, text="Управлять", variable=self.control_var, command=self._toggle_control,
             state="disabled", **check_style)
-        self.control_toggle.pack(side="top", anchor="w", pady=(12, 8))
+        self.control_toggle.pack(side="right")
         self.control_widgets = []
         for label, name in (("Назад", "back"), ("Домой", "home"), ("Недавние", "recents")):
-            button = tk.Button(controls, text=label, state="disabled",
+            button = ttk.Button(controls, text=label, state="disabled", style="DB.Sidebar.TButton",
                                command=lambda n=name: self._queue_control({"action": "global", "name": n}),
-                               **button_style)
+                               takefocus=True)
             button.pack(side="top", anchor="w", fill="x", pady=4)
             self.control_widgets.append(button)
         textbar = tk.Frame(self.control_panel, bg=PANEL)
@@ -266,8 +277,8 @@ class Viewer(object):
         self.text_entry.configure(width=22, font=(family, 10))
         self.text_entry.pack(side="top", anchor="w", fill="x", pady=(16, 8))
         self.text_entry.bind("<Return>", self._send_text)
-        send = tk.Button(textbar, text="Текст →", command=self._send_text,
-                         state="disabled", **button_style)
+        send = ttk.Button(textbar, text="Отправить", command=self._send_text, style="DB.Sidebar.TButton",
+                         state="disabled", takefocus=True)
         send.pack(side="top", anchor="w", pady=(0, 12))
         self.control_widgets.extend((self.text_entry, send))
         self.control_label = tk.Label(self.control_panel, text=self.control_message, bg=PANEL,
@@ -291,6 +302,14 @@ class Viewer(object):
         self._theme_binding = self._theme_root.bind(
             "<<DroidBridgeThemeChanged>>", self._on_theme_changed, add="+")
         self._on_theme_changed()
+
+    def _switch_photo(self, selected, p):
+        image = Image.new("RGB", (38, 22), p["surface_alt"])
+        draw = ImageDraw.Draw(image)
+        draw.rounded_rectangle((0, 1, 37, 21), radius=10, fill=p["primary"] if selected else p["muted"])
+        x = 19 if selected else 3
+        draw.ellipse((x, 4, x + 15, 19), fill="#FFFFFF")
+        return ImageTk.PhotoImage(image, master=self.root)
 
     def _palette(self):
         """Use the owning shell's palette; never create a second Tk/controller."""
@@ -318,16 +337,18 @@ class Viewer(object):
         self.status_label.configure(bg=p["surface"], fg=self._status_foreground())
         self.control_label.configure(bg=p["surface"], fg=p["muted"])
         focus = dict(highlightcolor=p["primary"], highlightbackground=p["surface"])
+        self._switch_images = [self._switch_photo(False, p), self._switch_photo(True, p)]
+        for row in self._switch_rows:
+            row.configure(bg=p["surface_alt"])
+            for child in row.winfo_children():
+                if isinstance(child, tk.Label):
+                    child.configure(bg=p["surface_alt"], fg=p["text"])
         for check in self._theme_checks:
-            check.configure(bg=p["surface"], fg=p["text"],
-                            activebackground=p["surface"], activeforeground=p["text"],
-                            selectcolor=p["surface"], disabledforeground=p["muted"], **focus)
-        for button in self.control_widgets:
-            if button is self.text_entry:
-                continue
-            button.configure(bg=p["background"], fg=p["text"],
-                             activebackground=p["surface_alt"], activeforeground=p["text"],
-                             disabledforeground=p["muted"], **focus)
+            check.configure(bg=p["surface_alt"], fg=p["text"], indicatoron=False,
+                            image=self._switch_images[0], selectimage=self._switch_images[1],
+                            compound="none", borderwidth=0, highlightthickness=1,
+                            activebackground=p["surface_alt"], selectcolor=p["surface_alt"],
+                            disabledforeground=p["muted"], **focus)
         self.text_entry.configure(bg=p["surface"], fg=p["text"],
                                   disabledbackground=p["background"], disabledforeground=p["muted"],
                                   insertbackground=p["text"], selectbackground=p["primary"],
@@ -340,7 +361,8 @@ class Viewer(object):
         ratio = self.vw / float(self.vh) if self.vw > 0 and self.vh > 0 else 0.45
         target_w = min(width, max(1, int(height * ratio)))
         target_h = min(height, max(1, int(target_w / ratio)))
-        self.image_label.place_configure(width=target_w, height=target_h)
+        self.image_label.place_configure(x=max(0, width - target_w), y=0,
+                                         width=target_w, height=target_h)
 
     def _on_resize(self, event):
         if event.widget is not self.root:
@@ -517,13 +539,18 @@ class Viewer(object):
             self.rendered_size = None
             self.photo = None
             self.image_label.configure(image="")
-        self.control_var.set(enabled)
+        if self.control_var.get() != enabled:
+            self.control_var.set(enabled)
         if not enabled:
             self.gesture = None
-        self.control_toggle.configure(state="normal" if available else "disabled")
+        toggle_state = "normal" if available else "disabled"
+        if str(self.control_toggle.cget("state")) != toggle_state:
+            self.control_toggle.configure(state=toggle_state)
         fresh = self._frame_fresh()
+        control_state = "normal" if enabled and fresh else "disabled"
         for widget in self.control_widgets:
-            widget.configure(state="normal" if enabled and fresh else "disabled")
+            if str(widget.cget("state")) != control_state:
+                widget.configure(state=control_state)
         if enabled and not fresh:
             self.control_message = "управление приостановлено: жду свежий кадр"
         elif enabled and self.control_message == "управление приостановлено: жду свежий кадр":
@@ -674,6 +701,16 @@ class Viewer(object):
 
     # ---------- картинка ----------
 
+    def _rounded_video(self, image):
+        image = image.convert('RGB')
+        mask = Image.new('L', image.size, 0)
+        radius = min(18, image.width // 8, image.height // 8)
+        ImageDraw.Draw(mask).rounded_rectangle((0, 0, image.width - 1, image.height - 1),
+                                                radius=radius, fill=255)
+        backdrop = Image.new('RGB', image.size, self._palette()['background'])
+        backdrop.paste(image, (0, 0), mask)
+        return backdrop
+
     def _pump(self):
         if self.stop.is_set():
             return
@@ -703,6 +740,7 @@ class Viewer(object):
                 if scale < 1.0:
                     size = (max(1, int(img.width * scale)), max(1, int(img.height * scale)))
                     img = img.resize(size, Image.BILINEAR)
+                img = self._rounded_video(img)
                 self.photo = ImageTk.PhotoImage(img)
                 self.image_label.configure(image=self.photo)
                 self.rendered_size = (img.width, img.height)
