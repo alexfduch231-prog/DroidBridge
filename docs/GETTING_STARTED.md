@@ -8,7 +8,7 @@
 
 DroidBridge не подключается через облако. Основные команды, видео и файлы передаются без транспортного шифрования. Используй приложение только на своих устройствах или с согласия владельца и **не пробрасывай порты роутера в Интернет**.
 
-Эта инструкция описывает Windows **1.0.6** и Android **1.16** (сборка **26**). Android **1.15** остаётся совместимым для прежних функций, но для значков программ нужны обе новые версии. Обычный Windows-установщик содержит FFmpeg и ffplay; у прежних slim-установщиков медиакомплект отсутствует. Проверка новых сценариев на реальном телефоне пока не подтверждена.
+Эта инструкция описывает Windows **1.0.6** и Android **1.16** (сборка **26**). Android **1.15** остаётся совместимым для прежних функций, но для значков программ нужны обе новые версии. Обычный Windows-установщик содержит FFmpeg и ffplay; у прежних slim-установщиков медиакомплект отсутствует.
 
 В 1.0.6 работа идёт в одном основном окне: слева **«Подключение»**, **«Экран телефона»**, **«Программы»**, **«Приём файлов»**, **«Включение ПК»** и **«Настройки»**. Установка Android-приложения, сопряжение и просмотр телефона открываются внутри этих разделов. Выбор файлов, подтверждения и системные запросы разрешений могут оставаться отдельными диалогами.
 
@@ -56,11 +56,11 @@ H.264 экрана ПК сейчас использует **NVIDIA NVENC**: ну
 
 **«Автоматический поиск»** отменяет ручной выбор и возвращает поиск комплектных инструментов, PATH и стандартных мест установки. Он ничего не устанавливает и не запускает EXE для проверки. Ручной выбор имеет приоритет: если выбранную папку удалили, выбери её заново или нажми **«Автоматический поиск»**; скрытой подмены другой сборкой нет.
 
-Лицензии и соответствующие исходники комплектных компонентов — часть подготовки дистрибутива, а не отдельное действие для обычного пользователя. Без найденных инструментов команды, файлы и JPEG-просмотр могут работать, но H.264 и звук недоступны.
+Без найденных инструментов команды, файлы и JPEG-просмотр могут работать, но H.264 и звук недоступны.
 
 ## Обновления
 
-**Функция включена в 1.0.4.** Обновление на реальном телефоне пока не проверено. Первую версию с проверкой обновлений установи вручную со страницы релиза поверх текущей; старое приложение само эту возможность не получит. Не удаляй приложение ради обновления: удаление может стереть настройки.
+**Функция включена в 1.0.4.** Первую версию с проверкой обновлений установи вручную со страницы релиза поверх текущей; старое приложение само эту возможность не получит. Не удаляй приложение ради обновления: удаление может стереть настройки.
 
 - При запуске Windows- и Android-приложение проверят наличие новой версии через Интернет. Для этого используется фиксированный публичный адрес со списком версий и цифровой подписью; учётная запись, личный ключ или настройка сервера тебе не нужны. Это отдельная проверка обновлений, не облачный канал управления устройствами.
 - Если есть новая версия, появятся **«Позже»** и **«Обновить»**. **«Позже»** оставляет текущую версию. Если Интернет недоступен или проверка не удалась, обновление не устанавливается; можно продолжить работу и попробовать позже.
@@ -90,7 +90,7 @@ H.264 экрана ПК сейчас использует **NVIDIA NVENC**: ну
 ### Файлы и программы
 
 - Для отправки файла выбери **«Загрузить файл на ПК»** на телефоне и укажи файл. Максимум — 50 ГиБ. Перед отправкой приложение читает файл для проверки целостности: подготовка большого файла может занять заметное время, ещё до появления переданных байтов.
-- **В версии 1.0.4 реализовано продолжение передачи; проверка на реальном телефоне пока не подтверждена.** Используй **«Пауза»**, затем **«Продолжить»**; **«Позже»** откладывает продолжение. После краткого обрыва Wi-Fi приложение попробует восстановить передачу; если не удалось — восстанови соединение с тем же ПК и продолжи вручную. После перезапуска приложения незавершённая передача будет предложена снова. Нужен тот же доступный и неизменённый исходный файл: не удаляй, не перемещай и не редактируй его до окончания, не отзывай доступ приложения к нему. Если выбранный источник не позволяет сохранить доступ, приложение попросит выбрать файл через другого поставщика. Повторная проверка исходного файла при продолжении тоже может занять время.
+- **Передачу можно приостановить и продолжить.** Используй **«Пауза»**, затем **«Продолжить»**; **«Позже»** откладывает продолжение. После краткого обрыва Wi-Fi приложение попробует восстановить передачу; если не удалось — восстанови соединение с тем же ПК и продолжи вручную. После перезапуска приложения незавершённая передача будет предложена снова. Нужен тот же доступный и неизменённый исходный файл: не удаляй, не перемещай и не редактируй его до окончания, не отзывай доступ приложения к нему. Если выбранный источник не позволяет сохранить доступ, приложение попросит выбрать файл через другого поставщика. Повторная проверка исходного файла при продолжении тоже может занять время.
 - Незавершённая передача хранится до **7 дней**, после чего может потребоваться начать заново. Пауза сохраняет возможность продолжить. **«Удалить передачу»** позволяет удалить незавершённую копию на исходном ПК, если он доступен с прежним сохранённым подключением. Если ПК недоступен или подключение изменилось, выбери в следующем диалоге **«Только на телефоне»**: приложение забудет передачу и очистит её локальные данные, но частичная копия на ПК останется до истечения 7 дней. Уже готовый файл не удаляется. Если сохранённая передача на ПК уже истекла или отсутствует, **«Продолжить»** покажет ошибку, а не начнёт заново в другой папке; удали запись передачи и выбери файл снова явно. Частичная копия на ПК **ещё не готовый файл**: обычный файл появляется только после полной передачи и проверки. Во время подготовки и отправки держи Android-приложение **на экране** — работа в фоне или при заблокированном телефоне не гарантируется.
 - Для продолжения передачи папка приёма должна находиться на диске с поддержкой жёстких ссылок, например **NTFS**. Диски **FAT/exFAT не поддерживаются**: приложение сообщит об этом до начала новой передачи. Выбери папку на NTFS; не форматируй диск ради этой функции.
 - По умолчанию файл сохраняется в **«Загрузки»** на ПК. Чтобы изменить место, открой на Windows **«Приём файлов / Received files» → «Выбрать папку…»**. Новая папка применяется со следующей загрузки, уже начатую не переносит, в том числе при её продолжении. **«Сбросить в „Загрузки“»** возвращает папку по умолчанию. Если выбранная папка недоступна, выбери другую: приложение не сохраняет файл в другое место молча. Одноимённые файлы не перезаписываются.
@@ -108,7 +108,7 @@ H.264 экрана ПК сейчас использует **NVIDIA NVENC**: ну
 4. Обычно нужен подключённый Ethernet-кабель. Пробуждение по Wi-Fi зависит от конкретного оборудования и драйвера и поддерживается не везде. Сначала подключи телефон к включённому ПК, чтобы сохранить его сетевые данные.
 5. Проверь пробуждение вручную в подходящее время: сохрани работу, сам переведи ПК в нужный режим и нажми **«Включить»** на телефоне. Приложение не выключает компьютер ради проверки. Успех из сна не гарантирует включение после полного выключения.
 
-**100% означает завершённые проверки или настройку, а не подтверждённое получение пакета и не гарантию пробуждения.** Пока ПК уже выключен, приложение не может исправить на нём настройки Windows или BIOS. Выключенный компьютер не отвечает на автопоиск. Проверка пробуждения на реальном оборудовании пока не подтверждена.
+**100% означает завершённые проверки или настройку, а не подтверждённое получение пакета и не гарантию пробуждения.** Пока ПК уже выключен, приложение не может исправить на нём настройки Windows или BIOS. Выключенный компьютер не отвечает на автопоиск.
 
 После **«Выключить»** или **«Перезагрузить»** есть 20 секунд для **«Отменить команду»**. Сохрани документы заранее. Если ответ потерялся, команда всё равно могла дойти: не нажимай её многократно.
 
@@ -131,7 +131,7 @@ H.264 экрана ПК сейчас использует **NVIDIA NVENC**: ну
 
 [README](../README.md#english) · [Download Windows and Android](https://github.com/alexfduch231-prog/DroidBridge/releases/latest)
 
-This guide describes Windows **1.0.6** and Android **1.16** (build **26**). Android **1.15** remains compatible with existing features, but program icons require both new versions. The standard Windows installer includes FFmpeg/ffplay; earlier slim installers do not. Verification of new scenarios on a real phone is not yet confirmed.
+This guide describes Windows **1.0.6** and Android **1.16** (build **26**). Android **1.15** remains compatible with existing features, but program icons require both new versions. The standard Windows installer includes FFmpeg/ffplay; earlier slim installers do not.
 
 In 1.0.6, one main window contains **«Подключение»** (Connection), **«Экран телефона»** (Phone screen), **«Программы»** (Applications), **«Приём файлов»** (Received files), **«Включение ПК»** (Wake PC) and **«Настройки»** (Settings). Android download, pairing and phone viewing open inside these sections. File pickers, confirmations and system permission prompts can still open dialogs. The sidebar currently uses Russian labels.
 
@@ -175,11 +175,11 @@ Use this for source runs, earlier slim installers or a deliberate media-bundle r
 
 **«Автоматический поиск»** (Automatic search) clears the manual override and returns to the bundled tools, PATH and standard installation locations. It installs nothing and does not probe executables. A manual selection takes priority: if its folder is deleted, choose it again or reset to automatic search; another build is not silently substituted.
 
-Bundled-component licenses and corresponding sources belong in distribution preparation, not in the normal user's installation checklist. Without available tools, commands, files and JPEG viewing may still work, but H.264 and audio are unavailable.
+Without available tools, commands, files and JPEG viewing may still work, but H.264 and audio are unavailable.
 
 ## Updates
 
-**This feature is included in 1.0.4.** Updating on a real phone has not yet been tested. Install the first updater-capable version manually from the release page over your current installation; an older app cannot acquire the feature by itself. Do not uninstall just to update: uninstalling may erase settings.
+**This feature is included in 1.0.4.** Install the first updater-capable version manually from the release page over your current installation; an older app cannot acquire the feature by itself. Do not uninstall just to update: uninstalling may erase settings.
 
 - At startup, both Windows and Android will check for a newer version over the Internet using a fixed public, digitally signed release list. You do not need an account, personal key or server setup. This update check is separate from device control; it is not a cloud relay.
 - If an update exists, choose **Later** or **Update**. **Later** keeps the current version. If the Internet is unavailable or verification fails, no update is installed; you can keep using the app and retry later.
@@ -195,7 +195,7 @@ Manual updating from the release page remains available. A digitally signed rele
 - **Phone control:** a phone-initiated session enables control automatically **only if** you have already enabled **Control phone from PC** in Android Accessibility settings. Otherwise it is view-only. To grant control, separately open **Allow phone control from PC** on Android, read the explanation and enable the service in system settings, then start casting again from the phone. The app cannot grant itself this permission. Gestures require Android 7+; revoke access in the same settings at any time. Automatic enabling applies to a new phone-initiated session, not every manual connection or reconnection; background operation and automatic control recovery are not guaranteed.
 - **Phone audio:** requires Android 10+, the requested audio permission and an app that allows playback capture. Not every app allows it. Protected screens may appear black. Restart mirroring after an APK update, phone rotation or enabling Accessibility. Stop it with **Stop casting** or the Android notification.
 - **Files:** choose **Upload file to PC** on Android. The maximum is 50 GiB. The app reads the source for an integrity check before sending, so preparing a large file may take time before any bytes are shown as sent.
-- **Resumable transfers are implemented in 1.0.4; real-phone verification is not yet confirmed.** Use **Pause**, then **Continue**; **Later** postpones resuming. After a brief Wi-Fi outage, the app will try to recover; if that fails, reconnect to the same PC and resume manually. A pending transfer will be offered again after restarting the app. The original file must remain accessible and unchanged: do not delete, move or edit it, or revoke the app's access before completion. If the selected provider cannot retain access, the app will ask you to choose a different provider. Checking the original file again when resuming can also take time.
+- **Transfers can be paused and resumed.** Use **Pause**, then **Continue**; **Later** postpones resuming. After a brief Wi-Fi outage, the app will try to recover; if that fails, reconnect to the same PC and resume manually. A pending transfer will be offered again after restarting the app. The original file must remain accessible and unchanged: do not delete, move or edit it, or revoke the app's access before completion. If the selected provider cannot retain access, the app will ask you to choose a different provider. Checking the original file again when resuming can also take time.
 - Incomplete transfers are kept for up to **7 days**; afterwards you may need to start again. Pausing keeps the transfer available. **Discard transfer** can remove the incomplete copy on the original PC when it is online with the same saved connection. If the PC is unavailable or the connection has changed, choose **Phone only** in the next dialog: this clears the phone's pending entry and local data, but leaves the PC's partial copy until its 7-day expiry. An already completed file is not deleted. If the PC session has expired or is missing, **Continue** reports an error rather than silently restarting in another folder; explicitly discard the pending entry and select the file again. A partial copy on the PC **is not a finished file**: the normal file appears only after the entire transfer and integrity check succeed. Keep Android **in the foreground** during preparation and sending; background or locked-screen operation is not guaranteed.
 - Resumable uploads require a destination disk that supports hard links, such as **NTFS**. **FAT/exFAT disks are unsupported** and will be rejected before a new transfer starts. Choose a folder on NTFS; do not format a disk just for this feature.
 - On Windows, open **Приём файлов / Received files → Choose folder…** to select a destination, or **Reset to Downloads**. Changes affect the next upload, not the current one or its resumed transfer. An unavailable folder causes an error, not a silent save elsewhere. Existing files are not overwritten.
@@ -214,7 +214,7 @@ In Windows 1.0.6:
 4. A connected Ethernet cable is usually needed. Wi-Fi waking depends on the hardware and driver and is not universally supported. Connect the phone while the PC is on first, so it saves network details.
 5. Test waking manually at a convenient time: save your work, put the PC into the intended state yourself, then tap **Wake** on the phone. The app does not shut the PC down to test it. Waking from sleep does not prove that waking after a full shutdown will work.
 
-**100% means checks or configuration have completed, not verified packet delivery or guaranteed waking.** An already-powered-off PC cannot have its Windows or BIOS settings fixed by the app and cannot answer discovery. Waking on real hardware is not yet confirmed as tested.
+**100% means checks or configuration have completed, not verified packet delivery or guaranteed waking.** An already-powered-off PC cannot have its Windows or BIOS settings fixed by the app and cannot answer discovery.
 
 ## Cannot connect?
 
