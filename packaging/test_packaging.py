@@ -150,7 +150,10 @@ class PackagingTests(unittest.TestCase):
         p = load('build_support', ROOT / 'packaging' / 'build_support.py')
         modules = {'desktop/update_protocol.py', 'desktop/update_manager.py', 'desktop/update_helper.py'}
         self.assertTrue(modules <= set(p.SOURCE_FILES))
-        self.assertEqual(len(p.SOURCE_FILES), 32)
+        self.assertIn('listener/focus_probe.py', p.SOURCE_FILES)
+        self.assertIn('listener/file_outbox.py', p.SOURCE_FILES)
+        self.assertIn('listener/outbox_http.py', p.SOURCE_FILES)
+        self.assertEqual(len(p.SOURCE_FILES), 35)
         with tempfile.TemporaryDirectory() as tmp:
             source, target = Path(tmp) / 'source', Path(tmp) / 'staged'
             for relative in p.SOURCE_FILES:

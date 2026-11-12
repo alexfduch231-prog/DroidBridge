@@ -54,7 +54,7 @@ public class ScreenActivity extends Activity {
     private final SimpleDateFormat clock = new SimpleDateFormat("HH:mm:ss", Locale.getDefault());
     private SurfaceView video;
     private TextView message, meta;
-    private EditText cmdText;
+
     private volatile boolean running = true;
     private volatile boolean paused;
     private volatile boolean surfaceReady;
@@ -85,7 +85,7 @@ public class ScreenActivity extends Activity {
 
         fullscreen = saved != null && saved.getBoolean("fullscreen", false);
         fillScreen = saved != null && saved.getBoolean("fillScreen", false);
-        inputBar = findViewById(R.id.screen_input_bar);
+
         fullscreenButton = (Button) findViewById(R.id.screen_fullscreen);
         scaleButton = (Button) findViewById(R.id.screen_scale);
         fullscreenButton.setOnClickListener(new View.OnClickListener() {
@@ -97,9 +97,7 @@ public class ScreenActivity extends Activity {
         video = (SurfaceView) findViewById(R.id.video);
         message = (TextView) findViewById(R.id.shot_message);
         meta = (TextView) findViewById(R.id.shot_meta);
-        cmdText = (EditText) findViewById(R.id.cmd_text);
-        Button cmdSend = (Button) findViewById(R.id.cmd_send);
-        Button cmdBack = (Button) findViewById(R.id.cmd_back);
+
 
         video.getHolder().addCallback(new SurfaceHolder.Callback() {
             public void surfaceCreated(SurfaceHolder h) {
@@ -130,20 +128,8 @@ public class ScreenActivity extends Activity {
         this.key = key;
         control = new DesktopControl(this, video, baseUrl, key);
 
-        cmdSend.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) { sendText(); }
-        });
-        cmdBack.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) { pressKey("backspace", false); }
-        });
-        cmdText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
-            public boolean onEditorAction(TextView v, int actionId, android.view.KeyEvent event) {
-                if (actionId == EditorInfo.IME_ACTION_SEND) {
-                    sendText();
-                    return true;
-                }
-                return false;
-            }
+        findViewById(R.id.screen_keyboard).setOnClickListener(new View.OnClickListener(){
+            public void onClick(View v){if(control!=null)control.keyboard();}
         });
 
         ((View) video.getParent()).addOnLayoutChangeListener(new View.OnLayoutChangeListener() {
@@ -160,9 +146,9 @@ public class ScreenActivity extends Activity {
         if (fullscreen) flags |= View.SYSTEM_UI_FLAG_FULLSCREEN | View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
                 | View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY;
         getWindow().getDecorView().setSystemUiVisibility(flags);
-        inputBar.setVisibility(fullscreen ? View.GONE : View.VISIBLE);
+
         meta.setVisibility(fullscreen ? View.GONE : View.VISIBLE);
-        if (control != null) control.setToolbarVisible(!fullscreen);
+
         fullscreenButton.setText(fullscreen ? R.string.screen_exit_fullscreen : R.string.screen_fullscreen);
         scaleButton.setText(fillScreen ? R.string.screen_fill : R.string.screen_fit);
         fitSurface(sourceWidth, sourceHeight);
@@ -183,16 +169,6 @@ public class ScreenActivity extends Activity {
     }
 
     // ---------- удалённый ввод ----------
-
-    private void sendText() {
-        final String text = cmdText.getText().toString();
-        if (text.trim().length() == 0) return;
-        if (control != null) control.text(text);
-    }
-
-    private void pressKey(final String name, final boolean quiet) {
-        if (control != null) control.key(name);
-    }
 
     private String call(String path) {
         HttpURLConnection c = null;
@@ -341,8 +317,8 @@ public class ScreenActivity extends Activity {
         View parent = (View) video.getParent();
         int parentW = parent.getWidth() > 0 ? parent.getWidth() : dm.widthPixels;
         int parentH = parent.getHeight() > 0 ? parent.getHeight() : dm.heightPixels;
-        int top = fullscreen ? 0 : Math.round(132 * dm.density);
-        int bottom = fullscreen ? 0 : Math.round(84 * dm.density);
+        int top = fullscreen ? 0 : Math.round(52 * dm.density);
+        int bottom = 0;
         int availH = Math.max(1, parentH - top - bottom);
         ScreenGeometry rect = ScreenGeometry.calculate(w, h, parentW, availH, fillScreen);
         FrameLayout.LayoutParams lp = (FrameLayout.LayoutParams) video.getLayoutParams();
@@ -544,6 +520,7 @@ public class ScreenActivity extends Activity {
     protected void onResume() {
         super.onResume();
         paused = false;
+        if(control!=null)control.resume();
         startStream();
     }
 

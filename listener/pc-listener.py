@@ -478,7 +478,10 @@ class Handler(http.server.BaseHTTPRequestHandler):
             return "?"
 
     def do_POST(self):
-        if urlparse(self.path).path.startswith('/upload/resume/'):
+        if urlparse(self.path).path.startswith('/outbox/'):
+            from outbox_http import handle_outbox
+            handle_outbox(self)
+        elif urlparse(self.path).path.startswith('/upload/resume/'):
             from resumable_upload import handle_resumable
             handle_resumable(self)
         elif urlparse(self.path).path == '/input':

@@ -9,12 +9,17 @@ from urllib.parse import urlparse
 
 _LOCK = threading.Lock()
 _KEYS = {'win':0x5B,'esc':0x1B,'enter':0x0D,'tab':0x09,'backspace':0x08,
-         'up':0x26,'down':0x28,'left':0x25,'right':0x27}
+         'up':0x26,'down':0x28,'left':0x25,'right':0x27,'delete':0x2E}
 
 def validate(event):
     if not isinstance(event, dict): raise ValueError('object required')
     action = event.get('action')
-    if action not in ('click','drag','scroll','key','text'): raise ValueError('unknown action')
+    if action not in ('click','drag','scroll','key','text','move_relative','focus'): raise ValueError('unknown action')
+    if action == 'move_relative':
+        for name in ('dx', 'dy'):
+            value = event.get(name)
+            if type(value) not in (int, float) or not math.isfinite(value) or not -1 <= value <= 1:
+                raise ValueError('invalid relative coordinate')
     if action in ('click','drag','scroll'):
         for key in (('x','y','x2','y2') if action == 'drag' else ('x','y')):
             v = event.get(key)
@@ -46,8 +51,18 @@ def dispatch(event, send, Input, Keyboard, Mouse, type_text):
             raise OSError('cursor injection denied')
     def mouse(flags,data=0): send([Input(type=0,mi=Mouse(0,0,data & 0xffffffff,flags,0,0))])
     action=event['action']
-    if action in ('click','drag','scroll'): move(event['x'],event['y'])
-    if action == 'click':
+    if action in ('click','drag'): move(event['x'],event['y'])
+    if action == 'move_relative':
+        from ctypes.wintypes import POINT
+        point = POINT()
+        if not u.GetCursorPos(ctypes.byref(point)):
+            raise OSError('cursor position unavailable')
+        width, height = u.GetSystemMetrics(0), u.GetSystemMetrics(1)
+        x = max(0, min(width-1, point.x + round(event['dx'] * (width-1))))
+        y = max(0, min(height-1, point.y + round(event['dy'] * (height-1))))
+        if not u.SetCursorPos(x, y):
+            raise OSError('cursor injection denied')
+    elif action == 'click':
         down,up=(0x0002,0x0004) if event.get('button','left')=='left' else (0x0008,0x0010)
         for _ in range(event.get('count',1)):
             try: mouse(down)
@@ -92,6 +107,14 @@ def handle_input(handler):
         event=validate(json.loads(raw))
     except (ValueError,UnicodeError,OSError):
         reply(400,{'ok':False,'error':'invalid_input'}); return
+    if event['action'] == 'focus':
+        from focus_probe import editable_focus
+        # No input lock or injection while waiting for an external UIA provider.
+        if getattr(handler.server, 'dry_run', False):
+            reply(200, {'ok': True, 'editable': None})
+        else:
+            reply(200, {'ok': True, 'editable': editable_focus()})
+        return
     if not _LOCK.acquire(timeout=.1):
         reply(429,{'ok':False,'error':'busy'}); return
     try:

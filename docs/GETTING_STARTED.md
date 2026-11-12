@@ -64,7 +64,7 @@ QR скачивания ведёт только к установочному ф
 
 Нажми **☰** вверху: откроются **«Управление ПК»**, **«Программы»**, **«Файлы»**, **«Трансляция»**, **«Настройки»**. Кнопки ПК находятся в управлении, отправка файла — в файлах, просмотр и трансляция экрана — в трансляции. Настройки подключения, тема и ручная проверка обновлений — в настройках.
 
-- В **«Настройки»** нажимай кнопку темы для переключения между системной (**«авто»**), светлой (**«день»**) и тёмной (**«ночь»**) темой. Выбор сохраняется; экран приложения пересоздаётся. «Океан», «Лес» и «Слива» — только Windows. Android использует свои системные шрифты.
+- В **«Настройки»** нажимай кнопку темы для переключения между системной (**«авто»**), светлой (**«день»**) и тёмной (**«ночь»**) темой. Выбор сохраняется; экран приложения пересоздаётся. «Океан», «Лес» и «Слива» доступны также на Android начиная с версии 1.19. Android использует свои системные шрифты.
 - **Версия** показана в выдвижном меню под разделами. Для ручной проверки открой **«Настройки» → «Проверить обновления»**. При установке APK подтверждение Android по-прежнему обязательно; проверка сама ничего не устанавливает.
 
 [Галерея](SCREENSHOTS.md) показывает прежнее оформление Windows до 1.0.8 и Android 1.16, а не этот новый интерфейс.
@@ -103,7 +103,7 @@ H.264 экрана ПК сейчас использует **NVIDIA NVENC**: ну
 
 ### Экран ПК на телефоне
 
-На Android нажми **«Смотреть экран ПК»**. Включи управление в этом экране, если нужны клики и ввод: касание — левый клик, удержание — правый, движение — перетаскивание. Есть кнопки прокрутки и поле ввода текста. UAC и окна с повышенными правами могут не принимать ввод; приложение не обходит ограничения Windows.
+На Android нажми **«Смотреть экран ПК»**. Касание нажимает в выбранном месте, свайп одним пальцем перемещает указатель как на трекпаде, долгий тап — правая кнопка, два пальца — прокрутка. После нажатия на доступное для ввода поле откроется текущая клавиатура Android; при необходимости нажми кнопку клавиатуры вручную. Приложение не читает содержимое поля Windows. UAC и окна с повышенными правами могут не принимать ввод; ограничения Windows не обходятся.
 
 ### Экран телефона на ПК
 
@@ -118,6 +118,10 @@ H.264 экрана ПК сейчас использует **NVIDIA NVENC**: ну
 Звук приложений доступен с Android 10+, после выдачи запрошенного разрешения на запись аудио и только если само приложение разрешает захват воспроизведения. Это не обещание передачи звука любого приложения. Защищённые экраны могут быть чёрными. После обновления APK, включения службы управления или поворота экрана перезапусти трансляцию. Остановить её можно кнопкой **«Остановить трансляцию»** или через уведомление Android.
 
 ### Файлы и программы
+
+**С ПК на телефон (Windows 1.0.10 / Android 1.20 и новее):** на ПК открой «Приём файлов / Received files» и выбери файл для телефона. Приложение подготовит отдельную копию и покажет её в очереди; исходник после этого можно закрыть. На телефоне открой «Файлы → Получить файлы с ПК», выбери папку системным диалогом, нажми «Файлы с ПК» и укажи файл. Корень памяти и некоторые системные папки Android выбрать не разрешает — используй обычную папку, например вложенную в Documents.
+
+Лимит — **50 ГиБ на файл**. На ПК нужно место для подготовленной копии; на телефоне — для внутренней докачки и сохранённой копии в выбранной папке, то есть до двух размеров файла. Пауза или уход приложения в фон останавливают загрузку; «Продолжить загрузку» возобновляет её с проверенной границы блока. После передачи проверяется SHA-256, затем файл сохраняется в папку и проверяется повторно. К имени добавляется идентификатор передачи — существующие файлы не перезаписываются. Держи приложение на экране во время получения. Очередь на ПК хранится до 7 дней; её можно очистить локально. Отмена на телефоне очищает его незавершённую копию, но оставляет файл в очереди ПК. Доступ к произвольным путям ПК телефону не выдаётся.
 
 - Для отправки файла выбери **«Загрузить файл на ПК»** на телефоне и укажи файл. Максимум — 50 ГиБ. Перед отправкой приложение читает файл для проверки целостности: подготовка большого файла может занять заметное время, ещё до появления переданных байтов.
 - **Передачу можно приостановить и продолжить.** Используй **«Пауза»**, затем **«Продолжить»**; **«Позже»** откладывает продолжение. После краткого обрыва Wi-Fi приложение попробует восстановить передачу; если не удалось — восстанови соединение с тем же ПК и продолжи вручную. После перезапуска приложения незавершённая передача будет предложена снова. Нужен тот же доступный и неизменённый исходный файл: не удаляй, не перемещай и не редактируй его до окончания, не отзывай доступ приложения к нему. Если выбранный источник не позволяет сохранить доступ, приложение попросит выбрать файл через другого поставщика. Повторная проверка исходного файла при продолжении тоже может занять время.
@@ -213,7 +217,7 @@ The installer has no commercial code-signing certificate, so SmartScreen may rep
 
 Tap **☰** at the top to open **PC control**, **Programs**, **Files**, **Streaming** and **Settings**. PC actions are under PC control, uploads under Files, and screen viewing/casting under Streaming. Connection settings, theme and the manual update check are under Settings.
 
-- In **Settings**, tap the theme button to cycle through **system**, **light** and **dark**. The selection is saved and the app screen is recreated. Ocean, Forest and Plum are Windows-only. Android uses its system fonts.
+- In **Settings**, tap the theme button to cycle through **system**, **light** and **dark**. The selection is saved and the app screen is recreated. Ocean, Forest and Plum are also available on Android starting with version 1.19. Android uses its system fonts.
 - The **version** appears below the drawer's sections. For a manual check, open **Settings → Check for updates**. Android installation confirmation is still mandatory for an APK; checking installs nothing by itself.
 
 The [gallery](SCREENSHOTS.md#english) shows the earlier Windows appearance before 1.0.8 and Android 1.16, not this new interface.
@@ -250,7 +254,11 @@ Manual updating from the release page remains available. A digitally signed rele
 
 ## Using it
 
-- **PC screen:** tap **View PC screen** on Android and enable control in that screen for clicks and text. Tap for left click, hold for right click, move to drag. Scroll buttons and text input are available. Windows UAC/elevated windows are not bypassed.
+**PC to phone (Windows 1.0.10 / Android 1.20 or later):** on Windows, open **Received files**, choose a file for the phone and wait for its snapshot to appear in the queue. On Android, open **Files → Receive files from PC**, choose a destination with the system folder picker, tap **Files from PC** and select the file. Android blocks some system locations and the storage root; choose a regular folder, such as a subfolder of Documents.
+
+The limit is **50 GiB per file**. The PC needs space for its prepared snapshot; the phone needs both a private resumable cache and the destination copy, potentially twice the file size. Pause or moving the app into the background stops receiving; **Continue download** resumes from a verified chunk boundary. The full SHA-256 is checked before saving and again against the saved document. A transfer identifier is added to the filename; existing files are not overwritten. Keep the app visible while receiving. The PC queue lasts up to seven days and can be cleared locally. Canceling on Android removes its unfinished copy but keeps the PC queue entry. The phone never receives arbitrary PC filesystem access.
+
+- **PC screen:** tap **View PC screen** on Android. Taps click the selected position; one-finger swipes move the pointer like a trackpad, long taps right-click and two fingers scroll. Clicking an editable field opens the current Android keyboard when Windows exposes editable-focus metadata; the keyboard button remains available manually. Windows field contents are not read. UAC/elevated windows are not bypassed.
 - **Phone screen:** keep the DroidBridge main window open and start its server. On the already-paired phone, tap **Cast phone to PC** and approve Android's system screen-capture prompt. In 1.0.8, this opens the embedded **«Экран телефона»** (Phone screen) section on the PC; its address comes from the authenticated phone request, so you do not need to type an IP. If the main window is closed, open DroidBridge and retry on the phone; a server alone can handle commands, but not embedded viewing. Manual connection is still available: open Phone screen, enter the phone's local IP and click **«Открыть экран телефона»** (Open phone screen). Find the phone IP in Android's current Wi-Fi network details. Navigating to another section closes the viewer connection; return and open it again to reconnect. Closing the PC viewer does not replace stopping Android casting: when finished, tap **Stop casting** on the phone or use its notification.
 - **Phone control:** a phone-initiated session enables control automatically **only if** you have already enabled **Control phone from PC** in Android Accessibility settings. Otherwise it is view-only. To grant control, separately open **Allow phone control from PC** on Android, read the explanation and enable the service in system settings, then start casting again from the phone. The app cannot grant itself this permission. Gestures require Android 7+; revoke access in the same settings at any time. Automatic enabling applies to a new phone-initiated session, not every manual connection or reconnection; background operation and automatic control recovery are not guaranteed.
 - **Phone audio:** requires Android 10+, the requested audio permission and an app that allows playback capture. Not every app allows it. Protected screens may appear black. Restart mirroring after an APK update, phone rotation or enabling Accessibility. Stop it with **Stop casting** or the Android notification.

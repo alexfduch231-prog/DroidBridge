@@ -1,5 +1,15 @@
 # Изменения / Changelog
 
+## 1.0.10 / Android 1.20 — 2026-11-13
+
+Добавлена передача файлов с ПК на телефон: локальная очередь выбранных файлов, выбор папки Android системным диалогом, прогресс, пауза и продолжение, проверка блоков и итогового SHA-256. Лимит — 50 ГиБ на файл, очередь до 7 дней; исходные пути ПК не публикуются телефону. Для докачки и сохранения нужна дополнительная память. Одноимённые файлы не перезаписываются. На ПК доступны отмена подготовки и удаление файла из очереди.
+
+Added PC-to-phone file transfer: a local queue of explicitly selected files, Android system folder selection, progress, pause/resume, chunk validation and full SHA-256 checks. The limit is 50 GiB per file, with a seven-day queue lifetime; original PC paths are not exposed to the phone. Resuming and saving require extra storage. Existing files are not overwritten. Windows can cancel staging and remove queued files.
+
+На телефоне убрана командная полоса под экраном ПК. Свайп одним пальцем перемещает указатель как на трекпаде; тап нажимает в выбранном месте, долгий тап вызывает правую кнопку, два пальца прокручивают. Кнопка клавиатуры открывает текущую системную клавиатуру Android. После нажатия на текстовое поле приложение запрашивает только признак возможности ввода через Windows UI Automation, без чтения содержимого поля. Если приложение не предоставляет этот признак, клавиатуру можно открыть вручную. Для новых жестов нужны обновления обеих частей.
+
+The phone's PC-view command strip is removed. One-finger swipes move the pointer like a trackpad; taps click the selected position, long taps right-click, and two fingers scroll. The keyboard button opens the current Android system keyboard. After a click, Windows UI Automation supplies only editable-focus metadata, without reading field contents. If an application does not expose that metadata, the keyboard remains available manually. Update both components for the new gestures.
+
 ## Android 1.19 — 2026-11-12
 
 Добавлены темы: системная, светлая, тёмная, «Океан», «Лес», «Слива». Выбор сохраняется на телефоне. В настройках появился встроенный сканер QR сопряжения: камера включается только на экране сканера, распознавание выполняется на устройстве, кадры не сохраняются и не отправляются. Подтверждение сопряжения на ПК остаётся обязательным; ручной ввод ссылки сохранён.

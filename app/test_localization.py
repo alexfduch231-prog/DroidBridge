@@ -46,8 +46,8 @@ class LocalizationTests(unittest.TestCase):
                     value = node.get('{http://schemas.android.com/apk/res/android}' + attribute, '')
                     self.assertFalse(re.search('[А-Яа-я]', value), str(file.name) + ': hardcoded UI text')
         manifest = (ROOT / 'AndroidManifest.xml').read_text(encoding='utf-8')
-        self.assertIn('android:versionCode="29"', manifest)
-        self.assertIn('android:versionName="1.19"', manifest)
+        self.assertIn('android:versionCode="30"', manifest)
+        self.assertIn('android:versionName="1.20"', manifest)
 
 if __name__ == '__main__':
     unittest.main(verbosity=2)

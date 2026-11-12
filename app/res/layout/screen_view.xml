@@ -36,64 +36,12 @@
         android:textSize="11sp" />
 
     <LinearLayout
-        android:id="@+id/screen_input_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom"
-        android:layout_margin="10dp"
-        android:background="@drawable/meta_bg"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="8dp">
-
-        <EditText
-            android:id="@+id/cmd_text"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:background="@drawable/input_dark"
-            android:hint="@string/type_hint"
-            android:imeOptions="actionSend"
-            android:inputType="text"
-            android:maxLength="1000"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:paddingTop="10dp"
-            android:paddingBottom="10dp"
-            android:singleLine="true"
-            android:textColor="#FFFFFFFF"
-            android:textColorHint="#80FFFFFF"
-            android:textSize="14sp" />
-
-        <Button
-            style="@style/BtnToolbar"
-            android:id="@+id/cmd_back"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:layout_marginStart="6dp"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:text="@string/type_back"
-            android:textAllCaps="false"
-            android:textSize="16sp" />
-
-        <Button
-            style="@style/BtnToolbar"
-            android:id="@+id/cmd_send"
-            android:layout_width="wrap_content"
-            android:layout_height="48dp"
-            android:layout_marginStart="6dp"
-            android:paddingLeft="14dp"
-            android:paddingRight="14dp"
-            android:text="@string/type_send"
-            android:textAllCaps="false"
-            android:textSize="14sp"
-            android:textStyle="bold" />
-    </LinearLayout>
-    <LinearLayout
         android:layout_width="wrap_content" android:layout_height="wrap_content"
-        android:layout_gravity="top|end" android:layout_marginTop="82dp"
+        android:layout_gravity="top|end" android:layout_marginTop="0dp"
         android:background="@drawable/meta_bg" android:orientation="horizontal">
+        <Button android:id="@+id/screen_keyboard" style="@style/BtnToolbar"
+            android:layout_width="wrap_content" android:layout_height="48dp"
+            android:text="@string/screen_keyboard" />
         <Button android:id="@+id/screen_scale" style="@style/BtnToolbar"
             android:layout_width="wrap_content" android:layout_height="48dp"
             android:text="@string/screen_fit" />

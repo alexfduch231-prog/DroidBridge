@@ -409,6 +409,12 @@ public class MainActivity extends Activity {
         btnMirror = (Button) findViewById(R.id.btn_mirror);
         addPhoneControlSetup();
         btnUpload = (Button) findViewById(R.id.btn_upload);
+        Button receiveButton = new Button(this);
+        receiveButton.setText(getResources().getConfiguration().locale.getLanguage().equals("ru") ? "Получить файлы с ПК" : "Receive files from PC");
+        receiveButton.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) { savePrefsIfNeeded(); startActivity(new Intent(MainActivity.this, ReceiveActivity.class)); }
+        });
+        ((ViewGroup) btnUpload.getParent()).addView(receiveButton);
         btnUpload.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 if (fileUpload != null) return;

@@ -48,6 +48,25 @@ class InputTests(unittest.TestCase):
         self.assertEqual(403, self.post({'action':'key','name':'win'}, token='wrong'))
         self.server.input_backend.assert_not_called()
 
+    def test_relative_move_authorized_and_bounded(self):
+        event = dict(action='move_relative', dx=.125, dy=-.25)
+        self.assertEqual(200, self.post(event))
+        self.server.input_backend.assert_called_once_with(event)
+        self.server.input_backend.reset_mock()
+        for value in [True, float('nan'), float('inf'), -1.01, 1.01, '1', None]:
+            with self.subTest(value=value):
+                self.assertEqual(400, self.post(dict(action='move_relative', dx=value, dy=0)))
+        self.server.input_backend.assert_not_called()
+
+    def test_focus_probe_is_authenticated_and_does_not_inject(self):
+        import focus_probe
+        with patch.object(focus_probe, 'editable_focus', return_value=True) as probe:
+            self.assertEqual(403, self.post(dict(action='focus'), token='wrong'))
+            probe.assert_not_called()
+            self.assertEqual(200, self.post(dict(action='focus')))
+            probe.assert_called_once()
+        self.server.input_backend.assert_not_called()
+
     def test_all_actions(self):
         for event in [dict(action='drag',x=0,y=0,x2=1,y2=1,duration=100),
                       dict(action='scroll',x=.5,y=.5,delta=-3),
@@ -72,6 +91,34 @@ class InputTests(unittest.TestCase):
         self.server.input_backend.assert_not_called()
 
 class DispatchTests(unittest.TestCase):
+    def test_trackpad_scroll_preserves_cursor(self):
+        import remote_input
+        user=Mock()
+        with patch.object(remote_input.ctypes.windll,'user32',user):
+            remote_input.dispatch(dict(action='scroll',x=.5,y=.5,delta=1),Mock(),
+                listener.INPUT,listener.KEYBDINPUT,listener.MOUSEINPUT,Mock())
+        user.SetCursorPos.assert_not_called()
+
+    def test_delete_key_is_supported(self):
+        import remote_input
+        self.assertEqual('delete',remote_input.validate(dict(action='key',name='delete'))['name'])
+
+    def test_relative_move_clamps_without_mouse_buttons(self):
+        import remote_input
+        def cursor(pointer):
+            pointer._obj.x, pointer._obj.y = 1800, 20
+            return 1
+        user = Mock()
+        user.GetCursorPos.side_effect = cursor
+        user.GetSystemMetrics.side_effect = lambda axis: 1920 if axis == 0 else 1080
+        user.SetCursorPos.return_value = 1
+        send = Mock()
+        with patch.object(remote_input.ctypes.windll, 'user32', user):
+            remote_input.dispatch(dict(action='move_relative', dx=.5, dy=-.5), send,
+                listener.INPUT, listener.KEYBDINPUT, listener.MOUSEINPUT, Mock())
+        user.SetCursorPos.assert_called_once_with(1919, 0)
+        send.assert_not_called()
+
     def test_drag_always_releases_mouse(self):
         import remote_input
         send=Mock()

@@ -24,7 +24,7 @@ def audit(output: Path, source: Path):
     forbidden = {'token.txt', 'apps.json', 'upload_settings.json', 'media_settings.json', 'android_setup.json', 'wol_onboarding.json', 'theme_settings.json', 'update_state.json', 'mirror-request.json', 'mirror-gui-heartbeat.json', 'client.pid', 'listener.log', 'client.log'}
     forbidden_suffixes = {'.jks', '.keystore', '.pem', '.key', '.log', '.pid'}
     for file in payload.rglob('*'):
-        if any(part.lower() == 'resumable-uploads' or part.lower().startswith('.pcmote-resume-')
+        if any(part.lower() in {'resumable-uploads', 'file-outbox'} or part.lower().startswith('.pcmote-resume-')
                for part in file.relative_to(payload).parts):
             raise ValueError('Unexpected private runtime state in payload: ' + file.relative_to(payload).as_posix())
         if file.is_file() and (file.name.lower() in forbidden or file.suffix.lower() in forbidden_suffixes):

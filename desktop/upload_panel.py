@@ -107,6 +107,105 @@ def build_uploads_page(parent, data_dir):
     ttk.Button(row, style='DB.Primary.TButton', text=words['choose'], command=select).pack(side='left')
     ttk.Button(row, text=words['reset'], command=lambda: guarded(model.reset)).pack(side='left', padx=8)
     ttk.Label(frame, style='DB.Muted.TLabel', text=words['local'], wraplength=580).pack(anchor='w')
+    # Sending never exposes arbitrary PC paths to the phone: stage a local snapshot.
+    import queue
+    import threading
+    from listener.file_outbox import Outbox, OutboxError
+    outbox = Outbox(data_dir)
+    messages = queue.Queue()
+    staging_cancel = threading.Event()
+    closed = [False]
+    timer = [None]
+    status = tk.StringVar(master=window)
+    ttk.Label(frame, style='DB.Heading.TLabel',
+              text='Отправить на смартфон' if language == 'ru' else 'Send to phone').pack(anchor='w', pady=(24, 8))
+    ttk.Label(frame, style='DB.Muted.TLabel',
+              text='Выбери файл на ПК, затем получи его в разделе «Файлы» на телефоне.' if language == 'ru'
+              else 'Choose a PC file, then receive it in Files on your phone.', wraplength=580).pack(anchor='w')
+    def stage():
+        selected = filedialog.askopenfilename(parent=window)
+        if not selected:
+            return
+        staging_cancel.clear()
+        send_button.configure(state='disabled')
+        cancel_stage.configure(state='normal')
+        status.set('Подготовка копии файла…' if language == 'ru' else 'Preparing file snapshot…')
+        def work():
+            try:
+                item = outbox.enqueue(selected, cancelled=staging_cancel.is_set,
+                                      progress=lambda done, total: messages.put(('progress', int(done * 100 / max(1, total)))))
+                messages.put(('ok', item['name']))
+            except (OutboxError, OSError):
+                messages.put(('error', ''))
+        threading.Thread(target=work, daemon=True).start()
+    send_button = ttk.Button(frame, text='Выбрать файл для телефона…' if language == 'ru'
+                             else 'Choose file for phone…', command=stage)
+    send_button.pack(anchor='w', pady=10)
+    cancel_stage = ttk.Button(frame, text='Отменить подготовку' if language == 'ru' else 'Cancel staging',
+                              command=staging_cancel.set, state='disabled')
+    cancel_stage.pack(anchor='w', pady=(0, 8))
+    pending = ttk.Treeview(frame, columns=('name', 'size'), show='headings', height=4)
+    pending.heading('name', text='Файл' if language == 'ru' else 'File')
+    pending.heading('size', text='Байт' if language == 'ru' else 'Bytes')
+    pending.pack(fill='x', pady=8)
+    def refresh_outbox():
+        for ident in pending.get_children():
+            pending.delete(ident)
+        for item in outbox.pending():
+            pending.insert('', 'end', iid=item['id'], values=(item['name'], item['size']))
+    def remove_outgoing():
+        selected = pending.selection()
+        if selected and messagebox.askyesno(words['title'],
+                'Убрать файл из очереди? Загрузка на телефоне может перестать продолжаться.' if language == 'ru'
+                else 'Remove queued file? A paused phone download may no longer resume.', parent=window):
+            try:
+                outbox.discard(selected[0])
+                refresh_outbox()
+            except (OutboxError, OSError):
+                status.set('Файл уже недоступен.' if language == 'ru' else 'File no longer available.')
+    ttk.Button(frame, text='Обновить очередь' if language == 'ru' else 'Refresh queue', command=refresh_outbox).pack(anchor='w')
+    ttk.Button(frame, text='Убрать выбранный файл' if language == 'ru' else 'Remove selected file', command=remove_outgoing).pack(anchor='w', pady=8)
+    refresh_outbox()
+    ttk.Label(frame, textvariable=status, style='DB.Muted.TLabel', wraplength=580).pack(anchor='w')
+    def drain():
+        if closed[0]:
+            return
+        try:
+            outcome, name = messages.get_nowait()
+            # Coalesce progress: 50 GiB can produce thousands of chunk updates.
+            while outcome == 'progress':
+                try:
+                    outcome, name = messages.get_nowait()
+                except queue.Empty:
+                    break
+            if outcome == 'progress':
+                status.set(('Подготовка: ' if language == 'ru' else 'Preparing: ') + str(name) + '%')
+                timer[0] = window.after(150, drain)
+                return
+            send_button.configure(state='normal')
+            cancel_stage.configure(state='disabled')
+            refresh_outbox()
+            status.set(('Готов к получению: ' if language == 'ru' else 'Ready to receive: ') + name
+                       if outcome == 'ok' else ('Не удалось подготовить файл. Проверь место на диске.'
+                       if language == 'ru' else 'Could not prepare file. Check free disk space.'))
+        except queue.Empty:
+            pass
+        timer[0] = window.after(150, drain)
+    def dispose():
+        staging_cancel.set()
+        closed[0] = True
+        if timer[0] is not None:
+            try:
+                window.after_cancel(timer[0])
+            except tk.TclError:
+                pass
+        if window.winfo_exists():
+            window.destroy()
+    window.dispose = dispose
+    window.bind('<Destroy>', lambda event: (closed.__setitem__(0, True),
+                window.after_cancel(timer[0]) if timer[0] is not None else None)
+                if event.widget is window and not closed[0] else None, add='+')
+    drain()
     refresh()
     window.close_container = row
     window.title_text = words['title']

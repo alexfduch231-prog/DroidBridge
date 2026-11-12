@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import tempfile
 
-APK_DOWNLOAD_URL = 'https://github.com/alexfduch231-prog/DroidBridge/releases/download/v1.0.9/DroidBridge-1.18-android.apk'
+APK_DOWNLOAD_URL = 'https://github.com/alexfduch231-prog/DroidBridge/releases/download/v1.0.10/DroidBridge-1.20-android.apk'
 _CONFIG_LIMIT = 4096
 
 

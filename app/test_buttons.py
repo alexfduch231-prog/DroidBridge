@@ -54,10 +54,10 @@ class ButtonTests(unittest.TestCase):
                 # One-argument native Buttons inherit AppTheme/ScreenTheme buttonStyle.
                 args = match.group(1).replace(' ', '')
                 self.assertTrue(args in ('this', 'activity') or 'R.style.Btn' in args, str(file))
-        self.assertEqual(count, 9, 'Review newly added programmatic buttons for themed context')
+        self.assertEqual(count, 10, 'Review app-owned programmatic buttons for themed context')
         desktop = (ROOT / 'src/ru/alexv/pcmote/DesktopControl.java').read_text(encoding='utf-8')
         pairing = (ROOT / 'src/ru/alexv/pcmote/PairingActivity.java').read_text(encoding='utf-8')
-        self.assertIn('new Button(activity, null, 0, R.style.BtnToolbar)', desktop)
+        self.assertIn('new RemoteImeView', desktop)
         self.assertIn('new Button(this, null, 0, R.style.BtnFilled)', pairing)
         for file in (ROOT / 'res/layout').glob('*.xml'):
             for node in ET.parse(file).getroot().iter('Button'):

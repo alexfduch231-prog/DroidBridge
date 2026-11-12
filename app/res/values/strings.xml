@@ -241,4 +241,5 @@
     <string name="scan_unavailable">Камера недоступна. Закрой другие приложения камеры и попробуй снова</string>
     <string name="scan_invalid">Это не QR сопряжения DroidBridge</string>
     <string name="scan_retry">Повторить / разрешить камеру</string>
+    <string name="screen_keyboard">Клавиатура</string>
 </resources>
