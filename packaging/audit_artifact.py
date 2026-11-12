@@ -3,6 +3,7 @@ import argparse
 import json
 from pathlib import Path
 from build_support import inventory
+from media_bundle import validate_media_bundle
 
 
 def audit(output: Path, source: Path):
@@ -20,13 +21,29 @@ def audit(output: Path, source: Path):
     current = {name: inventory_one(source / name) for name in expected}
     if current != expected:
         raise ValueError('Source changed since freeze; rebuild required')
-    forbidden = {'token.txt', 'apps.json', 'upload_settings.json', 'media_settings.json', 'android_setup.json', 'client.pid', 'listener.log', 'client.log'}
+    forbidden = {'token.txt', 'apps.json', 'upload_settings.json', 'media_settings.json', 'android_setup.json', 'update_state.json', 'client.pid', 'listener.log', 'client.log'}
     forbidden_suffixes = {'.jks', '.keystore', '.pem', '.key', '.log', '.pid'}
     for file in payload.rglob('*'):
+        if any(part.lower() == 'resumable-uploads' or part.lower().startswith('.pcmote-resume-')
+               for part in file.relative_to(payload).parts):
+            raise ValueError('Unexpected private runtime state in payload: ' + file.relative_to(payload).as_posix())
         if file.is_file() and (file.name.lower() in forbidden or file.suffix.lower() in forbidden_suffixes):
             raise ValueError('Unexpected private runtime file in payload: ' + file.relative_to(payload).as_posix())
+    contains_media = manifest.get('contains_ffmpeg')
+    if type(contains_media) is not bool:
+        raise ValueError('Missing explicit contains_ffmpeg media declaration')
+    media_verified = False
+    if contains_media:
+        proof = validate_media_bundle(payload / 'media', staged=True)
+        if manifest.get('media_bundle') != proof:
+            raise ValueError('Media source proof differs from build manifest')
+        media_verified = True
+    elif (payload / 'media').exists() or any(
+            file.name.lower() in {'ffmpeg.exe', 'ffplay.exe'} for file in payload.rglob('*')):
+        raise ValueError('Undeclared FFmpeg/media payload')
     return {'ok': True, 'integrity_ok': True,
-            'publish_allowed': bool(manifest.get('public_release_ready')) and not manifest['contains_ffmpeg'],
+            'media_source_verified': media_verified,
+            'publish_allowed': manifest.get('public_release_ready') is True and (not contains_media or media_verified),
             'release_gate': manifest.get('release_gate', 'Release validation required'),
             'source_files': len(expected), 'payload_files': len(manifest['payload_sha256']),
             'contains_ffmpeg': manifest['contains_ffmpeg'], 'self_test': manifest['self_test']}

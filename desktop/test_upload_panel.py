@@ -86,7 +86,7 @@ class UploadPanelTests(unittest.TestCase):
             finally:
                 root.destroy()
         with patch.object(sys, 'argv', ['launcher']), patch.object(launcher, 'data_directory', return_value=self.data):
-            with patch.object(tk.Tk, 'mainloop', inspect):
+            with patch.object(tk.Tk, 'mainloop', inspect), patch('update_manager.start_startup_check'):
                 self.assertEqual(launcher.main(), 0)
         self.assertEqual(len(seen), 1)
 

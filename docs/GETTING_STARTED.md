@@ -1,6 +1,6 @@
 # Первое подключение DroidBridge
 
-[На главную](../README.md) · [English](#english) · [Скачать Windows и Android](https://github.com/alexfduch231-prog/DroidBridge/releases/tag/v1.0.3)
+[На главную](../README.md) · [English](#english) · [Скачать Windows и Android](https://github.com/alexfduch231-prog/DroidBridge/releases/tag/v1.0.4)
 
 ## Перед установкой
 
@@ -8,10 +8,12 @@
 
 DroidBridge не подключается через облако. Основные команды, видео и файлы передаются без транспортного шифрования. Используй приложение только на своих устройствах или с согласия владельца и **не пробрасывай порты роутера в Интернет**.
 
+Эта инструкция описывает Windows-установщик **1.0.4** со встроенными FFmpeg и ffplay и Android **1.15**. Обновление Windows с сохранением настроек проверено; новые сценарии на реальном телефоне пока не проверены. У прежних slim-установщиков медиакомплект отсутствует.
+
 ## 1. Установи приложения
 
 1. На [странице загрузки](https://github.com/alexfduch231-prog/DroidBridge/releases/latest) скачай установщик Windows и Android APK из списка **Assets**. Архивы **Source code** для установки не нужны. При запуске DroidBridge на ПК также предложит **«Установить на телефон»**: отсканируй QR обычной камерой телефона, чтобы скачать APK с GitHub. Если приложение уже есть, нажми **«Уже установлено → подключить к ПК»** — скачивание будет пропущено.
-2. Запусти установщик Windows. Python и зависимости интерфейса уже включены. Сервер не запускается автоматически — его включаешь ты.
+2. Запусти установщик Windows. В обычную установку 1.0.4 входят Python, зависимости интерфейса, FFmpeg и ffplay; инструменты видео и звука выбираются автоматически. Ничего отдельно скачивать или добавлять в PATH не нужно. Сервер не запускается автоматически — его включаешь ты.
 3. Открой APK на телефоне. Если Android запросит разрешение на установку из этого источника, разреши его только для приложения, которым открываешь скачанный файл. После установки разрешение можно отозвать. Не отключай Play Protect и другие средства защиты.
 
 ### Если Windows показывает предупреждение
@@ -35,19 +37,35 @@ QR скачивания ведёт только к установочному ф
 
 Если Windows запросит сетевой доступ, разрешай его только для доверенного **частного** профиля, не для общедоступных сетей. Не меняй тип чужой сети на частный ради подключения. При ручной настройке брандмауэра ограничь правила локальной подсетью: TCP **8765** для управления и файлов, UDP **8766** для автопоиска, TCP **8767** на время сопряжения. Установщик сам таких правил не создаёт.
 
-## 3. Установи FFmpeg для видео и звука
+## 3. Видео и звук
 
-**Windows-установщик 1.0.3 не включает FFmpeg и ffplay. Скачай их отдельно и выбери папку в DroidBridge — менять PATH не нужно.** Приложение ничего не скачивает автоматически.
+**В обычной установке 1.0.4 FFmpeg и ffplay уже входят в комплект и выбираются автоматически.** Если главное окно пишет **«Видео и звук готовы. Дополнительная установка не нужна.»**, этот этап можно пропустить. Для автообнаружения приложение только ищет файлы: ничего не скачивает и не запускает для проверки.
 
-1. Открой **«Настроить видео и звук» → «Официальный сайт FFmpeg»** либо [страницу загрузки FFmpeg](https://ffmpeg.org/download.html). Перейди к одному из указанных там поставщиков сборок для Windows. Условия лицензии и состав внешней сборки проверяй у её поставщика.
-2. Скачай сборку с **обоими** файлами: `ffmpeg.exe` и `ffplay.exe`. Распакуй архив в постоянную папку на ПК. Не запускай программы из источника, которому не доверяешь.
-3. В DroidBridge нажми **«Настроить видео и звук» → «Выбрать папку…»**. Укажи папку `bin` с обоими EXE; можно выбрать и её родительскую папку, если внутри есть `bin`.
-4. Прочитай запрос **«Запустить выбранные программы для проверки?»**. При согласии DroidBridge запустит оба EXE с параметром `-version`: до 5 секунд на каждый. Дождись сообщения **«Проверка пройдена, папка сохранена»**. При ошибке настройки не меняются.
-5. Останови сервер кнопкой **«Остановить»** и снова нажми **«Запустить сервер»**. Если окно просмотра телефона уже открыто, закрой и открой его заново. Закрывать само приложение DroidBridge не нужно.
+H.264 экрана ПК сейчас использует **NVIDIA NVENC**: нужна поддерживаемая видеокарта NVIDIA и подходящий драйвер. Комплектный FFmpeg не гарантирует этот режим на любом Windows-ПК. Звук телефона требует Android 10+ и приложения, разрешающего захват.
 
-Если распакованную папку переместили или удалили, выбери её заново. Кнопка **«Автоматический поиск»** сбрасывает выбранную папку и возвращает поиск в `media` рядом с приложением и в существующем PATH; она ничего не устанавливает. Для обычной настройки этот сброс не нужен.
+### Необязательно: другая сборка или восстановление настройки
 
-Без этих инструментов обычные команды, файлы и JPEG-просмотр могут работать, но H.264 и звук недоступны.
+Эта настройка нужна для запуска из исходников, старого slim-установщика или осознанной замены медиакомплекта, а не при обычной установке 1.0.4.
+
+1. Если инструментов нет, сначала восстанови обычную установку. Для своей сборки можно открыть **«Настроить видео и звук» → «Официальный сайт FFmpeg»** или [страницу FFmpeg](https://ffmpeg.org/download.html) и выбрать доверенного поставщика Windows-сборки с **обоими** файлами: `ffmpeg.exe` и `ffplay.exe`. Распакуй её в постоянную папку.
+2. Нажми **«Настроить видео и звук» → «Выбрать папку…»**. Укажи `bin` с обоими EXE или родительскую папку, если внутри есть `bin`.
+3. Прочитай **«Запустить выбранные программы для проверки?»**. Только после твоего согласия DroidBridge запустит оба выбранных EXE с `-version`, до 5 секунд на каждый. Дождись **«Проверка пройдена, папка сохранена»**. При отказе или ошибке настройки не меняются.
+4. Перезапусти сервер кнопками **«Остановить» → «Запустить сервер»** и заново открой окно просмотра телефона. Закрывать DroidBridge не нужно.
+
+**«Автоматический поиск»** отменяет ручной выбор и возвращает поиск комплектных инструментов, PATH и стандартных мест установки. Он ничего не устанавливает и не запускает EXE для проверки. Ручной выбор имеет приоритет: если выбранную папку удалили, выбери её заново или нажми **«Автоматический поиск»**; скрытой подмены другой сборкой нет.
+
+Лицензии и соответствующие исходники комплектных компонентов — часть подготовки дистрибутива, а не отдельное действие для обычного пользователя. Без найденных инструментов команды, файлы и JPEG-просмотр могут работать, но H.264 и звук недоступны.
+
+## Обновления
+
+**Функция включена в 1.0.4.** Установка обновления Windows с сохранением настроек проверена. Обновление на реальном телефоне пока не проверено. Первую версию с проверкой обновлений установи вручную со страницы релиза поверх текущей; старое приложение само эту возможность не получит. Не удаляй приложение ради обновления: удаление может стереть настройки.
+
+- При запуске Windows- и Android-приложение проверят наличие новой версии через Интернет. Для этого используется фиксированный публичный адрес со списком версий и цифровой подписью; учётная запись, личный ключ или настройка сервера тебе не нужны. Это отдельная проверка обновлений, не облачный канал управления устройствами.
+- Если есть новая версия, появятся **«Позже»** и **«Обновить»**. **«Позже»** оставляет текущую версию. Если Интернет недоступен или проверка не удалась, обновление не устанавливается; можно продолжить работу и попробовать позже.
+- **Windows:** после **«Обновить»** приложение скачает установщик и проверит его по подписанным сведениям о выпуске. Только после успешной проверки закроет свой сервер, просмотр и главное окно, чтобы запустить установку. Сохрани работу и заверши передачу файлов заранее. Главное окно откроется снова только после успешной установки; настройки и сохранённые подключения должны остаться. При ошибке или отмене не считай обновление установленным — открой приложение вручную и проверь версию.
+- **Android:** после скачивания и проверки APK откроется **системное подтверждение установки**. При необходимости разреши установку из этого источника именно для DroidBridge; подтверждение Android обязательно и не обходится. Обновляй поверх установленного приложения, чтобы сохранить настройки. После установки приложение попробует открыться снова или предложить уведомление, но Android может это ограничить; если не открылось — запусти его обычным способом.
+
+Для ручного обновления всегда можно использовать страницу релиза. Цифровая подпись списка обновлений не означает, что Windows-установщик имеет коммерческую подпись или что SmartScreen не покажет предупреждение.
 
 ## Что делать после подключения
 
@@ -65,8 +83,11 @@ QR скачивания ведёт только к установочному ф
 
 ### Файлы и программы
 
-- Для отправки файла выбери **«Загрузить файл на ПК»** на телефоне и укажи файл. Не закрывай Android-приложение до окончания. Максимум — 50 ГиБ; после обрыва отправку нужно начать заново.
-- По умолчанию файл сохраняется в **«Загрузки»** на ПК. Чтобы изменить место, открой на Windows **«Приём файлов / Received files» → «Выбрать папку…»**. Новая папка применяется со следующей загрузки, уже начатую не переносит. **«Сбросить в „Загрузки“»** возвращает папку по умолчанию. Если выбранная папка недоступна, выбери другую: приложение не сохраняет файл в другое место молча. Одноимённые файлы не перезаписываются.
+- Для отправки файла выбери **«Загрузить файл на ПК»** на телефоне и укажи файл. Максимум — 50 ГиБ. Перед отправкой приложение читает файл для проверки целостности: подготовка большого файла может занять заметное время, ещё до появления переданных байтов.
+- **В версии 1.0.4 реализовано продолжение передачи; проверка на реальном телефоне пока не подтверждена.** Используй **«Пауза»**, затем **«Продолжить»**; **«Позже»** откладывает продолжение. После краткого обрыва Wi-Fi приложение попробует восстановить передачу; если не удалось — восстанови соединение с тем же ПК и продолжи вручную. После перезапуска приложения незавершённая передача будет предложена снова. Нужен тот же доступный и неизменённый исходный файл: не удаляй, не перемещай и не редактируй его до окончания, не отзывай доступ приложения к нему. Если выбранный источник не позволяет сохранить доступ, приложение попросит выбрать файл через другого поставщика. Повторная проверка исходного файла при продолжении тоже может занять время.
+- Незавершённая передача хранится до **7 дней**, после чего может потребоваться начать заново. Пауза сохраняет возможность продолжить. **«Удалить передачу»** позволяет удалить незавершённую копию на исходном ПК, если он доступен с прежним сохранённым подключением. Если ПК недоступен или подключение изменилось, выбери в следующем диалоге **«Только на телефоне»**: приложение забудет передачу и очистит её локальные данные, но частичная копия на ПК останется до истечения 7 дней. Уже готовый файл не удаляется. Если сохранённая передача на ПК уже истекла или отсутствует, **«Продолжить»** покажет ошибку, а не начнёт заново в другой папке; удали запись передачи и выбери файл снова явно. Частичная копия на ПК **ещё не готовый файл**: обычный файл появляется только после полной передачи и проверки. Во время подготовки и отправки держи Android-приложение **на экране** — работа в фоне или при заблокированном телефоне не гарантируется.
+- Для продолжения передачи папка приёма должна находиться на диске с поддержкой жёстких ссылок, например **NTFS**. Диски **FAT/exFAT не поддерживаются**: приложение сообщит об этом до начала новой передачи. Выбери папку на NTFS; не форматируй диск ради этой функции.
+- По умолчанию файл сохраняется в **«Загрузки»** на ПК. Чтобы изменить место, открой на Windows **«Приём файлов / Received files» → «Выбрать папку…»**. Новая папка применяется со следующей загрузки, уже начатую не переносит, в том числе при её продолжении. **«Сбросить в „Загрузки“»** возвращает папку по умолчанию. Если выбранная папка недоступна, выбери другую: приложение не сохраняет файл в другое место молча. Одноимённые файлы не перезаписываются.
 - Для кнопок запуска программ открой **«Программы / Applications» → «Добавить…»** на ПК, выбери локальный EXE или ярлык LNK и задай название. На телефоне нажми **«Обновить программы»**, если список ещё не появился.
 
 ### Включение и выключение ПК
@@ -84,7 +105,7 @@ QR скачивания ведёт только к установочному ф
 3. При создании QR выбран именно домашний адаптер ПК. VPN может менять маршруты; проверь его настройки локального доступа.
 4. В брандмауэре разрешены нужные порты только для частной локальной сети. Не отключай брандмауэр целиком. В управляемой сети обратись к администратору.
 5. Ссылка ещё действительна и подтверждена на обоих устройствах. Создай новую и выполни сопряжение заново, если есть сомнения. Коды должны совпадать.
-6. Команды работают, а видео или звук — нет? В **«Настроить видео и звук»** заново выбери папку с обоими EXE, дождись успешной проверки, затем перезапусти сервер и окно просмотра. Убедись, что папку не перемещали и не удаляли. Для звука проверь версию Android и другое приложение, которое разрешает захват.
+6. Команды работают, а видео или звук — нет? Проверь статус инструментов в главном окне. Если они не найдены, восстанови установку; если ранее выбирал свою папку — проверь её или верни **«Автоматический поиск»**. После изменения настройки перезапусти сервер и просмотр. Для H.264 экрана ПК проверь поддержку NVIDIA NVENC и драйвер, для звука — версию Android и приложение, разрешающее захват.
 
 Для вопроса в [Issues](https://github.com/alexfduch231-prog/DroidBridge/issues) укажи версии Windows, Android и приложений, что нажал и какой текст ошибки увидел. Не публикуй ключ доступа, QR, ссылки сопряжения, личные адреса устройств и полные логи без проверки. О проблеме безопасности сообщай по [правилам безопасности](../SECURITY.md).
 
@@ -92,7 +113,9 @@ QR скачивания ведёт только к установочному ф
 
 # English
 
-[README](../README.md#english) · [Download Windows and Android](https://github.com/alexfduch231-prog/DroidBridge/releases/tag/v1.0.3)
+[README](../README.md#english) · [Download Windows and Android](https://github.com/alexfduch231-prog/DroidBridge/releases/tag/v1.0.4)
+
+This guide describes the Windows **1.0.4** installer with bundled FFmpeg/ffplay and Android **1.15**. A Windows upgrade preserving settings was verified; new scenarios on a real phone have not yet been tested. Earlier slim installers do not contain the media bundle.
 
 ## Before installing
 
@@ -102,7 +125,7 @@ The download QR only downloads the APK. Pairing uses a **different QR** in its o
 
 ## Install and pair
 
-1. On the [download page](https://github.com/alexfduch231-prog/DroidBridge/releases/latest), download the Windows installer and Android APK from **Assets**. You do not need the **Source code** archives. When DroidBridge starts on the PC, choose **Install on phone** and scan the QR with your phone camera to download the APK from GitHub. Choose **Already installed → connect to PC** to skip downloading and open pairing. Windows includes Python and UI dependencies; it does not start the server automatically.
+1. On the [download page](https://github.com/alexfduch231-prog/DroidBridge/releases/latest), download the Windows installer and Android APK from **Assets**. You do not need the **Source code** archives. When DroidBridge starts on the PC, choose **Install on phone** and scan the QR with your phone camera to download the APK from GitHub. Choose **Already installed → connect to PC** to skip downloading and open pairing. The standard 1.0.4 Windows installer includes Python, UI dependencies, FFmpeg and ffplay; media tools are selected automatically. No separate download or PATH edit is needed. The server does not start automatically.
 2. Install the APK. If Android asks, allow installation only for the app opening this download; you can revoke that permission afterwards. Do not disable Play Protect or other security tools.
 3. Open DroidBridge on Windows and click **«Запустить сервер»** (Start server), then **«Приложение на телефон / подключить» → «Уже установлено → подключить к ПК»** (Phone app / connect → Already installed). The main Windows panel currently uses Russian labels; the pairing window has a RU/EN selector.
 4. Choose your home **Network adapter**, not a VPN or virtual adapter, and click **Create new QR**. Keep the window open.
@@ -117,19 +140,35 @@ If Windows asks for network access, allow only a trusted **Private** network, ne
 
 The installer has no commercial code-signing certificate, so SmartScreen may report an unknown publisher. This alone proves neither safety nor harm. Check that the file came from the linked GitHub repository, scan it with Windows Security, and compare a checksum if the release provides one. Stop if the source or scan result is suspicious. **Do not disable SmartScreen, antivirus or the firewall, or add security exclusions just to install.**
 
-## FFmpeg and ffplay: separate download, no PATH editing
+## Video and audio
 
-**The Windows 1.0.3 installer does not include FFmpeg or ffplay. Download them separately and select their folder in DroidBridge; no PATH change is needed.** The app never downloads these tools automatically.
+**The standard 1.0.4 installer includes FFmpeg and ffplay and selects them automatically.** If the main window says **«Видео и звук готовы. Дополнительная установка не нужна.»** (Video and audio are ready; no additional installation needed), skip this step. Automatic discovery only looks for files: it downloads nothing and does not run executables to probe them.
 
-1. Open **«Настроить видео и звук» → «Официальный сайт FFmpeg»** (Set up video and audio → Official FFmpeg website), or visit the [FFmpeg download page](https://ffmpeg.org/download.html). Choose a linked Windows build provider and check its license and package contents.
-2. Download a build containing **both** `ffmpeg.exe` and `ffplay.exe`. Extract it to a permanent folder. Only use executables from a source you trust.
-3. Click **«Настроить видео и звук» → «Выбрать папку…»** (Set up video and audio → Choose folder). Select `bin` containing both EXEs, or its parent folder if it contains `bin`. These Windows controls currently use Russian labels.
-4. Read **«Запустить выбранные программы для проверки?»** (Run selected programs to check?). If you agree, DroidBridge runs both EXEs with `-version`, allowing up to 5 seconds each. Wait for **«Проверка пройдена, папка сохранена»** (Check passed, folder saved). A failed check leaves settings unchanged.
-5. Click **«Остановить»** (Stop), then **«Запустить сервер»** (Start server). Close and reopen any already-running phone viewer too. You do not need to close DroidBridge itself.
+Current PC-screen H.264 encoding uses **NVIDIA NVENC**, requiring a supported NVIDIA GPU and driver. Bundling FFmpeg does not guarantee this mode on every Windows PC. Phone audio requires Android 10+ and an app that permits capture.
 
-If you move or delete the extracted folder, select it again. **«Автоматический поиск»** (Automatic search) resets your selection and searches the app's `media` folder and existing PATH; it installs nothing. Normal setup does not require this reset.
+### Optional: manual override or recovery
 
-Without these tools, commands, files and JPEG viewing may still work, but H.264 and audio are unavailable.
+Use this for source runs, earlier slim installers or a deliberate media-bundle replacement, not for a standard 1.0.4 installation.
+
+1. If tools are missing, try repairing the standard installation first. For your own build, use **«Настроить видео и звук» → «Официальный сайт FFmpeg»** (Set up video and audio → Official FFmpeg website), or the [FFmpeg download page](https://ffmpeg.org/download.html). Pick a trusted Windows build containing **both** `ffmpeg.exe` and `ffplay.exe` and extract it to a permanent folder.
+2. Click **«Настроить видео и звук» → «Выбрать папку…»** (Choose folder). Select `bin` containing both EXEs, or its parent folder if it contains `bin`. These controls currently use Russian labels.
+3. Read **«Запустить выбранные программы для проверки?»** (Run selected programs to check?). Only with your consent does DroidBridge run both selected EXEs with `-version`, allowing up to 5 seconds each. Wait for **«Проверка пройдена, папка сохранена»** (Check passed, folder saved). Declining or a failed check leaves settings unchanged.
+4. Click **«Остановить»** (Stop), then **«Запустить сервер»** (Start server), and close/reopen the phone viewer. DroidBridge itself can stay open.
+
+**«Автоматический поиск»** (Automatic search) clears the manual override and returns to the bundled tools, PATH and standard installation locations. It installs nothing and does not probe executables. A manual selection takes priority: if its folder is deleted, choose it again or reset to automatic search; another build is not silently substituted.
+
+Bundled-component licenses and corresponding sources belong in distribution preparation, not in the normal user's installation checklist. Without available tools, commands, files and JPEG viewing may still work, but H.264 and audio are unavailable.
+
+## Updates
+
+**This feature is included in 1.0.4.** Installing the Windows upgrade while preserving settings was verified. Updating on a real phone has not yet been tested. Install the first updater-capable version manually from the release page over your current installation; an older app cannot acquire the feature by itself. Do not uninstall just to update: uninstalling may erase settings.
+
+- At startup, both Windows and Android will check for a newer version over the Internet using a fixed public, digitally signed release list. You do not need an account, personal key or server setup. This update check is separate from device control; it is not a cloud relay.
+- If an update exists, choose **Later** or **Update**. **Later** keeps the current version. If the Internet is unavailable or verification fails, no update is installed; you can keep using the app and retry later.
+- **Windows:** after **Update**, the app will download the installer and verify it against the signed release information. Only after successful verification will it close its server, viewer and main window for installation. Save work and finish file transfers first. The main window will reopen only after installation succeeds; settings and saved connections are intended to remain. If installation fails or is cancelled, do not assume it updated: open the app manually and check the version.
+- **Android:** after downloading and verifying the APK, the app will open the **system installation confirmation**. If necessary, permit DroidBridge to install from this source. Android approval is mandatory and is not bypassed. Update in place to keep settings. Afterwards the app will try to reopen or offer a notification, but Android can restrict either action; open it normally if needed.
+
+Manual updating from the release page remains available. A digitally signed release list does not give the Windows installer a commercial code-signing certificate or prevent SmartScreen warnings.
 
 ## Using it
 
@@ -137,7 +176,11 @@ Without these tools, commands, files and JPEG viewing may still work, but H.264 
 - **Phone screen:** tap **Cast phone to PC** on Android and approve the system screen-capture prompt. With the PC server running, the app attempts to open the viewer. If it does not open, enter the phone's local IP in the Windows **«Экран телефона на ПК»** section and click **«Открыть экран телефона»** (Open phone screen). Find the phone IP in Android's current Wi-Fi network details.
 - **Phone control:** separately open **Allow phone control from PC** on Android and read the explanation. Enable **Control phone from PC** in system Accessibility settings, restart mirroring, then enable control in the PC viewer. Gestures require Android 7+. Revoke access in the same system settings at any time.
 - **Phone audio:** requires Android 10+, the requested audio permission and an app that allows playback capture. Not every app allows it. Protected screens may appear black. Restart mirroring after an APK update, phone rotation or enabling Accessibility. Stop it with **Stop casting** or the Android notification.
-- **Files:** choose **Upload file to PC** on Android. Keep the app open until complete. Maximum size is 50 GiB; interrupted uploads must restart. On Windows, open **Приём файлов / Received files → Choose folder…** to select a destination, or **Reset to Downloads**. Changes affect the next upload, not the current one. An unavailable folder causes an error, not a silent save elsewhere. Existing files are not overwritten.
+- **Files:** choose **Upload file to PC** on Android. The maximum is 50 GiB. The app reads the source for an integrity check before sending, so preparing a large file may take time before any bytes are shown as sent.
+- **Resumable transfers are implemented in 1.0.4; real-phone verification is not yet confirmed.** Use **Pause**, then **Continue**; **Later** postpones resuming. After a brief Wi-Fi outage, the app will try to recover; if that fails, reconnect to the same PC and resume manually. A pending transfer will be offered again after restarting the app. The original file must remain accessible and unchanged: do not delete, move or edit it, or revoke the app's access before completion. If the selected provider cannot retain access, the app will ask you to choose a different provider. Checking the original file again when resuming can also take time.
+- Incomplete transfers are kept for up to **7 days**; afterwards you may need to start again. Pausing keeps the transfer available. **Discard transfer** can remove the incomplete copy on the original PC when it is online with the same saved connection. If the PC is unavailable or the connection has changed, choose **Phone only** in the next dialog: this clears the phone's pending entry and local data, but leaves the PC's partial copy until its 7-day expiry. An already completed file is not deleted. If the PC session has expired or is missing, **Continue** reports an error rather than silently restarting in another folder; explicitly discard the pending entry and select the file again. A partial copy on the PC **is not a finished file**: the normal file appears only after the entire transfer and integrity check succeed. Keep Android **in the foreground** during preparation and sending; background or locked-screen operation is not guaranteed.
+- Resumable uploads require a destination disk that supports hard links, such as **NTFS**. **FAT/exFAT disks are unsupported** and will be rejected before a new transfer starts. Choose a folder on NTFS; do not format a disk just for this feature.
+- On Windows, open **Приём файлов / Received files → Choose folder…** to select a destination, or **Reset to Downloads**. Changes affect the next upload, not the current one or its resumed transfer. An unavailable folder causes an error, not a silent save elsewhere. Existing files are not overwritten.
 - **Programs:** open **Программы / Applications → Add…** on Windows, choose a local EXE or LNK shortcut and name it. Tap **Refresh programs** on Android if needed.
 - **Wake-on-LAN:** enable it in the PC's BIOS/UEFI and network adapter settings if supported. Connect to the PC while it is on first, so the phone saves network details. A powered-off PC cannot answer discovery. Wired Ethernet is generally more reliable; sending a wake packet does not guarantee startup.
 - **Shutdown/restart:** save work first. You have 20 seconds to tap **Cancel command**. A lost response does not mean the command failed; avoid repeating it blindly.
@@ -149,6 +192,6 @@ Without these tools, commands, files and JPEG viewing may still work, but H.264 
 3. Check the home adapter selected for the QR and any VPN's local-network routing settings.
 4. Check Private/local-subnet firewall rules for the ports above. Do not disable the firewall. Ask the network administrator on a managed network.
 5. Generate a new pairing link and repeat approval on both devices. Never accept mismatched codes.
-6. Commands work but video/audio does not? Open **«Настроить видео и звук»**, select the folder containing both EXEs again and wait for a successful check. Restart the server and viewer. Check that the extracted folder has not moved or been deleted. For audio, check Android version and an app that permits capture.
+6. Commands work but video/audio does not? Check the media-tool status in the main window. Repair the installation if tools are missing; if you previously chose your own folder, check it or reset to **«Автоматический поиск»** (Automatic search). Restart the server and viewer after settings changes. Check NVIDIA NVENC support and drivers for PC-screen H.264; for audio, check Android version and an app that permits capture.
 
 For [Issues](https://github.com/alexfduch231-prog/DroidBridge/issues), include Windows/Android/app versions, your steps and the exact error text. Do not share access keys, QR codes, pairing links, personal device addresses or unchecked full logs. See [security reporting](../SECURITY.md) for security concerns.

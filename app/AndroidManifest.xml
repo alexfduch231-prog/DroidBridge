@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="ru.alexv.pcmote"
-    android:versionCode="24"
-    android:versionName="1.14">
+    android:versionCode="25"
+    android:versionName="1.15">
 
     <uses-sdk android:minSdkVersion="21" android:targetSdkVersion="34" />
 
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
     <!-- Трансляция экрана и звука на ПК. -->
@@ -22,6 +23,13 @@
         android:allowBackup="false"
         android:usesCleartextTraffic="true"
         android:theme="@style/AppTheme">
+        <provider android:name=".UpdateProvider" android:authorities="ru.alexv.pcmote.updates"
+            android:exported="false" android:grantUriPermissions="true">
+            <grant-uri-permission android:path="/update.apk" />
+        </provider>
+        <receiver android:name=".UpdateReplacedReceiver" android:exported="false">
+            <intent-filter><action android:name="android.intent.action.MY_PACKAGE_REPLACED" /></intent-filter>
+        </receiver>
         <activity android:name=".MainActivity" android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

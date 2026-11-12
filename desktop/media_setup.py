@@ -44,9 +44,9 @@ def show_media_setup(parent, data_dir):
     frame = ttk.Frame(window, padding=18)
     frame.pack(fill='both', expand=True)
     ttk.Label(frame, text='Видео H.264 и звук: FFmpeg / ffplay', font=('Segoe UI', 13, 'bold')).pack(anchor='w')
-    ttk.Label(frame, text='DroidBridge не включает FFmpeg и ничего не скачивает автоматически. '
-              'С официального сайта выбери подходящую сборку, распакуй архив, выбери папку bin. '
-              'В ней должны быть ffmpeg.exe и ffplay.exe. Менять PATH не нужно.', wraplength=620).pack(anchor='w', pady=10)
+    ttk.Label(frame, text='Обычная установка DroidBridge уже содержит инструменты видео и звука. '
+              'Они выбираются автоматически — менять PATH не нужно. '
+              'Здесь можно выбрать другую сборку вручную или вернуть автоматический поиск.', wraplength=620).pack(anchor='w', pady=10)
     ttk.Label(frame, text='Это исполняемые программы. После твоего подтверждения DroidBridge запустит '
               'оба файла с -version для проверки (до 5 секунд на каждый), а затем будет использовать '
               'их для видео и звука. Выбирай только сборку из доверенного источника.', wraplength=620).pack(anchor='w')
@@ -64,12 +64,17 @@ def show_media_setup(parent, data_dir):
     def refresh():
         try:
             tools = resolve_media_tools(data_dir)
-            if tools.source == 'configured':
-                current.set(str(Path(tools.ffmpeg).parent))
-            elif tools.ffmpeg and tools.ffplay:
-                current.set('Найдены автоматически: папка media или PATH')
+            if tools.ffmpeg and tools.ffplay:
+                labels = {
+                    'configured': 'Выбраны вручную',
+                    'distribution': 'В комплекте DroidBridge',
+                    'path': 'Найдены в PATH',
+                    'detected': 'Найдены на компьютере',
+                }
+                source = labels.get(tools.source, 'Найдены автоматически')
+                current.set(f'{source}: {Path(tools.ffmpeg).parent}')
             else:
-                current.set('ffmpeg.exe и ffplay.exe не найдены — выбери папку bin')
+                current.set('Инструменты не найдены — восстанови установку или выбери папку bin')
         except MediaToolsError:
             current.set('Выбранная папка или настройки недоступны — выбери заново или сбрось')
 
@@ -110,7 +115,7 @@ def show_media_setup(parent, data_dir):
         try:
             reset_media_directory(data_dir)
             refresh()
-            status.set('Включён поиск в папке media и PATH. ' + RESTART_NOTICE)
+            status.set('Включён автоматический поиск инструментов видео и звука. ' + RESTART_NOTICE)
         except MediaToolsError as error:
             messagebox.showerror('Не удалось сбросить настройки', str(error), parent=window)
 

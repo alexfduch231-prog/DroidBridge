@@ -3,6 +3,11 @@ import argparse
 from pathlib import Path
 import sys
 
+if not getattr(sys, 'frozen', False):
+    _root = str(Path(__file__).resolve().parents[1])
+    if _root not in sys.path:
+        sys.path.insert(0, _root)
+
 # PyInstaller analysis needs these imports; they do not start any service.
 import tkinter as tk
 from tkinter import ttk, messagebox
@@ -39,6 +44,9 @@ def main():
                 import media_tools
                 import media_setup
                 import android_setup
+                import update_protocol
+                import update_manager
+                import update_helper
                 import qrcode
                 test_root = tk.Tk()
                 test_root.withdraw()
@@ -63,6 +71,11 @@ def main():
         return run_component(args.component, remaining)
     if remaining:
         parser.error('Unexpected arguments')
+    from runtime import create_update_signal
+    update_signal = create_update_signal()
+    if update_signal is not None and update_signal.is_set():
+        update_signal.close()
+        return 0
     root = tk.Tk()
     root.title('DroidBridge')
     root.geometry('640x740')
@@ -127,8 +140,14 @@ def main():
         from media_setup import show_media_setup
         show_media_setup(root, data_directory())
     ttk.Button(frame, text='Настроить видео и звук', command=media_settings).pack(anchor='w', pady=8)
-    ttk.Label(frame, text='FFmpeg устанавливается отдельно. Выбери готовую папку bin — менять PATH не нужно. '
-              'Изменения действуют при новом запуске сервера и просмотра.', wraplength=540).pack(anchor='w')
+    from listener.media_tools import MediaToolsError, resolve_media_tools
+    try:
+        media_tools = resolve_media_tools(data_directory())
+        media_available = bool(media_tools.ffmpeg and media_tools.ffplay)
+    except MediaToolsError:
+        media_available = False
+    ttk.Label(frame, text=('Видео и звук готовы. Дополнительная установка не нужна.' if media_available
+              else 'Инструменты видео и звука не найдены. Открой настройку.'), wraplength=540).pack(anchor='w')
     ttk.Separator(frame).pack(fill='x', pady=8)
     ttk.Label(frame, text='Экран телефона на ПК', font=('Segoe UI', 13, 'bold')).pack(anchor='w', pady=6)
     ttk.Label(frame, text='Включи трансляцию в приложении и введи IP телефона.').pack(anchor='w')
@@ -144,12 +163,13 @@ def main():
             messagebox.showerror('Не удалось открыть экран', str(error), parent=root)
     ttk.Button(frame, text='Открыть экран телефона', command=viewer).pack(anchor='w')
     ttk.Label(frame, text='Данные и ключи хранятся только в профиле Windows.\nНе открывай порты роутера в интернет.', wraplength=490).pack(anchor='w', pady=(16, 0))
+    tick_timer = [None]
     def tick():
         if server[0] is not None:
             code = server[0].poll()
             status.set('Процесс сервера запущен. Доступность сети не проверялась.' if code is None
                        else 'Сервер завершён (код %s). См. listener.log в папке данных.' % code)
-        root.after(1000, tick)
+        tick_timer[0] = root.after(1000, tick)
     def close():
         live = [child for child in children if child.poll() is None]
         if live and not messagebox.askyesno('Закрыть DroidBridge?', 'Остановить запущенные этим окном сервер и просмотр?', parent=root):
@@ -158,14 +178,38 @@ def main():
             child.terminate()
         root.destroy()
     root.protocol('WM_DELETE_WINDOW', close)
-    root.after(1000, tick)
+    tick_timer[0] = root.after(1000, tick)
     if should_show_on_startup(data_directory()):
         pending_setup = root.after(0, android_setup)
         def cancel_pending_setup(event):
             if event.widget is root:
                 root.after_cancel(pending_setup)
         root.bind('<Destroy>', cancel_pending_setup, add='+')
-    root.mainloop()
+    from update_manager import start_startup_check
+    start_startup_check(root, data_directory(), update_signal)
+    update_timer = [None]
+    def cancel_update_timer(event):
+        if event.widget is root:
+            if update_timer[0] is not None:
+                root.after_cancel(update_timer[0])
+                update_timer[0] = None
+            if tick_timer[0] is not None:
+                root.after_cancel(tick_timer[0])
+                tick_timer[0] = None
+    root.bind('<Destroy>', cancel_update_timer, add='+')
+    def poll_update_shutdown():
+        if update_signal is not None and update_signal.is_set():
+            # Every same-path GUI/component observes the event. No terminate here:
+            # server handlers drain, viewer closes its owned decoders normally.
+            root.destroy()
+            return
+        update_timer[0] = root.after(200, poll_update_shutdown)
+    update_timer[0] = root.after(200, poll_update_shutdown)
+    try:
+        root.mainloop()
+    finally:
+        if update_signal is not None:
+            update_signal.close()
     return 0
 
 if __name__ == '__main__':

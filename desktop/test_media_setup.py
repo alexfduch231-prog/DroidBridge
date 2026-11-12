@@ -127,8 +127,15 @@ class MediaSetupTests(unittest.TestCase):
         (self.data / 'media_settings.json').write_text('bad')
         media_tools.reset_media_directory(self.data)
         media_tools.reset_media_directory(self.data)
-        with patch.object(media_tools.shutil, 'which', return_value=None):
-            self.assertIsNone(media_tools.resolve_media_tools(self.data, media_dir=self.root / 'none').ffmpeg)
+        with patch.dict(os.environ, {}, clear=True):
+            with patch.object(media_tools.shutil, 'which', return_value=None):
+                original_is_file = Path.is_file
+                def no_standard_install(path):
+                    if str(path).replace('\\', '/').lower().startswith('c:/ffmpeg/'):
+                        return False
+                    return original_is_file(path)
+                with patch.object(Path, 'is_file', no_standard_install):
+                    self.assertIsNone(media_tools.resolve_media_tools(self.data, media_dir=self.root / 'none').ffmpeg)
 
     def test_worker_returns_before_validation_finishes_and_reports_via_queue(self):
         started, release = threading.Event(), threading.Event()
@@ -211,7 +218,7 @@ class MediaSetupTests(unittest.TestCase):
             finally:
                 root.destroy()
         with patch.object(sys, 'argv', ['launcher']), patch.object(launcher, 'data_directory', return_value=self.data):
-            with patch.object(tk.Tk, 'mainloop', inspect):
+            with patch.object(tk.Tk, 'mainloop', inspect), patch('update_manager.start_startup_check'):
                 self.assertEqual(launcher.main(), 0)
         self.assertEqual(seen, ['Настроить видео и звук'])
 

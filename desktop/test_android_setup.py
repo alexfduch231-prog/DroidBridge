@@ -14,7 +14,7 @@ try:
 except ImportError:
     android_setup = None
 
-PUBLIC_APK = 'https://github.com/alexfduch231-prog/DroidBridge/releases/download/v1.0.2/DroidBridge-1.14-android.apk'
+PUBLIC_APK = 'https://github.com/alexfduch231-prog/DroidBridge/releases/download/v1.0.4/DroidBridge-1.15-android.apk'
 
 
 def descendants(widget):
@@ -150,6 +150,10 @@ class AndroidSetupTests(unittest.TestCase):
         path = str(Path(__file__).resolve().parent)
         sys.path.insert(0, path)
         self.addCleanup(lambda: sys.path.remove(path))
+        # Launcher GUI tests exercise onboarding, never a real update-feed request.
+        updates = patch('update_manager.start_startup_check')
+        updates.start()
+        self.addCleanup(updates.stop)
         return importlib.import_module('desktop.launcher')
 
     def test_regular_startup_shows_optional_window_but_never_starts_services(self):

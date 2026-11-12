@@ -1,40 +1,69 @@
 # Windows build (x64, Windows 10+)
 
-The launcher does not start services automatically: **Запустить сервер** starts the control listener; **Подключить телефон безопасно** separately starts a temporary HTTPS pairing listener on the selected private-LAN adapter (8767). It opens the existing viewer only on request. Closing the launcher asks to terminate only the children it launched. No startup task, service, router forwarding or firewall rule is created by setup. DroidBridge keeps legacy runtime data at `%LOCALAPPDATA%/VzaimoPult` for compatibility (`VZAIMOPULT_DATA_DIR` override remains supported); uninstall preserves it deliberately.
+Windows setup version is **1.0.4**; Android's independent target is **1.15 (versionCode 25)**. The source allowlist contains **21 modules**, including `desktop/update_protocol.py`, `desktop/update_manager.py` and `desktop/update_helper.py`. Update runtime state (`update_state.json`, any case or nesting) is private and rejected from payloads. Publishing private keys must never enter staged source or release exports; an embedded public verification key is expected and is not a secret. The launcher does not automatically start services. Setup creates no startup task, service, router forwarding or firewall rule. Runtime preferences, tokens and uploads remain outside the install tree under `%LOCALAPPDATA%/VzaimoPult`; uninstall deliberately preserves them.
 
-Windows setup uses its own version **1.0.3**; the Android application currently uses **1.14**. These are independent component versions. Windows 1.0.3 offers an optional Android installation/download QR at startup and an Already installed shortcut to the separate pairing flow. The public download QR contains no pairing credentials. Startup display preference stays in local android_setup.json; the panel can be reopened. Existing Android APK installations remain compatible. Video/audio tools can be selected locally without editing PATH.
+## Build recipe
 
-## Toolchain and repeatable recipe
-
-Use Python 3.15 x64 with Tcl/Tk (tested host). Build requirements are pinned; this is a repeatable dependency recipe, **not a claim of bit-for-bit reproducible PE output**. Python itself, Windows SDK/runtime, wheel hashes, signing and timestamps also matter. Build manifest records source/payload SHA256 and installed dependency versions. Store the matching wheels if reproducing offline.
+Use an isolated Python x64 environment with Tcl/Tk (tested host: Python 3.15). Dependencies are pinned in `requirements-build.txt`; this is a repeatable recipe, **not a bit-for-bit reproducible PE claim**. Python/wheel provenance, compiler versions, signing and timestamps also matter.
 
 ```powershell
 python -m venv packaging/.venv-build
 packaging/.venv-build/Scripts/python.exe -m pip install --only-binary=:all: -r packaging/requirements-build.txt
-python -m unittest discover -s packaging -p test_packaging.py
+python -m unittest discover -s packaging -p "test*.py"
 python packaging/acquire_inno.py
-packaging/.venv-build/Scripts/python.exe packaging/build_windows.py --output packaging/.build/droidbridge-release-01 --iscc packaging/.build-tools/inno-7.1.1/ISCC.exe
+# Slim build: optional local media discovery remains available, no FFmpeg shipped.
+packaging/.venv-build/Scripts/python.exe packaging/build_windows.py --output packaging/.build/slim-release-01 --iscc packaging/.build-tools/inno-7.1.1/ISCC.exe
+# Bundled build: only after the complete media kit and final source receive root GO.
+packaging/.venv-build/Scripts/python.exe packaging/build_windows.py --output packaging/.build/bundled-release-01 --media-root X:/reviewed-media-kit --iscc packaging/.build-tools/inno-7.1.1/ISCC.exe
+python packaging/audit_artifact.py --output packaging/.build/bundled-release-01 --source .
 ```
 
-The default **slim setup excludes FFmpeg/ffplay** to avoid redistributing unreviewed static GPL binaries. Python, Tk, Pillow, QR and TLS dependencies are frozen: target users do not install Python. JPEG screenshots/control still work; H.264 and audio require separately downloaded `ffmpeg` + `ffplay`. The launcher lets the user select their extracted folder (or its `bin` subfolder); editing PATH is not required. Only after local confirmation are both selected programs probed with `-version` on a worker thread, each with a five-second timeout. Selection is stored in the local data directory; restart an already running server/viewer to apply it. An invalid saved selection does not silently fall back to another installation. The launcher provides an explicit official-site link, never an automatic download. For a local-only offline bundle add `--media-root X:/tools/ffmpeg-9.0.2-full_build`; its GPL release gate below still applies.
+Use a fresh output each time. Do not run the freezer while source or the media kit is still being edited. Do not install/uninstall on the owner's machine as a packaging smoke test. An existing installation's registration must not be overwritten by an allegedly isolated test. Root coordinates any real upgrade. Inno Setup 7.1.1 is SHA256-checked and unpacked without global installation; its compiler license must be reviewed for commercial use. The compiler/toolchains are not shipped.
 
-Inno Setup 7.1.1 is downloaded from the official GitHub release, SHA256-checked and unpacked with its supported `/PORTABLE=1`; no global installation. The downloaded compiler identifies itself as non-commercial-use only: obtain the appropriate Inno Setup license before using this build tool commercially (the compiler itself is not shipped to end users). The media root must already exist; the script never downloads ~436 MiB of FFmpeg binaries silently. `run_local_build.py` is a convenience probe using the approved installed FFmpeg from PATH. Use a fresh output for each build. Do not export `.build`, `.build-tools`, `.venv-build`, `__pycache__` as source.
+The default slim setup omits FFmpeg/ffplay and never downloads media programs automatically. The optional bundled setup takes a **reviewed complete source-built kit**, not a folder of opaque third-party executables. The old hardcoded Gyan/local-only branch is removed. Packaging does not execute a kit's binaries during validation; a separate functional review must prove their behavior and provenance.
 
-The allowlist copies only explicitly named Python modules. Runtime token, custom apps, logs, PID files, keystores, diagnostics and other project files cannot enter staging via recursive copy. Tests seed sentinel private files, reject stale staging and reject escaping symlinks. PyInstaller freezes both components in one shared onedir launcher (`--component server` / `--component viewer`). Dynamic imports of source modules are bundled explicitly. No separate Python installation is needed on the target.
+## Frozen media kit contract: schema 1
 
-`--self-test OUTPUT_JSON` checks frozen Python/TLS/Pillow, imports both component entrypoints and pairing/apps panels without calling their main functions, binding sockets, starting server/viewer or touching real runtime data (temporary isolated data directory is removed). It is **not** a real phone/Windows installation integration test.
+The producer supplies exactly these top-level fields in UTF-8 `media-manifest.json`:
 
-## Licensing and public release gate
+```json
+{
+  "schema_version": 1,
+  "runtime_sha256": {
+    "bin/ffmpeg.exe": "<64 lowercase hexadecimal characters>",
+    "bin/ffplay.exe": "<64 lowercase hexadecimal characters>",
+    "bin/avcodec-62.dll": "<64 lowercase hexadecimal characters>"
+  },
+  "source_sha256": {
+    "sources/ffmpeg-9.0.2.tar.xz": "<sha256>",
+    "sources/build-media.sh": "<sha256>"
+  },
+  "license_sha256": {
+    "licenses/FFmpeg-LGPL.txt": "<sha256>"
+  },
+  "components": [{
+    "name": "FFmpeg",
+    "version": "9.0.2",
+    "license": "LGPL-2.1-or-later",
+    "source_url": "https://ffmpeg.org/releases/ffmpeg-9.0.2.tar.xz",
+    "source_paths": ["sources/ffmpeg-9.0.2.tar.xz"],
+    "license_paths": ["licenses/FFmpeg-LGPL.txt"]
+  }]
+}
+```
 
-The local Gyan **9.0.2 full build**, exact FFmpeg source commit **946fcce07b**, states **GPL v3**. `ffmpeg.exe` (~217.27 MiB) and `ffplay.exe` (~218.72 MiB) are separate executables in `media/`, not linked into the application. Full upstream LICENSE and README/configuration are copied to `licenses/`. Python/Pillow/cryptography/qrcode licenses are also collected. Neither application licensing nor a MIT project license overrides these components.
+The example illustrates structure, not valid hashes or a complete runtime/dependency list. Every distributed FFmpeg dependency needs its own component entry with exact version/license, upstream HTTPS source URL, nonempty archive reference(s) and included license reference(s). Include official source archives, modifications if any, and sufficient source-build recipes. The current producer targets minimal LGPL FFmpeg with SDL2 and nv-codec-headers; MinGW runtime notices and applicable GCC exception must also be included as appropriate. Review complete dependency/source/license coverage independently; self-declared metadata alone cannot establish it.
 
-Sources:
-- https://www.gyan.dev/ffmpeg/builds/
-- https://github.com/FFmpeg/FFmpeg/commit/946fcce07b
-- https://github.com/jrsoftware/issrc/releases/tag/is-7_1_1
+`runtime_sha256`, `source_sha256`, and `license_sha256` are the **entire kit allowlist**, plus only `media-manifest.json` itself. All maps are nonempty. Runtime entries are direct `bin/*.exe` or `bin/*.dll`; both exact names `bin/ffmpeg.exe` and `bin/ffplay.exe` are mandatory. Sources require at least one `.tar.xz`, `.tar.gz`, `.tar.bz2`, `.tar.zst`, `.tgz` or `.zip` archive and a `.sh`, `.py`, `.ps1`, `.md` or `.txt` recipe. Each component references at least one source archive. Paths are portable, relative, forward-slash paths in their designated subtree. No traversal, backslashes, drive/ADS syntax, Windows reserved names, case-insensitive collisions, trailing-dot/space aliases, symlinks, junctions/reparse points, devices, unlisted files or unused directories are allowed. Every listed file must be regular and match SHA256. PE files outside runtime are rejected. Unknown schema fields, duplicate JSON keys, nonfree metadata and enabled nonfree configuration in text recipes are rejected.
 
-**Do not publish the full offline setup until Corresponding Source for the static FFmpeg build, its linked dependencies and build scripts is hosted/provided in a GPLv3-compliant way (or an appropriate compliant source offer is arranged).** A source URL for FFmpeg alone is not sufficient to assert complete compliance for a static full build. The manifest deliberately says `public_release_ready: false`. The built installer may be used as a local build/test artifact; do not represent it as an audited redistribution-ready release. Code signing/SmartScreen trust is not supplied.
+Validation happens **before source staging/freezing**. The kit is validated again while copying and after staging. The entire kit ships under `payload/media/`: `bin/ffmpeg.exe` becomes `media/ffmpeg.exe`, every DLL is beside it, while `sources/`, `licenses/`, and `media-manifest.json` remain nested/preserved. The existing resolver can find the executables without PATH changes. Inno Setup's recursive payload rule includes all archives, recipes and licenses, not just executables. Hashes and complete component metadata are also captured as `media_bundle` in the build manifest. Do not modify the kit after verification.
 
-`audit_artifact.py --output packaging/.build/droidbridge-release-01` checks payload, installer hashes, current source equality and absence of known runtime file types. `integrity_ok: true` is **not** publication approval; `publish_allowed` separately requires the manifest release-validation gate and no bundled FFmpeg. Keep the default `public_release_ready: false` until install/uninstall and real pairing integration have been validated. Do not publish build logs or tool/venv folders; logs contain build-host paths.
+## Integrity is not release permission
 
-Pairing protocol and production component behavior are parent-owned. If those modules change, rebuild from the final integrated source and rerun diagnostics; a previously frozen executable does not acquire changes automatically.
+Builds always start with `public_release_ready: false`. The build manifest records source/payload SHA256, Python/dependency versions, frozen self-test, `contains_ffmpeg`, and media proof. `audit_artifact.py --output ... --source ...` checks source equality, payload and installer integrity, known runtime-secret exclusions, and the **full staged media kit** whenever `contains_ffmpeg` is true, even when the release flag is already true. Missing source proof is an audit failure, not an integrity-only success. Declaring `contains_ffmpeg: false` cannot hide an existing media directory or FFmpeg executable.
+
+`integrity_ok: true` and `media_source_verified: true` mean the declared included files match, **not legal approval or runtime correctness**. `publish_allowed` also requires root's explicit `public_release_ready: true`. Root must first review provenance/source completeness/license obligations, actual media functionality, source privacy, frozen runtime self-test, real pairing, and installer/upgrade behavior. No publication or owner installation is performed by these scripts automatically. Code signing/SmartScreen trust is not supplied.
+
+The frozen `--self-test OUTPUT_JSON` checks Python/TLS/Pillow and imports production components without calling their main functions, binding sockets or touching real runtime data. It is not a real phone integration or installation test. A payload-isolated smoke test must not claim isolated installer/uninstaller validation when existing owner registration prevents it.
+
+Application sources are positive-allowlisted, not recursively copied. Tokens, custom apps/settings, logs, PIDs, keystores and private diagnostics do not enter staging. Do not export `.build`, `.build-tools`, `.venv-build`, build logs (host paths), or caches as project source. A frozen executable does not acquire later source changes: rebuild only from the final integrated source after root GO.

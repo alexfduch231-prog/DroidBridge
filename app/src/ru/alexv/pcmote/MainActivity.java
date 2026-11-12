@@ -92,6 +92,7 @@ public class MainActivity extends Activity {
     private static final int REQ_UPLOAD = 2003;
     private static final int REQ_PAIR = 2004;
     private FileUpload fileUpload;
+    private StartupUpdate startupUpdate;
     private Button btnUpload;
 
     private static final class RemoteApp {
@@ -274,10 +275,11 @@ public class MainActivity extends Activity {
                     log(getString(R.string.connection_required));
                     return;
                 }
+                if (FileUpload.hasPending(MainActivity.this)) { offerPendingUpload(); return; }
                 Intent pick = new Intent(Intent.ACTION_OPEN_DOCUMENT);
                 pick.addCategory(Intent.CATEGORY_OPENABLE);
                 pick.setType("*/*");
-                pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                pick.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION);
                 try { startActivityForResult(pick, REQ_UPLOAD); }
                 catch (android.content.ActivityNotFoundException e) { log(getString(R.string.picker_missing)); }
             }
@@ -382,11 +384,63 @@ public class MainActivity extends Activity {
             });
         }
         playIntro();
+        if (FileUpload.hasPending(this)) offerPendingUpload();
+    }
+
+    private void offerPendingUpload() {
+        if (fileUpload != null || isFinishing() || isDestroyed()) return;
+        new AlertDialog.Builder(this).setTitle(R.string.upload_title).setMessage(R.string.upload_pending)
+                .setPositiveButton(R.string.upload_resume, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface d, int which) { beginPendingUpload(false); }
+                }).setNeutralButton(R.string.upload_discard, new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface d, int which) {
+                        new AlertDialog.Builder(MainActivity.this).setTitle(R.string.upload_discard)
+                                .setMessage(R.string.upload_discard_local_confirm)
+                                .setPositiveButton(R.string.upload_discard, new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface c, int w) { beginPendingUpload(true); }
+                                }).setNeutralButton(R.string.upload_discard_local, new DialogInterface.OnClickListener() {
+                                    public void onClick(DialogInterface c, int w) {
+                                        if (fileUpload != null) return;
+                                        fileUpload = newUploadController();fileUpload.discardLocal();
+                                    }
+                                }).setNegativeButton(R.string.upload_later, null).show();
+                    }
+                }).setNegativeButton(R.string.upload_later, null).show();
+    }
+
+    private FileUpload newUploadController() {
+        btnUpload.setEnabled(false);
+        return new FileUpload(this, new FileUpload.Result() {
+            public void done(String message) {
+                fileUpload = null;
+                btnUpload.setEnabled(true);
+                log(message);
+                AlertDialog.Builder reply = new AlertDialog.Builder(MainActivity.this)
+                        .setTitle(R.string.upload_result_title).setMessage(message)
+                        .setNegativeButton(R.string.okay, null);
+                if (FileUpload.hasPending(MainActivity.this)) {
+                    reply.setPositiveButton(R.string.upload_resume, new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface d, int which) { offerPendingUpload(); }
+                    });
+                }
+                reply.show();
+            }
+        });
+    }
+
+    private void beginPendingUpload(boolean discard) {
+        if (fileUpload != null) return;
+        savePrefsIfNeeded();
+        fileUpload = newUploadController();
+        String host = prefs.getString(K_HOST, DEF_HOST), key = prefs.getString(K_KEY, "");
+        if (discard) fileUpload.discard(host, key); else fileUpload.resume(host, key);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
+        if (startupUpdate == null) startupUpdate = new StartupUpdate(this);
+        startupUpdate.onResume();
         // An external camera/deep-link can finish pairing outside startActivityForResult.
         String currentPairKey = prefs.getString(K_KEY, "");
         long currentPairRevision = prefs.getLong("pair_revision", 0);
@@ -415,6 +469,8 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onPause() {
+        if (fileUpload != null) fileUpload.cancel();
+        if (startupUpdate != null) startupUpdate.onPause();
         discoveryResumed = false;
         appsGeneration++;
         HttpURLConnection catalogConnection=appsConnection;if(catalogConnection!=null)catalogConnection.disconnect();
@@ -431,6 +487,7 @@ public class MainActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        if (startupUpdate != null) startupUpdate.dispose();
         if (fileUpload != null) fileUpload.dispose();
         super.onDestroy();
     }
@@ -549,16 +606,14 @@ public class MainActivity extends Activity {
         }
         if (requestCode == REQ_UPLOAD) {
             if (resultCode == RESULT_OK && data != null && data.getData() != null && fileUpload == null) {
-                btnUpload.setEnabled(false);
-                fileUpload = new FileUpload(this, new FileUpload.Result() {
-                    public void done(String message) {
-                        fileUpload = null;
-                        btnUpload.setEnabled(true);
-                        log(message);
-                        new AlertDialog.Builder(MainActivity.this).setTitle(getString(R.string.upload_result_title))
-                                .setMessage(message).setPositiveButton(getString(R.string.okay), null).show();
-                    }
-                });
+                if (FileUpload.hasPending(this)) { offerPendingUpload(); return; }
+                try {
+                    if ((data.getFlags() & Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION) == 0)
+                        throw new SecurityException("Provider has no persistent grant");
+                    getContentResolver().takePersistableUriPermission(data.getData(),
+                            data.getFlags() & Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                } catch (SecurityException e) { log(getString(R.string.upload_grant_required)); return; }
+                fileUpload = newUploadController();
                 fileUpload.start(data.getData(), prefs.getString(K_HOST, DEF_HOST), prefs.getString(K_KEY, ""));
             }
             return;

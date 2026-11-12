@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="update_title">DroidBridge update</string>
+    <string name="update_available">Version %1$s is available. Download the update? Android will require installation confirmation.</string>
+    <string name="update_now">Update</string>
+    <string name="update_later">Not now</string>
+    <string name="update_progress">Downloading update</string>
+    <string name="update_cancel">Cancel</string>
+    <string name="update_failed">The update could not be verified or downloaded. Your current version continues to work.</string>
+    <string name="update_permission">Allow updates from DroidBridge in system settings. After returning, Android will ask you to confirm installation.</string>
+    <string name="update_reopen">Update installed. Tap to open DroidBridge.</string>
     <string name="app_name">DroidBridge</string>
     <string name="title">DroidBridge</string>
     <string name="subtitle">Wake with Wake-on-LAN, shut down or restart over your network. Your phone and PC must be on the same Wi-Fi network.</string>
@@ -180,4 +189,25 @@
     <string name="apps_empty">No programs yet. On the PC open DroidBridge → Programs and add programs.</string>
     <string name="apps_unavailable">Connect to the PC to load programs.</string>
     <string name="apps_refresh">Refresh programs</string>
+    <string name="upload_resume">Continue</string>
+    <string name="upload_pause">Pause</string>
+    <string name="upload_discard">Discard transfer</string>
+    <string name="upload_later">Later</string>
+    <string name="upload_pending">An unfinished transfer exists. Continue it or discard it before choosing a new file? Discard needs the original PC online; a file already saved there is not deleted.</string>
+    <string name="upload_owner_changed">The PC or key changed. Restore the original settings to continue or discard this transfer.</string>
+    <string name="upload_cache_budget">Not enough space for the temporary copy. Free space and continue, or discard the transfer.</string>
+    <string name="upload_pending_invalid">The pending record is damaged or unavailable. A new transfer will not replace it automatically.</string>
+    <string name="upload_persist_failed">Could not save transfer state. Check available storage.</string>
+    <string name="upload_paused">Transfer paused. Use the upload button to continue. No background upload is running.</string>
+    <string name="upload_discarded">Unfinished transfer, temporary copy and source access removed. Files already saved on the PC remain.</string>
+    <string name="upload_verifying">Checking the entire source before continuing… This may take time.</string>
+    <string name="upload_source_changed">The source changed. Discard this transfer and select the file again.</string>
+    <string name="upload_finalizing">The PC is checking and saving the entire file… You can pause.</string>
+    <string name="upload_retrying">Connection lost. Retrying after checking the received part…</string>
+    <string name="upload_wait">Wait for the previous transfer to stop.</string>
+    <string name="upload_grant_required">The file provider did not allow persistent access. Choose another source: reliable resume after restart requires it.</string>
+    <string name="upload_discard_local">Phone only</string>
+    <string name="upload_discard_local_confirm">Discard transfer removes unfinished data on the original PC and phone. If the PC or original key is unavailable, choose Phone only: the PC part remains until its 7-day expiry. Already saved files are not deleted.</string>
+    <string name="upload_discard_local_done">Phone state, temporary copy and source access removed. The PC part may remain for up to 7 days.</string>
+    <string name="upload_session_missing">The PC no longer knows this transfer or did not confirm its creation. Restart is not automatic: the destination may have changed. Discard the transfer and explicitly select the file again.</string>
 </resources>

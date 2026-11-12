@@ -24,3 +24,11 @@ pairing-tls/
 **/upload_settings.json
 **/media_settings.json
 **/android_setup.json
+**/update_state.json
+private-release-signing/
+*.key
+*.pfx
+*.p12
+resumable-uploads/
+.pcmote-resume-*/
+*.part

@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="update_title">Обновление DroidBridge</string>
+    <string name="update_available">Доступна версия %1$s. Скачать обновление? Установка потребует подтверждения Android.</string>
+    <string name="update_now">Обновить</string>
+    <string name="update_later">Не сейчас</string>
+    <string name="update_progress">Загрузка обновления</string>
+    <string name="update_cancel">Отмена</string>
+    <string name="update_failed">Не удалось проверить или загрузить обновление. Текущая версия продолжает работать.</string>
+    <string name="update_permission">Разреши установку обновлений из DroidBridge в системных настройках. После возвращения Android запросит подтверждение установки.</string>
+    <string name="update_reopen">Обновление установлено. Нажми, чтобы открыть DroidBridge.</string>
     <string name="phone_control_label">Управление телефоном с ПК</string>
     <string name="phone_control_setup">Разрешить управление телефоном с ПК</string>
     <string name="phone_control_explanation">Эта служба специальных возможностей позволяет доверенному ПК нажимать на экран, выполнять свайпы, открывать Главный экран и вводить текст в выбранное редактируемое поле. Она работает только во время трансляции телефона и после проверки ключа ПК. Буфер обмена не используется; парольные поля и защищённые экраны не обходятся. Включи службу «Управление телефоном с ПК» вручную в системных настройках. Для жестов нужен Android 7 или новее. После включения перезапусти трансляцию; при повороте экрана также перезапусти её. Разрешение можно отозвать в любой момент здесь же.</string>
@@ -180,4 +189,25 @@
     <string name="apps_empty">Список пуст. На ПК открой DroidBridge → Программы и добавь программы.</string>
     <string name="apps_unavailable">Подключи ПК, чтобы получить список программ.</string>
     <string name="apps_refresh">Обновить программы</string>
+    <string name="upload_resume">Продолжить</string>
+    <string name="upload_pause">Пауза</string>
+    <string name="upload_discard">Удалить передачу</string>
+    <string name="upload_later">Позже</string>
+    <string name="upload_pending">Есть незавершённая передача. Продолжить её или удалить перед выбором нового файла? Удаление требует связи с тем же ПК; уже сохранённый файл не удаляется.</string>
+    <string name="upload_owner_changed">ПК или ключ изменились. Верни исходные настройки для продолжения или удаления передачи.</string>
+    <string name="upload_cache_budget">Недостаточно места для временной копии. Освободи место и продолжи либо удали передачу.</string>
+    <string name="upload_pending_invalid">Запись передачи повреждена или недоступна. Новая передача не заменит её автоматически.</string>
+    <string name="upload_persist_failed">Не удалось сохранить состояние передачи. Проверь свободное место.</string>
+    <string name="upload_paused">Передача приостановлена. Продолжить можно кнопкой отправки файла. Фоновая отправка не выполняется.</string>
+    <string name="upload_discarded">Незавершённая передача, временная копия и доступ к исходнику удалены. Уже сохранённый файл на ПК остаётся.</string>
+    <string name="upload_verifying">Проверка всего исходного файла перед продолжением… Это может занять время.</string>
+    <string name="upload_source_changed">Исходник изменился. Удали передачу и выбери файл заново.</string>
+    <string name="upload_finalizing">ПК проверяет весь файл и сохраняет его… Можно поставить на паузу.</string>
+    <string name="upload_retrying">Связь прервалась. Повтор с проверкой принятой части…</string>
+    <string name="upload_wait">Дождись остановки предыдущей передачи.</string>
+    <string name="upload_grant_required">Поставщик файла не разрешил постоянный доступ. Выбери файл через другой источник: без этого докачка после перезапуска ненадёжна.</string>
+    <string name="upload_discard_local">Только на телефоне</string>
+    <string name="upload_discard_local_confirm">«Удалить передачу» очищает незавершённую передачу на исходном ПК и телефоне. Если ПК или исходный ключ недоступны, можно удалить только на телефоне: часть на ПК останется до истечения 7 дней. Уже сохранённые файлы не удаляются.</string>
+    <string name="upload_discard_local_done">Состояние, временная копия и доступ удалены на телефоне. Часть на ПК может оставаться до 7 дней.</string>
+    <string name="upload_session_missing">ПК больше не знает эту передачу либо не подтвердил её создание. Автоматический старт заново запрещён: папка могла измениться. Удали передачу и явно выбери файл снова.</string>
 </resources>
