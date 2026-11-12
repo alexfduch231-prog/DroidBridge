@@ -14,7 +14,7 @@ try:
 except ImportError:
     android_setup = None
 
-PUBLIC_APK = 'https://github.com/alexfduch231-prog/DroidBridge/releases/download/v1.0.8/DroidBridge-1.17-android.apk'
+PUBLIC_APK = 'https://github.com/alexfduch231-prog/DroidBridge/releases/download/v1.0.9/DroidBridge-1.18-android.apk'
 
 
 def descendants(widget):
