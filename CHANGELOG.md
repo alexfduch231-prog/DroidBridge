@@ -1,5 +1,21 @@
 # Изменения / Changelog
 
+## 1.0.6 — в разработке / in development
+
+Готовящийся выпуск, ещё не опубликован. Инструкции ниже относятся к новому интерфейсу; последняя доступная сборка находится на [странице релизов](https://github.com/alexfduch231-prog/DroidBridge/releases/latest).
+
+- Основные действия Windows перенесены в одно основное окно с разделами слева: **«Подключение»**, **«Экран телефона»**, **«Программы»**, **«Приём файлов»** и **«Настройки»**. Выбор файлов, подтверждения и системные запросы могут оставаться диалогами.
+- QR скачивания Android-приложения и сопряжение находятся внутри **«Подключение»**. При уходе со страницы сопряжения временное подключение закрывается и QR перестаёт действовать; для повтора нужно создать новый.
+- Просмотр телефона встраивается в раздел **«Экран телефона»**. Запрос трансляции с телефона направляется в уже открытое основное окно вместо запуска отдельного просмотра. Если окно закрыто, нужно открыть DroidBridge и повторить запрос. При переходе в другой раздел подключение просмотра закрывается; остановка трансляции на Android по-прежнему выполняется на телефоне.
+- Инструкции RU/EN обновлены под разделы единого окна. Совместимое Android-приложение — **1.15**. Новые сценарии на реальном телефоне пока не заявлены как проверенные.
+
+Upcoming release, not published yet. These instructions describe the new interface; use the [release page](https://github.com/alexfduch231-prog/DroidBridge/releases/latest) for the latest available build.
+
+- Windows tasks move into one main window with sidebar sections: **«Подключение»** (Connection), **«Экран телефона»** (Phone screen), **«Программы»** (Applications), **«Приём файлов»** (Received files) and **«Настройки»** (Settings). File pickers, confirmations and system prompts can remain dialogs.
+- The Android download QR and pairing are inside Connection. Leaving pairing closes its temporary session and invalidates the QR; create a new one to retry.
+- Phone viewing is being embedded in Phone screen. Casting requests are handed to the already-open main window instead of launching a separate viewer. If it is closed, open DroidBridge and retry. Navigating away closes the viewer connection; stopping Android casting still happens on the phone.
+- RU/EN instructions now follow the single-window sections. Android **1.15** remains compatible. New scenarios on a real phone are not claimed as verified.
+
 ## 1.0.5 — 2026-11-12
 
 - Windows-интерфейс приводится к стилю приложения на телефоне: общая светлая палитра, синие акценты, карточки и единое оформление окон.

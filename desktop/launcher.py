@@ -1,4 +1,4 @@
-"""Visible opt-in launcher: control, temporary pairing, viewer start on explicit actions."""
+"""Visible opt-in launcher with one window for connection and settings."""
 import argparse
 from pathlib import Path
 import sys
@@ -12,7 +12,7 @@ if not getattr(sys, 'frozen', False):
 import tkinter as tk
 from tkinter import ttk, messagebox
 from runtime import data_directory, phone_address, run_component, start_child
-from desktop.theme import PALETTE, apply_theme, card
+from desktop.theme import apply_theme
 
 
 def main():
@@ -28,8 +28,6 @@ def main():
         import os
         import tempfile
         from runtime import load_component
-        # Import entrypoints only, never call main or bind sockets. Modules create DATA_DIR
-        # at import, so isolate it and restore the caller's environment afterwards.
         previous_data = os.environ.get('VZAIMOPULT_DATA_DIR')
         try:
             with tempfile.TemporaryDirectory(prefix='vzaimopult-selftest-') as isolated:
@@ -45,6 +43,7 @@ def main():
                 import media_tools
                 import media_setup
                 import android_setup
+                import desktop.navigation
                 import update_protocol
                 import update_manager
                 import update_helper
@@ -78,77 +77,43 @@ def main():
     if update_signal is not None and update_signal.is_set():
         update_signal.close()
         return 0
+    return run_launcher(update_signal)
+
+
+def run_launcher(update_signal=None):
+    """Own all pages, timers and children for the lifetime of the root."""
+    from desktop.navigation import PageHost
+    from desktop.theme import scrollable_card
     root = tk.Tk()
     root.title('DroidBridge')
     root.geometry('940x760')
     root.minsize(800, 600)
     apply_theme(root)
-    header = ttk.Frame(root, style='DB.TFrame', padding=(28, 20, 28, 16))
-    header.pack(fill='x')
-    accent = ttk.Frame(header, style='DB.Accent.TFrame', width=5)
-    accent.pack(side='left', fill='y', padx=(0, 16))
-    brand = ttk.Frame(header, style='DB.TFrame')
-    brand.pack(side='left', fill='x', expand=True)
-    ttk.Label(brand, text='DroidBridge', style='DB.Title.TLabel').pack(anchor='w')
-    ttk.Label(brand, text='Твой ПК и телефон — в одной локальной сети.',
-              style='DB.Subtitle.TLabel').pack(anchor='w', pady=(4, 0))
-    shell = ttk.Frame(root, style='DB.TFrame')
-    shell.pack(fill='both', expand=True, padx=(28, 12), pady=(0, 16))
-    canvas = tk.Canvas(shell, background=PALETTE['background'], highlightthickness=0,
-                       borderwidth=0, takefocus=False)
-    scrollbar = ttk.Scrollbar(shell, orient='vertical', command=canvas.yview)
-    scrollbar.pack(side='right', fill='y', padx=(8, 0))
-    canvas.pack(side='left', fill='both', expand=True)
-    canvas.configure(yscrollcommand=scrollbar.set)
-    frame = ttk.Frame(canvas, style='DB.TFrame')
-    content_id = canvas.create_window((0, 0), window=frame, anchor='nw')
-    wrapped = []
-    def resize_content(event):
-        canvas.itemconfigure(content_id, width=event.width)
-        for label in wrapped:
-            label.configure(wraplength=max(200, event.width - 40))
-    canvas.bind('<Configure>', resize_content)
-    frame.bind('<Configure>', lambda event: canvas.configure(scrollregion=canvas.bbox('all')))
-    def scroll_wheel(event):
-        if event.num == 4:
-            units = -1
-        elif event.num == 5:
-            units = 1
-        else:
-            units = -int(event.delta / 120) if abs(event.delta) >= 120 else (-1 if event.delta > 0 else 1)
-        if canvas.yview() != (0.0, 1.0):
-            canvas.yview_scroll(units, 'units')
-    # Root bindings receive events from owned descendants, without bind_all leaks
-    # or hijacking wheel events in the separate tool windows.
-    def wheel_in_main(event):
-        if event.widget.winfo_toplevel() is root:
-            scroll_wheel(event)
-    root.bind('<MouseWheel>', wheel_in_main, add='+')
-    root.bind('<Button-4>', wheel_in_main, add='+')
-    root.bind('<Button-5>', wheel_in_main, add='+')
-    def reveal_focus(event):
-        widget = event.widget
-        if widget.winfo_toplevel() is root and widget is not root:
-            top = widget.winfo_rooty() - frame.winfo_rooty()
-            bottom = top + widget.winfo_height()
-            visible_top = canvas.canvasy(0)
-            height = canvas.winfo_height()
-            if top < visible_top or bottom > visible_top + height:
-                total = max(1, frame.winfo_height())
-                canvas.yview_moveto(max(0, top - 16) / total)
-    frame.bind('<FocusIn>', reveal_focus, add='+')
-    root.bind('<FocusIn>', reveal_focus, add='+')
-    def body_label(parent, text=None, **kwargs):
-        label = ttk.Label(parent, text=text, style='DB.Muted.TLabel', wraplength=780, **kwargs)
-        wrapped.append(label)
-        return label
-    connection = card(frame)
-    connection.pack(fill='x', pady=(0, 12))
-    ttk.Label(connection, text='Подключение', style='DB.Heading.TLabel').pack(anchor='w')
-    status = tk.StringVar(value='Сервер ещё не запущен. Автозапуска нет.')
-    body_label(connection, textvariable=status).pack(anchor='w', pady=(8, 12))
+    data = data_directory()
+    # Embedded components use the same persistent media/log context as children.
+    import os
+    os.environ['VZAIMOPULT_DATA_DIR'] = str(data)
     children = []
     server = [None]
+    host = tk.StringVar(root, value='')
+    status = tk.StringVar(root, value='Сервер ещё не запущен. Автозапуска нет.')
+    tick_timer, update_timer, mirror_timer = [None], [None], [None]
+    from desktop.mirror_handoff import GuiMirrorHandoff
+    mirror_handoff = GuiMirrorHandoff(data)
+    try:
+        mirror_handoff.heartbeat()
+    except OSError:
+        pass  # An unavailable handoff must not prevent local controls.
+    closing = [False]
+
+    header = ttk.Frame(root, style='DB.TFrame', padding=(20, 12))
+    header.pack(fill='x')
+    ttk.Label(header, text='DroidBridge', style='DB.Title.TLabel').pack(anchor='w')
+    status_label = ttk.Label(header, textvariable=status, style='DB.Subtitle.TLabel', wraplength=720)
+    status_label.pack(anchor='w', pady=(4, 8))
+    controls = ttk.Frame(header, style='DB.TFrame')
+    controls.pack(fill='x')
+
     def start_server():
         if server[0] is not None and server[0].poll() is None:
             return
@@ -158,122 +123,209 @@ def main():
             status.set('Запуск сервера…')
         except OSError as error:
             messagebox.showerror('Не удалось запустить сервер', str(error), parent=root)
+
     def stop_server():
         if server[0] is not None and server[0].poll() is None:
             server[0].terminate()
             status.set('Остановка сервера…')
-    row = ttk.Frame(connection, style='DB.Card.TFrame')
-    row.pack(fill='x')
-    ttk.Button(row, text='Запустить сервер', style='DB.Primary.TButton', command=start_server).pack(side='left')
-    ttk.Button(row, text='Остановить', style='DB.TButton', command=stop_server).pack(side='left', padx=8)
+
+    ttk.Button(controls, text='Запустить сервер', style='DB.Primary.TButton', command=start_server).pack(side='left')
+    ttk.Button(controls, text='Остановить', style='DB.TButton', command=stop_server).pack(side='left', padx=(8, 0))
+    shell = ttk.Frame(root, style='DB.TFrame')
+    shell.pack(fill='both', expand=True, padx=(20, 12), pady=(0, 12))
+    sidebar = ttk.Frame(shell, style='DB.TFrame')
+    sidebar.pack(side='left', fill='y', padx=(0, 12))
+
+    def setup_page(parent):
+        from android_setup import build_android_setup_page
+        navigation.builders['connection'] = connection_page
+        return build_android_setup_page(parent, data, pairing)
+
+    def open_setup():
+        navigation.builders['connection'] = setup_page
+        show_section('connection', refresh=True)
+
+    def connection_page(parent):
+        from android_setup import should_show_on_startup
+        if should_show_on_startup(data):
+            return setup_page(parent)
+        page = ttk.Frame(parent, style='DB.TFrame')
+        content = scrollable_card(page)
+        ttk.Label(content, text='Подключение', style='DB.Heading.TLabel').pack(anchor='w')
+        ttk.Label(content, text='Запусти сервер кнопкой сверху. Установка приложения открывается только по твоему запросу.',
+                  style='DB.Muted.TLabel', wraplength=400).pack(anchor='w', pady=(8, 12))
+        ttk.Button(content, text='Установить приложение Android', style='DB.TButton', command=open_setup).pack(anchor='w', pady=(0, 8))
+        ttk.Button(content, text='Приложение уже установлено', style='DB.Primary.TButton', command=pairing).pack(anchor='w')
+        return page
+
     def pairing():
+        from pairing_panel import build_pairing_page
+        def build_pairing(parent):
+            # Only this visit is a pairing flow. Any later return to connection
+            # requires another explicit already-installed action.
+            navigation.builders['connection'] = connection_page
+            return build_pairing_page(parent, data, http_port=8765)
+        navigation.builders['connection'] = build_pairing
+        show_section('connection', refresh=True)
+
+    root.connection_pairing = pairing
+
+    def screen_page(parent):
+        page = ttk.Frame(parent, style='DB.TFrame')
+        content = scrollable_card(page)
+        ttk.Label(content, text='Экран телефона на ПК', style='DB.Heading.TLabel').pack(anchor='w')
+        ttk.Label(content, text='Включи трансляцию в приложении и введи IP телефона.',
+                  style='DB.Muted.TLabel', wraplength=400).pack(anchor='w', pady=(8, 12))
+        ttk.Label(content, text='IP-адрес телефона', style='DB.TLabel').pack(anchor='w')
+        entry = ttk.Entry(content, textvariable=host)
+        entry.pack(fill='x', pady=(4, 12))
+        active_viewer = [None]
+        def dispose_viewer():
+            current, active_viewer[0] = active_viewer[0], None
+            if current is not None:
+                current.dispose()
+                if current.winfo_exists():
+                    current.destroy()
+        page.dispose = dispose_viewer
+        def viewer(port=8768):
+            try:
+                from runtime import load_component
+                address = phone_address(host.get())
+                if not (data / 'token.txt').is_file():
+                    raise ValueError('Сначала запусти сервер и выполни сопряжение.')
+                component = load_component('viewer')
+                token = component.read_token(str(data / 'token.txt'))
+                if not token:
+                    raise ValueError('Ключ подключения пуст. Выполни сопряжение заново.')
+                dispose_viewer()
+                active_viewer[0] = component.build_viewer_page(page, address, port, token)
+                content.master.master.destroy()  # Remove the setup viewport, not this page.
+                active_viewer[0].pack(fill='both', expand=True)
+            except (ImportError, OSError, ValueError) as error:
+                messagebox.showerror('Не удалось открыть экран', str(error), parent=root)
+        page.start_viewer = viewer
+        ttk.Button(content, text='Открыть экран телефона', style='DB.Primary.TButton', command=viewer).pack(anchor='w')
+        ttk.Label(content, text='Трансляция появится здесь. Чтобы отключиться, перейди в другой раздел.',
+                  style='DB.Muted.TLabel', wraplength=400).pack(anchor='w', pady=(12, 0))
+        return page
+
+    def applications_page(parent):
+        from apps_panel import build_apps_page
+        return build_apps_page(parent, data)
+
+    def uploads_page(parent):
+        from upload_panel import build_uploads_page
+        return build_uploads_page(parent, data)
+
+    def settings_page(parent):
+        from media_setup import build_media_page
+        return build_media_page(parent, data)
+
+    navigation = PageHost(shell, {'connection': connection_page, 'screen': screen_page,
+                                  'apps': applications_page, 'uploads': uploads_page,
+                                  'settings': settings_page})
+    navigation.pack(side='left', fill='both', expand=True)
+    root.navigation = navigation
+    buttons = {}
+    def show_section(key, *, refresh=False):
         try:
-            from pairing_panel import show_pairing
-            show_pairing(root, data_directory(), http_port=8765)
+            # Pairing is temporary: leaving connection closes its TLS session;
+            # returning shows the explicit setup / already-installed choices.
+            if key != 'connection':
+                navigation.builders['connection'] = connection_page
+            page = navigation.show_page(key, refresh=refresh)
+            for name, button in buttons.items():
+                button.configure(style='DB.Primary.TButton' if name == key else 'DB.TButton')
+            return page
         except (ImportError, OSError, ValueError) as error:
-            messagebox.showerror('Сопряжение недоступно', str(error), parent=root)
-    from android_setup import should_show_on_startup, show_android_setup
-    def android_setup():
-        show_android_setup(root, data_directory(), pairing)
-    ttk.Button(connection, text='Приложение на телефон / подключить', style='DB.TButton', command=android_setup).pack(anchor='w', pady=(12, 8))
-    body_label(connection, 'Сопряжение доступно сразу; для управления запусти сервер.').pack(anchor='w')
-    def applications():
-        try:
-            from apps_panel import show_apps
-            show_apps(root, data_directory())
-        except (ImportError, OSError, ValueError) as error:
-            messagebox.showerror('Программы недоступны', str(error), parent=root)
-    def uploads():
-        try:
-            from upload_panel import show_uploads
-            show_uploads(root, data_directory())
-        except (ImportError, OSError, ValueError):
-            messagebox.showerror('Приём файлов недоступен',
-                                 'Проверь локальную папку и настройки приёма файлов.', parent=root)
-    def media_settings():
-        from media_setup import show_media_setup
-        show_media_setup(root, data_directory())
-    from listener.media_tools import MediaToolsError, resolve_media_tools
-    try:
-        media_tools = resolve_media_tools(data_directory())
-        media_available = bool(media_tools.ffmpeg and media_tools.ffplay)
-    except MediaToolsError:
-        media_available = False
-    screen = card(frame)
-    screen.pack(fill='x', pady=(0, 12))
-    ttk.Label(screen, text='Экран телефона на ПК', style='DB.Heading.TLabel').pack(anchor='w')
-    body_label(screen, 'Включи трансляцию в приложении и введи IP телефона.').pack(anchor='w', pady=(8, 12))
-    ttk.Label(screen, text='IP-адрес телефона', style='DB.TLabel').pack(anchor='w')
-    host = ttk.Entry(screen)
-    host.pack(fill='x', pady=(4, 12))
-    def viewer():
-        try:
-            address = phone_address(host.get())
-            if not (data_directory() / 'token.txt').is_file():
-                raise ValueError('Сначала запусти сервер и выполни сопряжение.')
-            children.append(start_child('viewer', '--connect', address))
-        except (OSError, ValueError) as error:
-            messagebox.showerror('Не удалось открыть экран', str(error), parent=root)
-    ttk.Button(screen, text='Открыть экран телефона', style='DB.TButton', command=viewer).pack(anchor='w')
-    tools = card(frame)
-    tools.pack(fill='x', pady=(0, 12))
-    ttk.Label(tools, text='Инструменты', style='DB.Heading.TLabel').pack(anchor='w')
-    actions = ttk.Frame(tools, style='DB.Card.TFrame')
-    actions.pack(fill='x', pady=(12, 0))
-    ttk.Button(actions, text='Программы / Applications', style='DB.TButton', command=applications).pack(side='left')
-    ttk.Button(actions, text='Приём файлов / Received files', style='DB.TButton', command=uploads).pack(side='left', padx=(8, 0))
-    ttk.Button(tools, text='Настроить видео и звук', style='DB.TButton', command=media_settings).pack(anchor='w', pady=(12, 8))
-    body_label(tools, ('Видео и звук готовы. Дополнительная установка не нужна.' if media_available
-              else 'Инструменты видео и звука не найдены. Открой настройку.')).pack(anchor='w')
-    ttk.Label(frame, text='Данные и ключи хранятся только в профиле Windows.\nНе открывай порты роутера в интернет.', style='DB.Subtitle.TLabel', wraplength=700).pack(anchor='w', pady=(4, 8))
-    tick_timer = [None]
+            messagebox.showerror('Раздел недоступен', str(error), parent=root)
+            return None
+    for key, title in (('connection', 'Подключение'), ('screen', 'Экран телефона'),
+                       ('apps', 'Программы'), ('uploads', 'Приём файлов'), ('settings', 'Настройки')):
+        button = ttk.Button(sidebar, text=title, style='DB.TButton', command=lambda key=key: show_section(key))
+        button.pack(fill='x', pady=(0, 8))
+        buttons[key] = button
+    # Direct navigation is also used by integration tests and explicit page actions.
+    root.show_section = show_section
+    show_section('connection')
+
     def tick():
         if server[0] is not None:
             code = server[0].poll()
             status.set('Процесс сервера запущен. Доступность сети не проверялась.' if code is None
                        else 'Сервер завершён (код %s). См. listener.log в папке данных.' % code)
         tick_timer[0] = root.after(1000, tick)
+
+    def cleanup(event):
+        if event.widget is not root or closing[0]:
+            return
+        closing[0] = True
+        try:
+            mirror_handoff.close()
+        except OSError:
+            pass
+        for timer in (tick_timer, update_timer, mirror_timer):
+            if timer[0] is not None:
+                root.after_cancel(timer[0])
+                timer[0] = None
+        try:
+            navigation.dispose()
+        finally:
+            # Update shutdown asks components to drain via the shared event.
+            if update_signal is None or not update_signal.is_set():
+                for child in children:
+                    if child.poll() is None:
+                        child.terminate()
+
+    root.bind('<Destroy>', cleanup, add='+')
     def close():
         live = [child for child in children if child.poll() is None]
         if live and not messagebox.askyesno('Закрыть DroidBridge?', 'Остановить запущенные этим окном сервер и просмотр?', parent=root):
             return
-        for child in live:
-            child.terminate()
         root.destroy()
     root.protocol('WM_DELETE_WINDOW', close)
     tick_timer[0] = root.after(1000, tick)
-    if should_show_on_startup(data_directory()):
-        pending_setup = root.after(0, android_setup)
-        def cancel_pending_setup(event):
-            if event.widget is root:
-                root.after_cancel(pending_setup)
-        root.bind('<Destroy>', cancel_pending_setup, add='+')
     from update_manager import start_startup_check
-    start_startup_check(root, data_directory(), update_signal)
-    update_timer = [None]
-    def cancel_update_timer(event):
-        if event.widget is root:
-            if update_timer[0] is not None:
-                root.after_cancel(update_timer[0])
-                update_timer[0] = None
-            if tick_timer[0] is not None:
-                root.after_cancel(tick_timer[0])
-                tick_timer[0] = None
-    root.bind('<Destroy>', cancel_update_timer, add='+')
+    start_startup_check(root, data, update_signal)
     def poll_update_shutdown():
         if update_signal is not None and update_signal.is_set():
-            # Every same-path GUI/component observes the event. No terminate here:
-            # server handlers drain, viewer closes its owned decoders normally.
-            root.destroy()
+            try:
+                navigation.dispose()
+            finally:
+                root.destroy()
             return
         update_timer[0] = root.after(200, poll_update_shutdown)
     update_timer[0] = root.after(200, poll_update_shutdown)
+    def poll_mirror_requests():
+        if mirror_timer[0] is not None:
+            root.after_cancel(mirror_timer[0])
+            mirror_timer[0] = None
+        try:
+            mirror_handoff.heartbeat()
+            request = mirror_handoff.consume()
+            if request is not None:
+                address = phone_address(request.host)
+                port = int(request.port)
+                if not 1 <= port <= 65535:
+                    raise ValueError('Invalid viewer port')
+                host.set(address)
+                page = show_section('screen', refresh=True)
+                if page is not None:
+                    page.start_viewer(port=port)
+        except (OSError, ValueError, TypeError, AttributeError):
+            pass  # Ignore stale/unreadable handoffs; the next poll can recover.
+        finally:
+            if not closing[0]:
+                mirror_timer[0] = root.after(250, poll_mirror_requests)
+    mirror_timer[0] = root.after(250, poll_mirror_requests)
+    root.poll_mirror_requests = poll_mirror_requests
     try:
         root.mainloop()
     finally:
         if update_signal is not None:
             update_signal.close()
     return 0
+
 
 if __name__ == '__main__':
     raise SystemExit(main())

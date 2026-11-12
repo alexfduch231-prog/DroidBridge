@@ -79,6 +79,24 @@ class AndroidSetupTests(unittest.TestCase):
         self.addCleanup(root.destroy)
         return root
 
+    def test_embedded_builder_owns_no_window_and_disposed_callback_is_inert(self):
+        import tkinter as tk
+        from tkinter import ttk
+        root, paired = self.root(), []
+        page = android_setup.build_android_setup_page(root, self.data, lambda: paired.append(True))
+        self.assertIsInstance(page, ttk.Frame)
+        self.assertEqual(page.winfo_manager(), '')
+        self.assertFalse(any(isinstance(w, tk.Toplevel) for w in descendants(root)))
+        page.pack(fill='both', expand=True)
+        button(page, 'Уже установлено → подключить к ПК').invoke()
+        self.assertEqual(paired, [True])
+        self.assertTrue(page.winfo_exists())
+        page.dispose()
+        page.dispose()
+        button(page, 'Уже установлено → подключить к ПК').invoke()
+        self.assertEqual(paired, [True])
+        self.assertFalse(self.data.exists())
+
     def test_duplicate_window_is_reused_and_close_never_pairs(self):
         root, paired = self.root(), []
         window = android_setup.show_android_setup(root, self.data, lambda: paired.append(True))
@@ -165,7 +183,7 @@ class AndroidSetupTests(unittest.TestCase):
         self.addCleanup(updates.stop)
         return importlib.import_module('desktop.launcher')
 
-    def test_regular_startup_shows_optional_window_but_never_starts_services(self):
+    def test_regular_startup_embeds_setup_without_windows_or_services(self):
         import tkinter as tk
         launcher = self.launcher()
         seen = []
@@ -173,8 +191,11 @@ class AndroidSetupTests(unittest.TestCase):
             try:
                 root.update()
                 windows = [w for w in root.winfo_children() if isinstance(w, tk.Toplevel)]
-                self.assertEqual(len(windows), 1)
-                seen.append(windows[0].title())
+                self.assertEqual(windows, [])
+                self.assertEqual(root.navigation.current_key, 'connection')
+                page = root.navigation.pages['connection']
+                button(page, 'Уже установлено → подключить к ПК')
+                seen.append('embedded setup')
                 root.update_idletasks()
                 for w in descendants(root):
                     if w.winfo_toplevel() is not root:
@@ -205,9 +226,9 @@ class AndroidSetupTests(unittest.TestCase):
              patch.object(socket.socket, 'bind', side_effect=AssertionError('no listener')), \
              patch.object(tk.Tk, 'mainloop', inspect):
             self.assertEqual(launcher.main(), 0)
-        self.assertEqual(seen, ['DroidBridge — приложение на телефон'])
+        self.assertEqual(seen, ['embedded setup'])
 
-    def test_optout_suppresses_startup_but_repeated_button_opens_window(self):
+    def test_optout_persists_when_connection_page_is_explicitly_revisited(self):
         import tkinter as tk
         launcher = self.launcher()
         android_setup.save_dont_show(self.data, True)
@@ -215,30 +236,43 @@ class AndroidSetupTests(unittest.TestCase):
             try:
                 root.update()
                 self.assertFalse(any(isinstance(w, tk.Toplevel) for w in root.winfo_children()))
-                button(root, 'Приложение на телефон / подключить').invoke()
-                self.assertEqual(len([w for w in root.winfo_children() if isinstance(w, tk.Toplevel)]), 1)
+                root.show_section('screen')
+                button(root, 'Подключение').invoke()
+                self.assertEqual(root.navigation.current_key, 'connection')
+                button(root.navigation.pages['connection'], 'Приложение уже установлено')
+                button(root.navigation.pages['connection'], 'Установить приложение Android').invoke()
+                button(root.navigation.pages['connection'], 'Уже установлено → подключить к ПК')
+                self.assertFalse(any(isinstance(w, tk.Toplevel) for w in root.winfo_children()))
+                self.assertFalse(android_setup.should_show_on_startup(self.data))
             finally:
                 root.destroy()
         with patch.object(sys, 'argv', ['launcher']), patch.object(launcher, 'data_directory', return_value=self.data), \
              patch.object(tk.Tk, 'mainloop', inspect):
             self.assertEqual(launcher.main(), 0)
 
-    def test_launcher_onboarding_uses_existing_pairing_callback_after_closing(self):
+    def test_launcher_onboarding_replaces_page_using_pairing_callback(self):
         import tkinter as tk
         launcher = self.launcher()
         seen = []
         def pair(parent, data_dir, http_port):
+            from tkinter import ttk
             self.assertFalse(any(isinstance(w, tk.Toplevel) for w in parent.winfo_children()))
+            self.assertFalse(any(w.winfo_exists() for w in old_pages))
             seen.append((data_dir, http_port))
+            return ttk.Frame(parent)
+        old_pages = []
         def inspect(root):
             try:
                 root.update()
-                window = next(w for w in root.winfo_children() if isinstance(w, tk.Toplevel))
-                button(window, 'Уже установлено → подключить к ПК').invoke()
+                page = root.navigation.pages['connection']
+                old_pages.append(page)
+                button(page, 'Уже установлено → подключить к ПК').invoke()
+                self.assertEqual(root.navigation.current_key, 'connection')
+                self.assertFalse(any(isinstance(w, tk.Toplevel) for w in descendants(root)))
             finally:
                 root.destroy()
         with patch.object(sys, 'argv', ['launcher']), patch.object(launcher, 'data_directory', return_value=self.data), \
-             patch('pairing_panel.show_pairing', side_effect=pair), patch.object(tk.Tk, 'mainloop', inspect):
+             patch('pairing_panel.build_pairing_page', side_effect=pair), patch.object(tk.Tk, 'mainloop', inspect):
             self.assertEqual(launcher.main(), 0)
         self.assertEqual(seen, [(self.data, 8765)])
 

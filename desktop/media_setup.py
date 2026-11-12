@@ -15,8 +15,27 @@ from listener.media_tools import (MediaToolsError, resolve_media_tools,
 RESTART_NOTICE = 'Изменения применятся при новом запуске сервера и окна просмотра. Останови и запусти их заново; закрывать DroidBridge не нужно.'
 
 
+_jobs_lock = threading.Lock()
+_jobs = {}
+
+
+def _job_key(data_dir):
+    return str(Path(data_dir).resolve()).casefold()
+
+
+def _media_busy(data_dir):
+    with _jobs_lock:
+        return _job_key(data_dir) in _jobs
+
+
 def start_media_setup(data_dir, directory, results) -> threading.Thread:
-    """Run probes and atomic save off the Tk thread; report through a queue."""
+    """Run one consented validation/save per data directory, across page lifetimes."""
+    key = _job_key(data_dir)
+    with _jobs_lock:
+        if key in _jobs:
+            raise MediaToolsError('Проверка уже идёт. Дождись её завершения.')
+        _jobs[key] = results
+
     def work():
         try:
             tools = save_media_directory(data_dir, directory)
@@ -25,27 +44,30 @@ def start_media_setup(data_dir, directory, results) -> threading.Thread:
             results.put((False, str(error)))
         except (OSError, ValueError):
             results.put((False, 'Не удалось настроить видео и звук. Проверь выбранную папку.'))
+        finally:
+            with _jobs_lock:
+                _jobs.pop(key, None)
     worker = threading.Thread(target=work, name='media-setup', daemon=True)
-    worker.start()
+    try:
+        worker.start()
+    except RuntimeError:
+        with _jobs_lock:
+            _jobs.pop(key, None)
+        raise
     return worker
 
 
-def show_media_setup(parent, data_dir):
-    """Open a local non-modal settings window; never run tools without consent."""
+def build_media_page(parent, data_dir):
+    """Build an unpacked media frame; validation survives hiding or disposal."""
     import tkinter as tk
     from tkinter import filedialog, messagebox, ttk
     import webbrowser
 
     try:
-        from theme import apply_theme, scrollable_card
+        from theme import scrollable_card
     except ModuleNotFoundError:
-        from desktop.theme import apply_theme, scrollable_card
-    window = tk.Toplevel(parent)
-    apply_theme(window)
-    window.title('Настроить видео и звук')
-    window.geometry(f'730x{min(510, max(400, window.winfo_screenheight() - 100))}')
-    window.minsize(520, 400)
-    window.transient(parent)
+        from desktop.theme import scrollable_card
+    window = ttk.Frame(parent, style='DB.TFrame')
     frame = scrollable_card(window)
     ttk.Label(frame, text='Видео H.264 и звук: FFmpeg / ffplay', style='DB.Heading.TLabel').pack(anchor='w')
     ttk.Label(frame, style='DB.Muted.TLabel', text='Обычная установка DroidBridge уже содержит инструменты видео и звука. '
@@ -64,6 +86,27 @@ def show_media_setup(parent, data_dir):
     ttk.Label(frame, style='DB.Muted.TLabel', textvariable=status, wraplength=620).pack(anchor='w', pady=10)
     results = queue.Queue()
     busy = [False]
+    disposed = [False]
+    pending_poll = [None]
+
+    def cleanup(event=None):
+        if event is not None and event.widget is not window:
+            return
+        disposed[0] = True
+        if pending_poll[0] is not None:
+            try:
+                window.after_cancel(pending_poll[0])
+            except tk.TclError:
+                pass
+            pending_poll[0] = None
+
+    def dispose():
+        cleanup()
+        if window.winfo_exists():
+            window.destroy()
+
+    window.dispose = dispose
+    window.bind('<Destroy>', cleanup, add='+')
 
     def refresh():
         try:
@@ -88,10 +131,19 @@ def show_media_setup(parent, data_dir):
             button.configure(state='disabled' if value else 'normal')
 
     def poll():
+        pending_poll[0] = None
+        if disposed[0]:
+            return
         try:
             success, result = results.get_nowait()
         except queue.Empty:
-            window.after(75, poll)
+            if _media_busy(data_dir):
+                set_busy(True)
+                pending_poll[0] = window.after(75, poll)
+            else:
+                set_busy(False)
+                refresh()
+                status.set(RESTART_NOTICE)
             return
         set_busy(False)
         if success:
@@ -102,6 +154,8 @@ def show_media_setup(parent, data_dir):
             messagebox.showerror('Не удалось настроить видео и звук', result, parent=window)
 
     def select():
+        if _media_busy(data_dir):
+            return
         selected = filedialog.askdirectory(parent=window, mustexist=True,
                                             title='Выбери папку с ffmpeg.exe и ffplay.exe (или её родительскую папку)')
         if not selected:
@@ -112,10 +166,15 @@ def show_media_setup(parent, data_dir):
             return
         set_busy(True)
         status.set('Проверяем оба файла… Окно остаётся доступным, проверка займёт до 10 секунд.')
-        start_media_setup(data_dir, selected, results)
-        window.after(75, poll)
+        try:
+            start_media_setup(data_dir, selected, results)
+        except MediaToolsError:
+            status.set('Проверка уже идёт. Дождись её завершения. ' + RESTART_NOTICE)
+        pending_poll[0] = window.after(75, poll)
 
     def clear():
+        if _media_busy(data_dir):
+            return
         try:
             reset_media_directory(data_dir)
             refresh()
@@ -123,21 +182,52 @@ def show_media_setup(parent, data_dir):
         except MediaToolsError as error:
             messagebox.showerror('Не удалось сбросить настройки', str(error), parent=window)
 
-    def close():
-        if busy[0]:
-            messagebox.showinfo('Идёт проверка', 'Дождись окончания проверки перед закрытием окна.', parent=window)
-            return
-        window.destroy()
-
     row = ttk.Frame(frame, style='DB.Card.TFrame')
     row.pack(fill='x', pady=6)
     choose = ttk.Button(row, style='DB.Primary.TButton', text='Выбрать папку…', command=select)
     choose.pack(side='left')
     reset = ttk.Button(row, text='Автоматический поиск', command=clear)
     reset.pack(side='left', padx=8)
-    ttk.Button(row, text='Закрыть', command=close).pack(side='right')
     ttk.Button(frame, text='Официальный сайт FFmpeg',
                command=lambda: webbrowser.open('https://ffmpeg.org/download.html')).pack(anchor='w', pady=6)
-    window.protocol('WM_DELETE_WINDOW', close)
     refresh()
+    window.close_container = row
+    window.is_busy = lambda: busy[0] or _media_busy(data_dir)
+    if _media_busy(data_dir):
+        set_busy(True)
+        status.set('Проверка уже идёт. Дождись её завершения. ' + RESTART_NOTICE)
+        pending_poll[0] = window.after(75, poll)
+    return window
+
+
+def show_media_setup(parent, data_dir):
+    """Compatibility wrapper around the embedded, explicitly consented setup."""
+    import tkinter as tk
+    from tkinter import ttk
+    try:
+        from theme import apply_theme
+    except ModuleNotFoundError:
+        from desktop.theme import apply_theme
+
+    window = tk.Toplevel(parent)
+    try:
+        apply_theme(window)
+        page = build_media_page(window, data_dir)
+        window.title('Настроить видео и звук')
+        window.geometry(f'730x{min(510, max(400, window.winfo_screenheight() - 100))}')
+        window.minsize(520, 400)
+        window.transient(parent)
+        page.pack(fill='both', expand=True)
+        def close():
+            from tkinter import messagebox
+            if page.is_busy():
+                messagebox.showinfo('Идёт проверка', 'Дождись окончания проверки перед закрытием окна.', parent=window)
+                return
+            window.destroy()
+
+        ttk.Button(page.close_container, text='Закрыть', command=close).pack(side='right')
+        window.protocol('WM_DELETE_WINDOW', close)
+    except Exception:
+        window.destroy()
+        raise
     return window

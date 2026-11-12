@@ -48,27 +48,17 @@ def save_dont_show(data_dir, dont_show):
             temporary.unlink(missing_ok=True)
 
 
-def show_android_setup(parent, data_dir, on_pair):
-    """Show one non-modal window; pairing runs only after its explicit button."""
+def build_android_setup_page(parent, data_dir, on_pairing):
+    """Build an unpacked page; the host owns navigation and calls dispose on exit."""
     import tkinter as tk
     from tkinter import messagebox, ttk
 
-    existing = getattr(parent, '_android_setup_window', None)
-    if existing is not None and existing.winfo_exists():
-        existing.deiconify()
-        existing.lift()
-        return existing
     try:
-        from theme import apply_theme, scrollable_card
+        from theme import scrollable_card
     except ModuleNotFoundError:
-        from desktop.theme import apply_theme, scrollable_card
-    window = tk.Toplevel(parent)
-    apply_theme(window)
-    parent._android_setup_window = window
-    window.title('DroidBridge — приложение на телефон')
-    window.geometry(f'680x{min(760, max(400, window.winfo_screenheight() - 100))}')
-    window.minsize(520, 400)
-    window.transient(parent)
+        from desktop.theme import scrollable_card
+    window = ttk.Frame(parent, style='DB.TFrame')
+    closed = [False]
     frame = scrollable_card(window)
     ttk.Label(frame, text='DroidBridge на Android', style='DB.Heading.TLabel').pack(anchor='w')
     ttk.Label(frame, style='DB.Muted.TLabel', text='Сначала установи приложение на телефон, затем подключи его к ПК. '
@@ -79,6 +69,8 @@ def show_android_setup(parent, data_dir, on_pair):
     dont_show = tk.BooleanVar(master=window, value=not should_show_on_startup(data_dir))
 
     def remember():
+        if closed[0]:
+            return
         try:
             save_dont_show(data_dir, dont_show.get())
         except (OSError, ValueError):
@@ -89,14 +81,16 @@ def show_android_setup(parent, data_dir, on_pair):
     ttk.Checkbutton(frame, style='DB.Card.TCheckbutton', text='Больше не показывать при запуске', variable=dont_show,
                     command=remember).pack(anchor='w', pady=(12, 0))
 
-    def close():
-        window.destroy()
+    def dispose():
+        closed[0] = True
 
     def pair():
-        close()
-        on_pair()
+        if not closed[0]:
+            on_pairing()
 
     def install():
+        if closed[0]:
+            return
         import qrcode
         from PIL import ImageTk
         for child in content.winfo_children():
@@ -126,10 +120,13 @@ def show_android_setup(parent, data_dir, on_pair):
         row.pack(fill='x', pady=6)
 
         def copy():
-            window.clipboard_clear()
-            window.clipboard_append(APK_DOWNLOAD_URL)
+            if not closed[0]:
+                window.clipboard_clear()
+                window.clipboard_append(APK_DOWNLOAD_URL)
 
         def open_link():
+            if closed[0]:
+                return
             import webbrowser
             webbrowser.open(APK_DOWNLOAD_URL)
 
@@ -139,8 +136,40 @@ def show_android_setup(parent, data_dir, on_pair):
 
     ttk.Button(content, style='DB.Primary.TButton', text='Установить на телефон', command=install).pack(anchor='w', pady=8)
     ttk.Button(content, style='DB.Primary.TButton', text='Уже установлено → подключить к ПК', command=pair).pack(anchor='w', pady=8)
-    ttk.Label(content, style='DB.Muted.TLabel', text='При подключении откроется отдельное окно для создания временного QR '
-              'сопряжения. Просто закрыть это окно — ничего не запускать.',
+    ttk.Label(content, style='DB.Muted.TLabel', text='При подключении откроется страница создания временного QR '
+              'сопряжения. Пока ты не создашь QR, подключение не запускается.',
               wraplength=590).pack(anchor='w', pady=10)
-    window.protocol('WM_DELETE_WINDOW', close)
+    window.dispose = dispose
+    window.bind('<Destroy>', lambda event: dispose() if event.widget is window else None, add='+')
+    return window
+
+
+def show_android_setup(parent, data_dir, on_pair):
+    """Compatibility wrapper for callers that still want a separate window."""
+    import tkinter as tk
+    try:
+        from theme import apply_theme
+    except ModuleNotFoundError:
+        from desktop.theme import apply_theme
+    existing = getattr(parent, '_android_setup_window', None)
+    if existing is not None and existing.winfo_exists():
+        existing.deiconify()
+        existing.lift()
+        return existing
+    window = tk.Toplevel(parent)
+    apply_theme(window)
+    parent._android_setup_window = window
+    window.title('DroidBridge — приложение на телефон')
+    window.geometry(f'680x{min(760, max(400, window.winfo_screenheight() - 100))}')
+    window.minsize(520, 400)
+    window.transient(parent)
+
+    def pair():
+        window.destroy()
+        on_pair()
+
+    page = build_android_setup_page(window, data_dir, pair)
+    page.pack(fill='both', expand=True)
+    window.dispose = page.dispose
+    window.protocol('WM_DELETE_WINDOW', window.destroy)
     return window

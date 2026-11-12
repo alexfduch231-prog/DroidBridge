@@ -51,8 +51,8 @@ _LABELS = {
 }
 
 
-def show_uploads(parent, data_dir):
-    """Open a non-modal Tk settings window. A corrupt config remains recoverable."""
+def build_uploads_page(parent, data_dir):
+    """Build an unpacked upload settings frame, without creating a window."""
     import tkinter as tk
     from tkinter import filedialog, messagebox, ttk
 
@@ -63,15 +63,11 @@ def show_uploads(parent, data_dir):
         language = 'en'
     words = _LABELS[language]
     try:
-        from theme import apply_theme, scrollable_card
+        from theme import scrollable_card
     except ModuleNotFoundError:
-        from desktop.theme import apply_theme, scrollable_card
-    window = tk.Toplevel(parent)
-    apply_theme(window)
-    window.title(words['title'])
-    window.geometry(f'700x{min(290, max(400, window.winfo_screenheight() - 100))}')
-    window.minsize(520, 400)
-    window.transient(parent)
+        from desktop.theme import scrollable_card
+    window = ttk.Frame(parent, style='DB.TFrame')
+    window.dispose = lambda: window.destroy() if window.winfo_exists() else None
     frame = scrollable_card(window)
     ttk.Label(frame, style='DB.Heading.TLabel', text=words['intro'], wraplength=580).pack(anchor='w')
     current = tk.StringVar(master=window)
@@ -110,7 +106,34 @@ def show_uploads(parent, data_dir):
     row.pack(fill='x', pady=(0, 12))
     ttk.Button(row, style='DB.Primary.TButton', text=words['choose'], command=select).pack(side='left')
     ttk.Button(row, text=words['reset'], command=lambda: guarded(model.reset)).pack(side='left', padx=8)
-    ttk.Button(row, text=words['close'], command=window.destroy).pack(side='right')
     ttk.Label(frame, style='DB.Muted.TLabel', text=words['local'], wraplength=580).pack(anchor='w')
     refresh()
+    window.close_container = row
+    window.title_text = words['title']
+    window.close_text = words['close']
+    return window
+
+
+def show_uploads(parent, data_dir):
+    """Compatibility wrapper around the embedded upload settings page."""
+    import tkinter as tk
+    from tkinter import ttk
+    try:
+        from theme import apply_theme
+    except ModuleNotFoundError:
+        from desktop.theme import apply_theme
+
+    window = tk.Toplevel(parent)
+    try:
+        apply_theme(window)
+        page = build_uploads_page(window, data_dir)
+        window.title(page.title_text)
+        window.geometry(f'700x{min(290, max(400, window.winfo_screenheight() - 100))}')
+        window.minsize(520, 400)
+        window.transient(parent)
+        page.pack(fill='both', expand=True)
+        ttk.Button(page.close_container, text=page.close_text, command=window.destroy).pack(side='right')
+    except Exception:
+        window.destroy()
+        raise
     return window

@@ -25,6 +25,8 @@ pairing-tls/
 **/media_settings.json
 **/android_setup.json
 **/update_state.json
+**/mirror-request.json
+**/mirror-gui-heartbeat.json
 private-release-signing/
 *.key
 *.pfx

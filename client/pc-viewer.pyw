@@ -117,8 +117,12 @@ def peak_percent(chunk):
 
 
 class Viewer(object):
-    def __init__(self, root, host, port, token, audio=True):
-        self.root = root
+    def __init__(self, root, host, port, token, audio=True, embedded=False):
+        self.embedded = embedded
+        self.root = tk.Frame(root, bg=BG) if embedded else root
+        self._closed = False
+        self._after_ids = set()
+        self._stats_last = (time.monotonic(), 0, 0)
         self.host = host
         self.port = port
         self.token = token
@@ -170,8 +174,14 @@ class Viewer(object):
         self.max_h = 800
 
         self._build_ui()
-        self.root.protocol("WM_DELETE_WINDOW", self.close)
-        self.root.after(20, self._pump)
+        if embedded:
+            self.root.viewer = self
+            self.root.dispose = self.close
+            self.root.bind("<Destroy>", self._on_destroy, add="+")
+        else:
+            self.root.protocol("WM_DELETE_WINDOW", self.close)
+        self._schedule(20, self._pump)
+        self._schedule(500, self._tick)
         threading.Thread(target=self._control_loop, daemon=True).start()
         threading.Thread(target=self._net, daemon=True).start()
         threading.Thread(target=self._audio_loop, daemon=True).start()
@@ -180,14 +190,15 @@ class Viewer(object):
     # ---------- интерфейс ----------
 
     def _build_ui(self):
-        self.root.title("Экран телефона — DroidBridge")
-        apply_theme(self.root)
+        if not getattr(self, "embedded", False):
+            self.root.title("Экран телефона — DroidBridge")
+            apply_theme(self.root)
+            sw = self.root.winfo_screenwidth()
+            sh = self.root.winfo_screenheight()
+            w = min(480, max(360, sw // 3))
+            h = min(sh - 120, 980)
+            self.root.geometry("%dx%d+%d+%d" % (w, h, sw - w - 60, 60))
         self.root.configure(bg=BG)
-        sw = self.root.winfo_screenwidth()
-        sh = self.root.winfo_screenheight()
-        w = min(480, max(360, sw // 3))
-        h = min(sh - 120, 980)
-        self.root.geometry("%dx%d+%d+%d" % (w, h, sw - w - 60, 60))
 
         top = tk.Frame(self.root, bg=PANEL)
         top.pack(side="top", fill="x")
@@ -209,8 +220,9 @@ class Viewer(object):
                             relief="flat", overrelief="flat", **focus_style)
 
         self.on_top = tk.BooleanVar(value=False)
-        tk.Checkbutton(top, text="Поверх", variable=self.on_top, command=self._toggle_top,
-                       **check_style).pack(side="right", padx=(0, 6))
+        if not getattr(self, "embedded", False):
+            tk.Checkbutton(top, text="Поверх", variable=self.on_top, command=self._toggle_top,
+                           **check_style).pack(side="right", padx=(0, 6))
 
         self.audio_var = tk.BooleanVar(value=self.audio_enabled)
         tk.Checkbutton(top, text="Звук", variable=self.audio_var, command=self._toggle_audio,
@@ -264,6 +276,8 @@ class Viewer(object):
         self.max_h = max(1, self.image_label.winfo_height())
 
     def _toggle_top(self):
+        if getattr(self, "embedded", False):
+            return
         try:
             self.root.attributes("-topmost", bool(self.on_top.get()))
         except tk.TclError:
@@ -302,9 +316,10 @@ class Viewer(object):
             self.control_capable = False
             self.control_enabled = False
             self.last_rendered = 0.0
-            self.sock = None
+            detached_sock, self.sock = self.sock, None
             self.connection_epoch += 1
             self._clear_controls_locked()
+            return detached_sock
 
     def _toggle_control(self):
         with self.control_lock:
@@ -464,6 +479,9 @@ class Viewer(object):
                 continue
             delay = 0.3
             with self.control_lock:
+                if self.stop.is_set():
+                    sock.close()
+                    return
                 self.sock = sock
             sock.settimeout(None)
             log("подключено к %s:%s" % (self.host, self.port))
@@ -609,7 +627,7 @@ class Viewer(object):
                 log("кадр не разобран: %r" % (e,))
 
         self.status_label.configure(text=self._status_text(), fg=self.status_color)
-        self.root.after(10, self._pump)
+        self._schedule(10, self._pump)
 
     # ---------- видео H.264 ----------
 
@@ -623,6 +641,8 @@ class Viewer(object):
 
     def _ensure_decoder(self):
         with self.vlock:
+            if self.stop.is_set():
+                return None
             if self.vproc is not None and self.vproc.poll() is None:
                 return self.vproc
             self._kill_decoder_locked()
@@ -652,14 +672,21 @@ class Viewer(object):
                 return None
             threading.Thread(target=self._read_stderr, args=(self.vproc,),
                              daemon=True).start()
-            if self.h264_config:
-                try:
-                    self.vproc.stdin.write(self.h264_config)
-                    self.vproc.stdin.flush()
-                except Exception as e:
-                    log("видео: конфиг не записан: %r" % (e,))
-            log("видео: декодер H.264 запущен (%dx%d)" % (self.vw, self.vh))
-            return self.vproc
+            proc, config = self.vproc, self.h264_config
+        # Pipe writes can block. Never hold vlock here: dispose needs that lock
+        # to kill the decoder and unblock its writer. Keep the captured identity
+        # rather than accidentally feeding a replacement decoder.
+        if config:
+            try:
+                proc.stdin.write(config)
+                proc.stdin.flush()
+            except Exception as e:
+                log("видео: конфиг не записан: %r" % (e,))
+        with self.vlock:
+            if self.stop.is_set() or self.vproc is not proc:
+                return None
+        log("видео: декодер H.264 запущен (%dx%d)" % (self.vw, self.vh))
+        return proc
 
     def _feed_video(self, payload):
         proc = self._ensure_decoder()
@@ -727,13 +754,15 @@ class Viewer(object):
         proc, self.vproc = self.vproc, None
         if proc is None:
             return
+        # Stop the reader before closing the pipe: a worker may hold its write
+        # lock while blocked in flush, so closing first can freeze the Tk thread.
         try:
-            if proc.stdin:
-                proc.stdin.close()
+            proc.kill()
         except Exception:
             pass
         try:
-            proc.kill()
+            if proc.stdin:
+                proc.stdin.close()
         except Exception:
             pass
 
@@ -779,25 +808,28 @@ class Viewer(object):
                 self._stop_ffplay()
 
     def _start_ffplay(self):
-        exe = MEDIA_TOOLS.ffplay
-        if not exe or not os.path.isfile(exe):
-            log("Звук недоступен: настрой видео и звук на ПК и открой просмотр заново")
-            self.audio_enabled = False
-            return
-        layout = "mono" if self.ch == 1 else "stereo"
-        cmd = [exe, "-hide_banner", "-loglevel", "error", "-nodisp", "-autoexit",
-               "-fflags", "nobuffer", "-flags", "low_delay",
-               "-f", "s16le", "-sample_rate", str(self.sr),
-               "-ch_layout", layout, "-"]
-        try:
-            self.ffplay = subprocess.Popen(cmd, stdin=subprocess.PIPE,
-                                           stdout=subprocess.DEVNULL,
-                                           stderr=subprocess.DEVNULL,
-                                           creationflags=CREATE_NO_WINDOW)
-            log("звук: ffplay запущен (%d Гц, %d кан.)" % (self.sr, self.ch))
-        except Exception as e:
-            log("звук: не удалось запустить ffplay: %r" % (e,))
-            self.ffplay = None
+        with self.audio_lock:
+            if self.stop.is_set() or not self.audio_enabled:
+                return
+            exe = MEDIA_TOOLS.ffplay
+            if not exe or not os.path.isfile(exe):
+                log("Звук недоступен: настрой видео и звук на ПК и открой просмотр заново")
+                self.audio_enabled = False
+                return
+            layout = "mono" if self.ch == 1 else "stereo"
+            cmd = [exe, "-hide_banner", "-loglevel", "error", "-nodisp", "-autoexit",
+                   "-fflags", "nobuffer", "-flags", "low_delay",
+                   "-f", "s16le", "-sample_rate", str(self.sr),
+                   "-ch_layout", layout, "-"]
+            try:
+                self.ffplay = subprocess.Popen(cmd, stdin=subprocess.PIPE,
+                                               stdout=subprocess.DEVNULL,
+                                               stderr=subprocess.DEVNULL,
+                                               creationflags=CREATE_NO_WINDOW)
+                log("звук: ffplay запущен (%d Гц, %d кан.)" % (self.sr, self.ch))
+            except Exception as e:
+                log("звук: не удалось запустить ffplay: %r" % (e,))
+                self.ffplay = None
 
     def _stop_ffplay(self):
         with self.audio_lock:
@@ -805,21 +837,62 @@ class Viewer(object):
         if proc is None:
             return
         try:
-            if proc.stdin:
-                proc.stdin.close()
+            proc.terminate()
         except Exception:
             pass
         try:
-            proc.terminate()
+            if proc.stdin:
+                proc.stdin.close()
         except Exception:
             pass
 
     # ---------- закрытие ----------
 
+    def _schedule(self, delay, callback):
+        """Keep every Tk callback owned by this viewer and cancellable on dispose."""
+        if self.stop.is_set():
+            return
+        after_id = None
+
+        def run():
+            self._after_ids.discard(after_id)
+            if not self.stop.is_set():
+                callback()
+
+        after_id = self.root.after(delay, run)
+        self._after_ids.add(after_id)
+
+    def _tick(self):
+        if self.stop.is_set():
+            return
+        now = time.monotonic()
+        began, previous_frames, previous_bytes = self._stats_last
+        dt = now - began
+        if dt >= 1.0:
+            with self.lock:
+                frames, nbytes = self.frames, self.bytes
+            self.fps = (frames - previous_frames) / dt
+            self.kbps = (nbytes - previous_bytes) / dt / 1024.0
+            self._stats_last = (now, frames, nbytes)
+        self._schedule(500, self._tick)
+
+    def _on_destroy(self, event):
+        if event.widget is self.root:
+            self.close()
+
     def close(self):
+        if self._closed:
+            return
+        self._closed = True
         self.stop.set()
-        sock = self.sock
-        self._invalidate_connection()
+        for after_id in self._after_ids:
+            try:
+                self.root.after_cancel(after_id)
+            except tk.TclError:
+                pass
+        self._after_ids.clear()
+        # Snapshot and detach under the same lock as post-connect publication.
+        sock = self._invalidate_connection()
         self.gesture = None
         try:
             if sock:
@@ -836,9 +909,18 @@ class Viewer(object):
         except tk.TclError:
             pass
 
-    # статистика, обновляется из _pump через _tick
+    # Статистика: собственный таймер работает и без standalone main().
     fps = 0.0
     kbps = 0.0
+
+
+def build_viewer_page(parent, host, port, token, audio=True):
+    """Return an unpacked Frame with .viewer and an idempotent .dispose().
+
+    The caller owns geometry management and the application window. Disposing
+    this page (or destroying its parent) stops its workers and Tk timers only.
+    """
+    return Viewer(parent, host, port, token, audio=audio, embedded=True).root
 
 
 def main():
@@ -859,20 +941,6 @@ def main():
     viewer = Viewer(root, args.connect, args.port, token, audio=not args.no_audio)
     write_pid()
 
-    last = [time.time(), 0, 0]
-
-    def tick():
-        now = time.time()
-        dt = now - last[0]
-        if dt >= 1.0:
-            with viewer.lock:
-                frames, nbytes = viewer.frames, viewer.bytes
-            viewer.fps = (frames - last[1]) / dt
-            viewer.kbps = (nbytes - last[2]) / dt / 1024.0
-            last[0], last[1], last[2] = now, frames, nbytes
-        root.after(500, tick)
-
-    root.after(500, tick)
     try:
         root.mainloop()
     finally:

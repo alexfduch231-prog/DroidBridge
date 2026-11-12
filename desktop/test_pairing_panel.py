@@ -6,7 +6,9 @@ import unittest
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / 'listener'))
 from lan_discovery import Adapter
+import pairing_panel
 from pairing_panel import PairingController, eligible_adapters, load_pairing_key
+from unittest.mock import patch
 
 
 class FakeServer:
@@ -32,6 +34,74 @@ class PanelTests(unittest.TestCase):
         self.now = 0
         self.control = PairingController(self.path, server_factory=FakeServer, clock=lambda: self.now)
         self.addCleanup(self.control.close)
+
+    def make_page(self):
+        import tkinter as tk
+        root = tk.Tk()
+        root.withdraw()
+        def destroy_root():
+            try:
+                root.destroy()
+            except tk.TclError:
+                pass
+        self.addCleanup(destroy_root)
+        with patch.object(pairing_panel, 'PairingController', return_value=self.control), \
+             patch('lan_discovery.windows_adapters', return_value=[self.adapter]):
+            page = pairing_panel.build_pairing_page(root, self.path)
+        return root, page
+
+    def click(self, page, text):
+        from tkinter import ttk
+        def walk(widget):
+            for child in widget.winfo_children():
+                yield child
+                yield from walk(child)
+        next(w for w in walk(page) if isinstance(w, ttk.Button) and w.cget('text') == text).invoke()
+
+    def test_embedded_page_dispose_revokes_session_cancels_timer_and_owned_clipboard(self):
+        from tkinter import ttk
+        root, page = self.make_page()
+        self.assertIsInstance(page, ttk.Frame)
+        self.assertEqual(page.winfo_manager(), '')
+        self.assertIs(page.controller, self.control)
+        self.assertEqual(self.control.link, '')
+        self.assertFalse(FakeServer.instances)
+        self.click(page, 'Создать новый QR')
+        self.click(page, 'Скопировать ссылку')
+        self.assertEqual(root.clipboard_get(), self.control.link)
+        session = self.control.session
+        self.assertTrue(root.tk.call('after', 'info'))
+        page.dispose()
+        page.dispose()
+        self.assertEqual(session.snapshot()['state'], 'rejected')
+        self.assertTrue(FakeServer.instances[0].closed)
+        self.assertFalse(root.tk.call('after', 'info'))
+        try:
+            clipboard = root.clipboard_get()
+        except Exception:
+            clipboard = ''
+        self.assertEqual(clipboard, '')
+        self.click(page, 'Создать новый QR')
+        self.assertEqual(len(FakeServer.instances), 1)
+
+    def test_embedded_page_destroy_preserves_foreign_clipboard(self):
+        root, page = self.make_page()
+        self.click(page, 'Создать новый QR')
+        self.click(page, 'Скопировать ссылку')
+        root.clipboard_clear()
+        root.clipboard_append('user text')
+        page.destroy()
+        self.assertEqual(root.clipboard_get(), 'user text')
+        self.assertTrue(FakeServer.instances[0].closed)
+        self.assertFalse(root.tk.call('after', 'info'))
+
+    def test_root_destroy_revokes_embedded_pairing(self):
+        root, page = self.make_page()
+        self.click(page, 'Создать новый QR')
+        session = self.control.session
+        root.destroy()
+        self.assertTrue(FakeServer.instances[0].closed)
+        self.assertEqual(session.snapshot()['state'], 'rejected')
 
     def test_key_creation_and_legacy_preservation(self):
         key = load_pairing_key(self.path)

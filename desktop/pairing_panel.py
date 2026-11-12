@@ -90,8 +90,8 @@ class PairingController:
         self.link = ''
 
 
-def show_pairing(parent, data_dir: Path, http_port=8765):
-    """Open native approval window. Closing/expiry immediately disables bootstrap."""
+def build_pairing_page(parent, data_dir, http_port=8765):
+    """Build an unpacked local approval page; dispose revokes its TLS bootstrap."""
     import tkinter as tk
     from tkinter import ttk
     import qrcode
@@ -118,16 +118,13 @@ def show_pairing(parent, data_dir: Path, http_port=8765):
                    error='Cannot create QR. Check adapter, port and access to local data.',
                    warning='The camera must support QR links. Fallback: paste the pairing link in the app.\nTLS protects pairing; legacy HTTP commands require a trusted network.')}
     try:
-        from theme import apply_theme, scrollable_card
+        from theme import scrollable_card
     except ModuleNotFoundError:
-        from desktop.theme import apply_theme, scrollable_card
-    window = tk.Toplevel(parent)
-    apply_theme(window)
-    window.title('DroidBridge')
-    window.geometry(f'640x{min(820, max(400, window.winfo_screenheight() - 100))}')
+        from desktop.theme import scrollable_card
+    window = ttk.Frame(parent, style='DB.TFrame')
     controller = PairingController(data_dir, http_port)
     adapters = eligible_adapters(windows_adapters())
-    language = tk.StringVar(value='ru')
+    language = tk.StringVar(master=window, value='ru')
     copied = ['']
     closed = [False]
     pending_after = [None]
@@ -152,9 +149,11 @@ def show_pairing(parent, data_dir: Path, http_port=8765):
     name.pack(fill='x')
     buttons = ttk.Frame(frame, style='DB.Card.TFrame')
     buttons.pack(fill='x', pady=8)
-    approve = ttk.Button(buttons, style='DB.Primary.TButton', command=controller.approve)
+    approve = ttk.Button(buttons, style='DB.Primary.TButton',
+                         command=lambda: controller.approve() if not closed[0] else None)
     approve.pack(side='left')
-    reject = ttk.Button(buttons, style='DB.Danger.TButton', command=controller.reject)
+    reject = ttk.Button(buttons, style='DB.Danger.TButton',
+                        command=lambda: controller.reject() if not closed[0] else None)
     reject.pack(side='left', padx=8)
     controls = ttk.Frame(frame, style='DB.Card.TFrame')
     controls.pack(fill='x', pady=8)
@@ -176,6 +175,8 @@ def show_pairing(parent, data_dir: Path, http_port=8765):
             copied[0] = ''
 
     def create():
+        if closed[0]:
+            return
         clear_clipboard()
         index = selection.current()
         if index < 0:
@@ -193,9 +194,10 @@ def show_pairing(parent, data_dir: Path, http_port=8765):
         except Exception:
             failure[0] = True
             controller.close()
+        refresh()
 
     def copy_link():
-        if controller.link:
+        if not closed[0] and controller.link:
             window.clipboard_clear()
             window.clipboard_append(controller.link)
             copied[0] = controller.link
@@ -206,8 +208,10 @@ def show_pairing(parent, data_dir: Path, http_port=8765):
     def refresh():
         if closed[0]:
             return
+        if pending_after[0] is not None:
+            window.after_cancel(pending_after[0])
+            pending_after[0] = None
         text = texts[language.get()]
-        window.title('DroidBridge — ' + text['title'])
         title.configure(text=text['title'])
         adapter_label.configure(text=text['adapter'])
         generate.configure(text=text['generate'])
@@ -240,12 +244,33 @@ def show_pairing(parent, data_dir: Path, http_port=8765):
         clear_clipboard()
         controller.close()
 
+    # Root shutdown and page removal both revoke the session, not just window close.
+    window.dispose = cleanup
+    window.controller = controller
+    window.bind('<Destroy>', lambda event: cleanup() if event.widget is window else None, add='+')
+    refresh()
+    return window
+
+
+def show_pairing(parent, data_dir: Path, http_port=8765):
+    """Compatibility wrapper around the embedded local approval page."""
+    import tkinter as tk
+    try:
+        from theme import apply_theme
+    except ModuleNotFoundError:
+        from desktop.theme import apply_theme
+    window = tk.Toplevel(parent)
+    apply_theme(window)
+    window.title('DroidBridge — Подключить телефон')
+    window.geometry(f'640x{min(820, max(400, window.winfo_screenheight() - 100))}')
+    page = build_pairing_page(window, data_dir, http_port)
+    page.pack(fill='both', expand=True)
+    window.dispose = page.dispose
+    window.controller = page.controller
+
     def close():
-        cleanup()
+        page.dispose()
         window.destroy()
 
-    # Parent shutdown also destroys child windows without WM_DELETE_WINDOW.
-    window.bind('<Destroy>', lambda event: cleanup() if event.widget is window else None)
     window.protocol('WM_DELETE_WINDOW', close)
-    refresh()
     return window

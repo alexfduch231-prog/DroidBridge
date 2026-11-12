@@ -193,7 +193,7 @@ class MediaSetupTests(unittest.TestCase):
             self.assertIsNone(module.MEDIA_TOOLS.ffmpeg)
             self.assertIsNone(module.MEDIA_TOOLS.ffplay)
 
-    def test_launcher_media_button_opens_local_window(self):
+    def test_launcher_settings_embeds_media_without_another_window(self):
         import sys
         import tkinter as tk
         from tkinter import ttk
@@ -208,19 +208,20 @@ class MediaSetupTests(unittest.TestCase):
                     yield child
                     yield from descendants(child)
             try:
-                button = next(w for w in descendants(root) if isinstance(w, ttk.Button)
-                              and w.cget('text') == 'Настроить видео и звук')
-                button.invoke()
+                root.navigation.show_page('settings')
                 root.update_idletasks()
-                windows = [w for w in root.winfo_children() if isinstance(w, tk.Toplevel)]
-                self.assertEqual(len(windows), 1)
-                seen.append(windows[0].title())
+                windows = [w for w in descendants(root) if isinstance(w, tk.Toplevel)]
+                self.assertEqual(windows, [])
+                self.assertEqual(root.navigation.current_key, 'settings')
+                self.assertTrue(any(isinstance(w, ttk.Button) and w.cget('text') == 'Выбрать папку…'
+                                    for w in descendants(root.navigation.pages['settings'])))
+                seen.append(root.navigation.current_key)
             finally:
                 root.destroy()
         with patch.object(sys, 'argv', ['launcher']), patch.object(launcher, 'data_directory', return_value=self.data):
             with patch.object(tk.Tk, 'mainloop', inspect), patch('update_manager.start_startup_check'):
                 self.assertEqual(launcher.main(), 0)
-        self.assertEqual(seen, ['Настроить видео и звук'])
+        self.assertEqual(seen, ['settings'])
 
     def test_runtime_does_not_modify_path(self):
         from desktop import runtime

@@ -12,6 +12,14 @@ def load(name, path):
     return module
 
 class PackagingTests(unittest.TestCase):
+    def test_mirror_handoff_is_frozen(self):
+        support = load('mirror_handoff_support', ROOT / 'packaging' / 'build_support.py')
+        self.assertIn('desktop/mirror_handoff.py', support.SOURCE_FILES)
+
+    def test_single_window_navigation_is_frozen(self):
+        support = load('single_window_support', ROOT / 'packaging' / 'build_support.py')
+        self.assertIn('desktop/navigation.py', support.SOURCE_FILES)
+
     def test_custom_icon_is_positive_allowlisted_and_hash_staged(self):
         p = load('build_support_icon', ROOT / 'packaging' / 'build_support.py')
         self.assertIn('assets/droidbridge.ico', p.SOURCE_FILES)
@@ -134,7 +142,7 @@ class PackagingTests(unittest.TestCase):
         p = load('build_support', ROOT / 'packaging' / 'build_support.py')
         modules = {'desktop/update_protocol.py', 'desktop/update_manager.py', 'desktop/update_helper.py'}
         self.assertTrue(modules <= set(p.SOURCE_FILES))
-        self.assertEqual(len(p.SOURCE_FILES), 23)
+        self.assertEqual(len(p.SOURCE_FILES), 25)
         with tempfile.TemporaryDirectory() as tmp:
             source, target = Path(tmp) / 'source', Path(tmp) / 'staged'
             for relative in p.SOURCE_FILES:
@@ -156,7 +164,7 @@ class PackagingTests(unittest.TestCase):
         sys.path.insert(0, str(ROOT / 'packaging'))
         from build_support import inventory
         p = load('artifact_audit', ROOT / 'packaging' / 'audit_artifact.py')
-        for relative in ['update_state.json', '_internal/desktop/UPDATE_STATE.JSON', 'media/sources/update_State.json']:
+        for relative in ['update_state.json', '_internal/desktop/UPDATE_STATE.JSON', 'media/sources/update_State.json', '_internal/desktop/MIRROR-REQUEST.JSON', 'mirror-gui-heartbeat.json']:
             with self.subTest(relative=relative), tempfile.TemporaryDirectory() as tmp:
                 output = Path(tmp) / 'build'
                 payload = output / 'dist' / 'DroidBridge'

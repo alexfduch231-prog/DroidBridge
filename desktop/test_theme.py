@@ -73,46 +73,34 @@ class ThemeTests(unittest.TestCase):
                 try:
                     root.update()
                     self.assertEqual((root.winfo_width(), root.winfo_height()), (940, 760))
-                    cards = [w for w in descendants(root) if isinstance(w, ttk.Frame)
-                             and w.cget('style') == 'DB.Card.TFrame'
-                             and isinstance(w.master.master, tk.Canvas)]
-                    self.assertEqual(len(cards), 3)
-                    for size in ('940x760', '800x600'):
+                    self.assertEqual(root.navigation.current_key, 'connection')
+                    for size, scaling in (('940x760', 1.33), ('800x600', 2.0)):
+                        root.tk.call('tk', 'scaling', scaling)
                         root.geometry(size)
                         root.update()
-                        canvases = [w for w in descendants(root) if isinstance(w, tk.Canvas)]
-                        self.assertEqual(len(canvases), 1)
-                        canvas = canvases[0]
-                        self.assertLessEqual(canvas.winfo_width(), root.winfo_width())
-                        for widget in descendants(canvas):
-                            if isinstance(widget, (ttk.Button, ttk.Entry, ttk.Label)):
-                                self.assertGreaterEqual(widget.winfo_rootx(), canvas.winfo_rootx())
-                                self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(),
-                                                     canvas.winfo_rootx() + canvas.winfo_width())
-                                self.assertGreaterEqual(widget.winfo_height(), widget.winfo_reqheight())
-                        canvas.yview_moveto(0)
-                        root.update()
-                        if size == '800x600':
-                            self.assertLess(canvas.yview()[1], 1.0)
-                            canvas.event_generate('<MouseWheel>', delta=-120)
+                        for title in ('Подключение', 'Экран телефона', 'Программы', 'Приём файлов', 'Настройки'):
+                            button = next(w for w in descendants(root) if isinstance(w, ttk.Button) and w.cget('text') == title)
+                            self.assertGreaterEqual(button.winfo_rootx(), root.winfo_rootx())
+                            self.assertGreaterEqual(button.winfo_rooty(), root.winfo_rooty())
+                            self.assertLessEqual(button.winfo_rootx() + button.winfo_width(), root.winfo_rootx() + root.winfo_width())
+                            self.assertLessEqual(button.winfo_rooty() + button.winfo_height(), root.winfo_rooty() + root.winfo_height())
+                        # Every section replaces the same page host, never a tool window.
+                        for key in ('screen', 'apps', 'uploads', 'settings', 'connection'):
+                            root.show_section(key)
                             root.update()
-                            self.assertGreater(canvas.yview()[0], 0.0)
-                        canvas.yview_moveto(1)
-                        root.update()
-                        last = next(w for w in descendants(canvas) if isinstance(w, ttk.Button)
-                                    and w.cget('text') == 'Настроить видео и звук')
-                        self.assertLessEqual(last.winfo_rooty() + last.winfo_height(),
-                                             canvas.winfo_rooty() + canvas.winfo_height())
-                        canvas.yview_moveto(0)
-                        last.event_generate('<FocusIn>')
-                        root.update()
-                        self.assertGreaterEqual(last.winfo_rooty(), canvas.winfo_rooty())
-                        self.assertLessEqual(last.winfo_rooty() + last.winfo_height(),
-                                             canvas.winfo_rooty() + canvas.winfo_height())
-                    texts = [w.cget('text') for w in descendants(root) if isinstance(w, ttk.Label)]
-                    self.assertIn('Подключение', texts)
-                    self.assertIn('Экран телефона на ПК', texts)
-                    self.assertIn('Инструменты', texts)
+                            self.assertEqual(root.navigation.current_key, key)
+                            self.assertFalse(any(isinstance(w, tk.Toplevel) for w in descendants(root)))
+                            canvas = next(w for w in descendants(root.navigation) if isinstance(w, tk.Canvas))
+                            controls = [w for w in descendants(canvas) if isinstance(w, (ttk.Button, ttk.Entry, ttk.Checkbutton))]
+                            self.assertTrue(controls)
+                            for widget in controls:
+                                widget.event_generate('<FocusIn>')
+                                root.update()
+                                self.assertGreaterEqual(widget.winfo_rooty(), canvas.winfo_rooty())
+                                self.assertLessEqual(widget.winfo_rooty() + widget.winfo_height(), canvas.winfo_rooty() + canvas.winfo_height())
+                                diagnostic = (key, str(widget), widget.cget('text') if 'text' in widget.keys() else '', widget.winfo_width(), canvas.winfo_width())
+                                self.assertGreaterEqual(widget.winfo_rootx(), canvas.winfo_rootx(), diagnostic)
+                                self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(), canvas.winfo_rootx() + canvas.winfo_width(), diagnostic)
                 finally:
                     root.destroy()
             with patch.object(sys, 'argv', ['launcher']), \

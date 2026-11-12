@@ -95,9 +95,59 @@ def scrollable_card(window) -> ttk.Frame:
     content = card(canvas)
     item = canvas.create_window(0, 0, anchor='nw', window=content)
 
+    button_text = {}
+
+    def fit_controls(parent, available):
+        """Reflow text and action groups without reducing the user's font size."""
+        children = parent.winfo_children()
+        packed_buttons = [child for child in children
+                          if isinstance(child, ttk.Button) and child.winfo_manager() == 'pack']
+        if packed_buttons and len(packed_buttons) == len(children):
+            def natural_width(button):
+                original = button_text.get(button, (str(button.cget('text')), ''))[0]
+                style = ttk.Style(button)
+                button_font = style.lookup(button.cget('style') or 'TButton', 'font')
+                return max(button.winfo_reqwidth() + 8,
+                           int(button.tk.call('font', 'measure', button_font, original.replace('\n', ' '))) + 60)
+            stacked = sum(natural_width(child) for child in children) > available
+            for child in children:
+                child.pack_configure(side='top' if stacked else 'left',
+                                     anchor='w', padx=0 if stacked else 4,
+                                     pady=4 if stacked else 0)
+        for child in children:
+            if isinstance(child, ttk.Label) and (child.cget('text') or child.cget('textvariable')):
+                child.configure(wraplength=max(40, available))
+            elif isinstance(child, ttk.Button):
+                current = str(child.cget('text'))
+                original, rendered = button_text.get(child, (current, current))
+                if current != rendered:
+                    original = current
+                style = ttk.Style(child)
+                button_font = style.lookup(child.cget('style') or 'TButton', 'font')
+                lines, line = [], ''
+                for word in original.replace('\n', ' ').split():
+                    candidate = f'{line} {word}'.strip()
+                    if line and int(child.tk.call('font', 'measure', button_font, candidate)) > max(40, available - 44):
+                        lines.append(line)
+                        line = word
+                    else:
+                        line = candidate
+                lines.append(line)
+                rendered = '\n'.join(lines)
+                button_text[child] = (original, rendered)
+                if current != rendered:
+                    child.configure(text=rendered)
+            if isinstance(child, ttk.Frame):
+                fit_controls(child, available)
+
     def resize(_event=None):
-        canvas.itemconfigure(item, width=max(canvas.winfo_width(), content.winfo_reqwidth()),
-                             height=max(canvas.winfo_height(), content.winfo_reqheight()))
+        width = canvas.winfo_width()
+        if width > 100:
+            fit_controls(content, max(40, width - 40))
+        canvas.itemconfigure(item, width=width)
+        # Let Tk derive the window item's height from its requested geometry.
+        # Setting an explicit height during Configure can leave packed children
+        # laid out at the previous height while the scroll region already shrank.
         canvas.configure(scrollregion=canvas.bbox('all'))
 
     def reveal(event):
@@ -116,11 +166,25 @@ def scrollable_card(window) -> ttk.Frame:
             canvas.xview_moveto((left + widget.winfo_width() + 8 - canvas.winfo_width()) / max(1, content.winfo_width()))
 
     def wheel(event):
-        if event.delta:
+        if not str(event.widget).startswith(str(viewport) + '.'):
+            return
+        if viewport.winfo_ismapped() and event.delta:
             canvas.yview_scroll(-int(event.delta / 120) or (-1 if event.delta > 0 else 1), 'units')
 
     content.bind('<Configure>', resize)
     canvas.bind('<Configure>', resize)
-    window.bind('<FocusIn>', reveal, add='+')
-    window.bind('<MouseWheel>', wheel, add='+')
+    # Tk sends descendant events to their toplevel bindtag, not arbitrary
+    # ancestor frames. Bind there so embedded pages retain focus scrolling.
+    owner = window.winfo_toplevel()
+    bindings = [(event, owner.bind(event, callback, add='+'))
+                for event, callback in (('<FocusIn>', reveal), ('<MouseWheel>', wheel))]
+
+    def cleanup(event):
+        if event.widget is not viewport:
+            return
+        for sequence, identifier in bindings:
+            owner.unbind(sequence, identifier)
+        bindings.clear()
+
+    viewport.bind('<Destroy>', cleanup, add='+')
     return content

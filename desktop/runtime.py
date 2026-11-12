@@ -62,12 +62,9 @@ def run_component(component, arguments):
         module.APPS_FILE = str(data / 'apps.json')
         module.LOG_FILE = str(data / 'listener.log')
         module.CLIENT_PID = str(data / 'client.pid')
+        from desktop.mirror_handoff import request_mirror
         def mirror(ip, port):
-            try:
-                start_child('viewer', '--connect', phone_address(ip), '--port', str(int(port)))
-                return True, ''
-            except (OSError, ValueError) as error:
-                return False, str(error)
+            return request_mirror(data, ip, port)
         module.start_mirror_client = mirror
     else:
         module.LOG_PATH = str(data / 'client.log')

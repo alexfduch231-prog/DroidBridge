@@ -57,7 +57,7 @@ class UploadPanelTests(unittest.TestCase):
         self.model.reset()
         self.assertEqual(self.model.directory, self.default)
 
-    def test_launcher_opens_upload_window_and_controls_fit(self):
+    def test_launcher_embeds_upload_page_and_controls_fit(self):
         import sys
         import tkinter as tk
         from tkinter import ttk
@@ -71,16 +71,16 @@ class UploadPanelTests(unittest.TestCase):
                     yield child
                     yield from descendants(child)
             try:
+                root.navigation.show_page('uploads')
                 root.update_idletasks()
-                buttons = [w for w in descendants(root) if isinstance(w, ttk.Button)]
-                upload = next((w for w in buttons if w.cget('text') == 'Приём файлов / Received files'), None)
-                self.assertIsNotNone(upload)
-                upload.invoke()
-                root.update_idletasks()
-                windows = [w for w in root.winfo_children() if isinstance(w, tk.Toplevel)]
-                self.assertEqual(len(windows), 1)
-                seen.append(windows[0].title())
-                canvas = next(w for w in descendants(root) if isinstance(w, tk.Canvas))
+                page = root.navigation.pages['uploads']
+                buttons = [w for w in descendants(page) if isinstance(w, ttk.Button)]
+                self.assertTrue(buttons)
+                windows = [w for w in descendants(root) if isinstance(w, tk.Toplevel)]
+                self.assertEqual(windows, [])
+                self.assertEqual(root.navigation.current_key, 'uploads')
+                seen.append(root.navigation.current_key)
+                canvas = next(w for w in descendants(page) if isinstance(w, tk.Canvas))
                 for button in buttons:
                     button.focus_force()
                     root.update()

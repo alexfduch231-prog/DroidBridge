@@ -98,12 +98,8 @@ _LABELS = {
 }
 
 
-def show_apps(parent, data_dir: Path):
-    """Open a non-modal local Tk editor, reading data_dir / 'apps.json'.
-
-    Returns its Toplevel; no nested mainloop and no applications are launched.
-    CatalogError is safe for the caller to display if initial loading fails.
-    """
+def build_apps_page(parent, data_dir: Path):
+    """Build an unpacked local editor frame; the caller owns its layout/lifetime."""
     import tkinter as tk
     from tkinter import filedialog, messagebox, simpledialog, ttk
 
@@ -114,15 +110,11 @@ def show_apps(parent, data_dir: Path):
         language = 'en'
     words = _LABELS[language]
     try:
-        from theme import apply_theme, scrollable_card
+        from theme import scrollable_card
     except ModuleNotFoundError:
-        from desktop.theme import apply_theme, scrollable_card
-    window = tk.Toplevel(parent)
-    apply_theme(window)
-    window.title(words['title'])
-    window.geometry(f'680x{min(480, max(400, window.winfo_screenheight() - 100))}')
-    window.minsize(520, 400)
-    window.transient(parent)
+        from desktop.theme import scrollable_card
+    window = ttk.Frame(parent, style='DB.TFrame')
+    window.dispose = lambda: window.destroy() if window.winfo_exists() else None
     frame = scrollable_card(window)
     ttk.Label(frame, style='DB.Heading.TLabel', text=words['intro'], wraplength=580).pack(anchor='w')
     ttk.Label(frame, style='DB.Muted.TLabel', text=words['hint'], wraplength=580).pack(anchor='w', pady=(6, 12))
@@ -181,7 +173,6 @@ def show_apps(parent, data_dir: Path):
     rename_button.pack(side='left', padx=8)
     remove_button = ttk.Button(row, style='DB.Danger.TButton', text=words['remove'], command=remove)
     remove_button.pack(side='left')
-    ttk.Button(row, text=words['close'], command=window.destroy).pack(side='right')
 
     def update_buttons(*_):
         state = 'normal' if tree.selection() else 'disabled'
@@ -191,4 +182,32 @@ def show_apps(parent, data_dir: Path):
     tree.bind('<<TreeviewSelect>>', update_buttons)
     ttk.Label(frame, style='DB.Muted.TLabel', text=words['local'], wraplength=580).pack(anchor='w')
     refresh()
+    window.close_container = row
+    window.title_text = words['title']
+    window.close_text = words['close']
+    return window
+
+
+def show_apps(parent, data_dir: Path):
+    """Compatibility wrapper: open the shared editor in a non-modal window."""
+    import tkinter as tk
+    from tkinter import ttk
+    try:
+        from theme import apply_theme
+    except ModuleNotFoundError:
+        from desktop.theme import apply_theme
+
+    window = tk.Toplevel(parent)
+    try:
+        apply_theme(window)
+        page = build_apps_page(window, data_dir)
+        window.title(page.title_text)
+        window.geometry(f'680x{min(480, max(400, window.winfo_screenheight() - 100))}')
+        window.minsize(520, 400)
+        window.transient(parent)
+        page.pack(fill='both', expand=True)
+        ttk.Button(page.close_container, text=page.close_text, command=window.destroy).pack(side='right')
+    except Exception:
+        window.destroy()
+        raise
     return window
