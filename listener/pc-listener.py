@@ -897,6 +897,7 @@ def main():
     token = load_token()
     srv = Server((args.host, args.port), Handler)
     srv.token = token
+    srv.upload_data_dir = DATA_DIR
     srv.delay = args.delay
     srv.dry_run = args.dry_run
     from remote_input import dispatch

@@ -1,5 +1,4 @@
 """Authenticated raw-body uploads. No external dependencies."""
-import ctypes
 import hmac
 import json
 import os
@@ -8,33 +7,16 @@ import re
 import shutil
 import tempfile
 import threading
-import uuid
 from urllib.parse import unquote, urlparse
 
 MAX_BYTES = 50 * 1024**3
 _UPLOAD_SLOTS = threading.BoundedSemaphore(2)
 
 
-def downloads_folder():
-    """Use Windows Known Folders, including redirected Downloads."""
-    if os.name != 'nt':
-        return Path.home() / 'Downloads'
-    class GUID(ctypes.Structure):
-        _fields_ = [('data', ctypes.c_ubyte * 16)]
-    guid = GUID()
-    guid.data[:] = uuid.UUID('374de290-123f-4565-9164-39c4925e467b').bytes_le
-    value = ctypes.c_void_p()
-    fn = ctypes.windll.shell32.SHGetKnownFolderPath
-    fn.argtypes = [ctypes.POINTER(GUID), ctypes.c_uint32, ctypes.c_void_p,
-                   ctypes.POINTER(ctypes.c_void_p)]
-    fn.restype = ctypes.c_long
-    if fn(ctypes.byref(guid), 0, None, ctypes.byref(value)) != 0:
-        raise OSError('Не удалось определить папку «Загрузки» Windows')
-    try:
-        return Path(ctypes.wstring_at(value.value))
-    finally:
-        ctypes.windll.ole32.CoTaskMemFree.argtypes = [ctypes.c_void_p]
-        ctypes.windll.ole32.CoTaskMemFree(value)
+if __package__:
+    from .upload_settings import downloads_folder, upload_directory
+else:
+    from upload_settings import downloads_folder, upload_directory
 
 
 def _filename(encoded):
@@ -89,8 +71,15 @@ def handle_upload(handler):
             _reply(handler, 429, {'ok': False, 'error': 'Уже идут две загрузки. Повтори позже'})
             return
         root = getattr(handler.server, 'downloads_dir', None)
-        root = Path(root) if root is not None else downloads_folder()
-        root.mkdir(parents=True, exist_ok=True)
+        if root is not None:
+            # Explicit server-side test override, never supplied by request data.
+            root = Path(root)
+            root.mkdir(parents=True, exist_ok=True)
+        else:
+            data_dir = getattr(handler.server, 'upload_data_dir',
+                               os.environ.get('VZAIMOPULT_DATA_DIR') or Path(__file__).parent)
+            # Resolve exactly once: a local settings edit cannot redirect this upload.
+            root = upload_directory(data_dir)
         if shutil.disk_usage(root).free < length + 16 * 1024**2:
             _reply(handler, 507, {'ok': False, 'error': 'Недостаточно места на ПК'})
             return

@@ -21,3 +21,4 @@ dist/
 **/token.txt
 **/apps.json
 pairing-tls/
+**/upload_settings.json

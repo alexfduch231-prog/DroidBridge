@@ -34,6 +34,8 @@ def main():
                 import app_catalog
                 import pairing_panel
                 import apps_panel
+                import upload_settings
+                import upload_panel
                 import qrcode
                 test_root = tk.Tk()
                 test_root.withdraw()
@@ -50,7 +52,7 @@ def main():
                 os.environ.pop('VZAIMOPULT_DATA_DIR', None)
             else:
                 os.environ['VZAIMOPULT_DATA_DIR'] = previous_data
-        Path(args.self_test).write_text(json.dumps({'ok': True, 'components_imported': ['server', 'viewer', 'pairing', 'apps'], 'python': sys.version.split()[0],
+        Path(args.self_test).write_text(json.dumps({'ok': True, 'components_imported': ['server', 'viewer', 'pairing', 'apps', 'uploads'], 'python': sys.version.split()[0],
             'pillow': Image.__version__, 'tls': ssl.OPENSSL_VERSION,
             'frozen': bool(getattr(sys, 'frozen', False))}), encoding='utf-8')
         return 0
@@ -60,8 +62,8 @@ def main():
         parser.error('Unexpected arguments')
     root = tk.Tk()
     root.title('DroidBridge')
-    root.geometry('600x640')
-    root.minsize(600, 640)
+    root.geometry('640x740')
+    root.minsize(640, 740)
     root.configure(bg='#f4f6fa')
     style = ttk.Style(root)
     style.theme_use('vista' if 'vista' in style.theme_names() else 'clam')
@@ -107,6 +109,14 @@ def main():
         except (ImportError, OSError, ValueError) as error:
             messagebox.showerror('Программы недоступны', str(error), parent=root)
     ttk.Button(frame, text='Программы / Applications', command=applications).pack(anchor='w')
+    def uploads():
+        try:
+            from upload_panel import show_uploads
+            show_uploads(root, data_directory())
+        except (ImportError, OSError, ValueError):
+            messagebox.showerror('Приём файлов недоступен',
+                                 'Проверь локальную папку и настройки приёма файлов.', parent=root)
+    ttk.Button(frame, text='Приём файлов / Received files', command=uploads).pack(anchor='w', pady=8)
     import shutil
     media_available = bool(shutil.which('ffmpeg') and shutil.which('ffplay')) or (Path(sys.executable).parent / 'media' / 'ffplay.exe').is_file()
     if not media_available:

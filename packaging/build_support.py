@@ -6,6 +6,7 @@ import shutil
 SOURCE_FILES = (
     'desktop/launcher.py', 'desktop/runtime.py',
     'desktop/pairing_panel.py', 'desktop/apps_panel.py',
+    'desktop/upload_panel.py', 'listener/upload_settings.py',
     'listener/pairing.py', 'listener/app_catalog.py',
     'listener/pc-listener.py', 'listener/file_upload.py',
     'listener/remote_input.py', 'listener/lan_discovery.py',

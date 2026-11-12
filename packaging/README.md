@@ -2,7 +2,7 @@
 
 The launcher does not start services automatically: **Запустить сервер** starts the control listener; **Подключить телефон безопасно** separately starts a temporary HTTPS pairing listener on the selected private-LAN adapter (8767). It opens the existing viewer only on request. Closing the launcher asks to terminate only the children it launched. No startup task, service, router forwarding or firewall rule is created by setup. DroidBridge keeps legacy runtime data at `%LOCALAPPDATA%/VzaimoPult` for compatibility (`VZAIMOPULT_DATA_DIR` override remains supported); uninstall preserves it deliberately.
 
-Windows setup uses its own version **1.0.0**; the Android application currently uses **1.14**. These are component versions, not a promise that Windows 1.0.0 is an earlier Android build.
+Windows setup uses its own version **1.0.1**; the Android application currently uses **1.14**. These are independent component versions. Windows 1.0.1 adds the local **Received files / Приём файлов** folder selector; the existing Android APK is compatible.
 
 ## Toolchain and repeatable recipe
 

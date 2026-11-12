@@ -21,7 +21,7 @@
 
 - **Телефон → ПК:** смотреть экран Windows в H.264 и нажимать прямо на изображение. Левый/правый клик, перетаскивание, прокрутка, ввод текста и кнопки вроде «Пуск», Esc и Enter.
 - **ПК → телефон:** смотреть экран Android со звуком; при отдельном согласии через AccessibilityService — нажимать, делать свайпы, вводить текст, пользоваться «Назад», «Домой» и «Недавние».
-- **Файлы:** отправлять выбранный файл с телефона в системную папку Downloads компьютера. Есть прогресс, отмена и защита от перезаписи одноимённых файлов. Лимит — 50 ГиБ, возобновления передачи нет.
+- **Файлы:** отправлять выбранный файл с телефона в выбранную на ПК папку (по умолчанию Downloads). В Windows-приложении открой «Приём файлов / Received files» для локального выбора и сброса папки; изменение применяется к следующим загрузкам без перезапуска. Недоступная выбранная папка вызывает ошибку без скрытого сохранения в другое место. Есть прогресс, отмена и защита от перезаписи одноимённых файлов. Лимит — 50 ГиБ, возобновления передачи нет.
 - **Обычные команды:** Wake-on-LAN, выключение с задержкой и отменой, перезагрузка, блокировка, медиаклавиши и мониторинг ресурсов ПК.
 - **Автопоиск ПК:** после первоначального сопряжения находит IP, MAC и broadcast в общей локальной сети. Ответ проверяется существующим ключом; сам ключ discovery не рассылает.
 - **Русский / English:** переключение языка Android-приложения с сохранением выбора.
@@ -99,7 +99,7 @@ I am sharing the source because somebody else might find it useful. Feel free to
 
 - **Phone → PC:** view the Windows desktop over H.264 and interact directly with the image. Left/right click, drag, scroll, text input and shortcuts such as Start, Esc and Enter.
 - **PC → phone:** view Android's screen with audio. With separate AccessibilityService consent, tap, swipe, enter text and use Back, Home and Recents.
-- **File uploads:** send a selected phone file to the PC's system Downloads folder, with progress, cancellation and collision-safe filenames. The limit is 50 GiB; interrupted uploads cannot be resumed.
+- **File uploads:** send a selected phone file to a locally selected PC folder (Downloads by default). Open **Received files / Приём файлов** in the Windows app to choose/reset the destination; changes apply to new uploads without restarting. An unavailable selected folder fails explicitly instead of silently falling back elsewhere. Uploads come with progress, cancellation and collision-safe filenames. The limit is 50 GiB; interrupted uploads cannot be resumed.
 - **Everyday controls:** Wake-on-LAN, delayed shutdown and cancellation, reboot, lock, media keys and PC resource monitoring.
 - **LAN discovery:** after initial pairing, discover the PC's IP, MAC and broadcast address on the same local network. Replies are verified using the existing key; discovery does not transmit that key.
 - **Russian / English:** a persistent language selector in the Android app.

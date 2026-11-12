@@ -20,6 +20,11 @@ class UploadTests(unittest.TestCase):
         self.server = listener.Server(('127.0.0.1', 0), listener.Handler)
         self.server.token = 'test-secret'
         self.server.downloads_dir = self.root
+        from unittest.mock import patch
+        import upload_settings
+        self.default_patch = patch.object(upload_settings, 'downloads_folder', return_value=self.root / 'default-downloads')
+        self.default_patch.start()
+        self.addCleanup(self.default_patch.stop)
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
         self.thread.start()
 
@@ -105,6 +110,94 @@ class UploadTests(unittest.TestCase):
         self.assertEqual(411, response.status)
         response.read()
         conn.close()
+
+    def configured_destination(self):
+        import upload_settings
+        del self.server.downloads_dir
+        self.server.upload_data_dir = self.root / 'data'
+        folder = self.root / 'received'
+        folder.mkdir()
+        upload_settings.save_upload_directory(self.server.upload_data_dir, folder)
+        return folder
+
+    def test_request_cannot_choose_or_change_destination(self):
+        folder = self.configured_destination()
+        forbidden = self.root / 'remote-choice'
+        status, _ = self.upload(b'{"directory":"remote-choice"}', extra={
+            'X-Upload-Directory': str(forbidden), 'X-Download-Directory': str(forbidden)})
+        self.assertEqual(status, 201)
+        self.assertEqual((folder / 'test.txt').read_bytes(), b'{"directory":"remote-choice"}')
+        self.assertFalse(forbidden.exists())
+        config = self.server.upload_data_dir / 'upload_settings.json'
+        self.assertEqual(json.loads(config.read_text(encoding='utf-8')), {'directory': str(folder)})
+        conn = http.client.HTTPConnection(*self.server.server_address, timeout=3)
+        conn.request('POST', '/upload/settings', body=b'{}', headers={'Authorization': 'Bearer test-secret'})
+        response = conn.getresponse()
+        self.assertEqual(response.status, 404)
+        response.read()
+        conn.close()
+
+    def test_destination_reloads_each_request(self):
+        import upload_settings
+        first = self.configured_destination()
+        self.assertEqual(201, self.upload(b'first')[0])
+        second = self.root / 'second'
+        second.mkdir()
+        upload_settings.save_upload_directory(self.server.upload_data_dir, second)
+        self.assertEqual(201, self.upload(b'second')[0])
+        self.assertEqual((first / 'test.txt').read_bytes(), b'first')
+        self.assertEqual((second / 'test.txt').read_bytes(), b'second')
+
+    def test_unavailable_or_corrupt_destination_never_falls_back(self):
+        from unittest.mock import patch
+        import upload_settings
+        folder = self.configured_destination()
+        folder.rmdir()
+        fallback = self.root / 'fallback'
+        with patch.object(upload_settings, 'downloads_folder', return_value=fallback):
+            status, result = self.upload()
+            self.assertEqual(500, status)
+            self.assertNotIn(str(folder), result['error'])
+            self.assertFalse(folder.exists())
+            (self.server.upload_data_dir / 'upload_settings.json').write_text('{private', encoding='utf-8')
+            self.assertEqual(500, self.upload()[0])
+        self.assertFalse(fallback.exists())
+
+    def test_explicit_test_override_ignores_corrupt_settings(self):
+        self.server.upload_data_dir = self.root / 'data'
+        self.server.upload_data_dir.mkdir()
+        (self.server.upload_data_dir / 'upload_settings.json').write_text('{broken', encoding='utf-8')
+        self.assertEqual(201, self.upload()[0])
+        self.assertTrue((self.root / 'test.txt').exists())
+
+    def test_environment_data_directory_used_without_server_attribute(self):
+        import upload_settings
+        from unittest.mock import patch
+        del self.server.downloads_dir
+        data = self.root / 'env-data'
+        folder = self.root / 'env-target'
+        folder.mkdir()
+        upload_settings.save_upload_directory(data, folder)
+        with patch.dict('os.environ', {'VZAIMOPULT_DATA_DIR': str(data)}):
+            self.assertEqual(201, self.upload()[0])
+        self.assertEqual((folder / 'test.txt').read_bytes(), b'hello')
+
+    def test_active_upload_keeps_original_directory_snapshot(self):
+        import upload_settings
+        from unittest.mock import patch
+        import file_upload
+        first = self.configured_destination()
+        second = self.root / 'second'
+        second.mkdir()
+        original = file_upload.shutil.disk_usage
+        def change_setting_after_snapshot(path):
+            upload_settings.save_upload_directory(self.server.upload_data_dir, second)
+            return original(path)
+        with patch.object(file_upload.shutil, 'disk_usage', side_effect=change_setting_after_snapshot):
+            self.assertEqual(201, self.upload()[0])
+        self.assertEqual((first / 'test.txt').read_bytes(), b'hello')
+        self.assertFalse((second / 'test.txt').exists())
+        self.assertEqual(upload_settings.upload_directory(self.server.upload_data_dir), second)
 
     def test_empty_file_supported(self):
         status, result = self.upload(b'')

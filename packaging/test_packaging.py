@@ -29,6 +29,54 @@ class PackagingTests(unittest.TestCase):
             self.assertEqual(actual, set(p.SOURCE_FILES))
             self.assertNotIn('PRIVATE SENTINEL', ''.join(f.read_text() for f in target.rglob('*') if f.is_file()))
 
+    def test_upload_modules_are_staged_without_user_settings(self):
+        p = load('build_support', ROOT / 'packaging' / 'build_support.py')
+        modules = ('listener/upload_settings.py', 'desktop/upload_panel.py')
+        configs = ('upload_settings.json', 'listener/upload_settings.json',
+                   'desktop/upload_settings.json', 'listener/UPLOAD_SETTINGS.JSON')
+        with tempfile.TemporaryDirectory() as tmp:
+            source, target = Path(tmp) / 'src', Path(tmp) / 'dst'
+            for relative in set(p.SOURCE_FILES) | set(modules):
+                file = source / relative
+                file.parent.mkdir(parents=True, exist_ok=True)
+                file.write_text('# public upload module', encoding='utf-8')
+            for relative in configs:
+                file = source / relative
+                file.parent.mkdir(parents=True, exist_ok=True)
+                file.write_text('PRIVATE UPLOAD SETTINGS', encoding='utf-8')
+            p.stage_sources(source, target)
+            for relative in modules:
+                with self.subTest(module=relative):
+                    self.assertTrue((target / relative).is_file())
+                    self.assertEqual((target / relative).read_text(), '# public upload module')
+            for relative in configs:
+                with self.subTest(config=relative):
+                    self.assertFalse((target / relative).exists())
+            self.assertFalse(any(f.name.lower() == 'upload_settings.json'
+                                 for f in target.rglob('*')))
+
+    def test_audit_rejects_upload_settings_even_with_valid_payload_hash(self):
+        import hashlib
+        import json
+        import sys
+        sys.path.insert(0, str(ROOT / 'packaging'))
+        p = load('artifact_audit', ROOT / 'packaging' / 'audit_artifact.py')
+        for relative in ('upload_settings.json', '_internal/listener/upload_settings.json',
+                         '_internal/desktop/UPLOAD_SETTINGS.JSON'):
+            with self.subTest(config=relative), tempfile.TemporaryDirectory() as tmp:
+                output = Path(tmp) / 'build'
+                payload = output / 'dist' / 'DroidBridge'
+                file = payload / relative
+                file.parent.mkdir(parents=True)
+                data = b'{"upload_directory": "private"}'
+                file.write_bytes(data)
+                manifest = {'source_sha256': {},
+                            'payload_sha256': {relative: hashlib.sha256(data).hexdigest()},
+                            'contains_ffmpeg': False, 'self_test': {'ok': True}}
+                (output / 'build-manifest.json').write_text(json.dumps(manifest), encoding='utf-8')
+                with self.assertRaisesRegex(ValueError, 'Unexpected private runtime file in payload:'):
+                    p.audit(output, Path(tmp) / 'source')
+
     def test_existing_stage_is_rejected_to_avoid_stale_secrets(self):
         p = load('build_support', ROOT / 'packaging' / 'build_support.py')
         with tempfile.TemporaryDirectory() as tmp:
