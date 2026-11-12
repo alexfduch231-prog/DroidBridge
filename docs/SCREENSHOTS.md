@@ -4,6 +4,34 @@
 
 Здесь — настоящие экраны приложения на пустом профиле. Подписи объясняют, что нажать и что должно произойти дальше. Локальные пути в двух снимках закрыты сплошными полосами. Состояние без подключённого телефона не показывает работающую трансляцию. Системные окна установки, разрешений Android и UAC могут отличаться на твоём устройстве.
 
+## Windows 1.0.10
+
+### Подключение / Connection
+
+![Подключение — Windows 1.0.10](images/windows-connection-1.0.10.png)
+
+Запусти сервер и подключи телефон. / Start the server and pair your phone.
+
+### Программы / Applications
+
+![Программы — Windows 1.0.10](images/windows-programs-1.0.10.png)
+
+Здесь добавляются свои программы; на снимке список пуст. / Add your own programs here; this list is empty.
+
+### Файлы в обе стороны / Bidirectional files
+
+![Передача файлов — Windows 1.0.10](images/windows-files-1.0.10.png)
+
+Сверху выбирается папка для файлов с телефона. Ниже — отправка выбранных файлов на телефон и очередь. Локальный путь закрыт. / Choose the PC destination at the top; queue files for your phone below. The local path is masked.
+
+### Настройки / Settings
+
+![Настройки — Windows 1.0.10](images/windows-settings-1.0.10.png)
+
+Выбор оформления и инструментов видео и звука. Локальный путь закрыт. / Appearance and video/audio tool selection. The local path is masked.
+
+## Остальные экраны — предыдущие версии / Other screens — earlier versions
+
 ## Windows: подключение
 
 ![Подключение](images/windows-connection.png)

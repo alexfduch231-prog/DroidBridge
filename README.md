@@ -35,7 +35,9 @@
 
 ## Скриншоты
 
-[Посмотреть интерфейс](docs/SCREENSHOTS.md)
+![DroidBridge — Windows](docs/images/windows-connection-1.0.10.png)
+
+[Остальные экраны](docs/SCREENSHOTS.md)
 
 ## О проекте
 
