@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- иконка переключения темы: обводка круга + залитая правая половина -->
+    <path
+        android:pathData="M12,4.5 A7.5,7.5 0 1 1 12,19.5 A7.5,7.5 0 1 1 12,4.5 Z"
+        android:strokeColor="@color/primary"
+        android:strokeWidth="1.8"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M12,4.5 A7.5,7.5 0 0 1 12,19.5 Z"
+        android:fillColor="@color/primary" />
+</vector>

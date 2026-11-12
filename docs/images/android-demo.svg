@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1120" height="1120" viewBox="0 0 1120 1120" role="img" aria-labelledby="title desc">
+  <title id="title">DroidBridge — Android interface illustration</title>
+  <desc id="desc">Documentation illustration, not a screenshot. Two consecutive excerpts from the Android main layout. Connection fields are empty, monitoring has no data, no device is paired. System styling is schematic; controls and Russian labels follow the existing layout and string resources.</desc>
+  <style>
+    text { font-family: Roboto, 'Segoe UI', Arial, sans-serif; fill: #222b36; }
+    .small { font-size: 16px; fill: #536071; }
+    .body { font-size: 18px; }
+    .section { font-size: 17px; font-weight: 600; fill: #46586c; }
+    .button { fill: #fff; stroke: #aab7c5; stroke-width: 1.5; }
+    .label { font-size: 18px; font-weight: 500; text-anchor: middle; }
+    .card { fill: #fff; stroke: #d6dce4; }
+    .field { fill: #f8fafc; stroke: #aab7c5; }
+  </style>
+  <rect width="1120" height="1120" fill="#e9edf2"/>
+  <rect x="0" y="0" width="1120" height="68" fill="#202c3b"/>
+  <text x="36" y="42" style="font-size:23px;font-weight:700;fill:white">DEMO · interface illustration / иллюстрация интерфейса</text>
+  <text x="36" y="108" style="font-size:25px;font-weight:700">DroidBridge · Android</text>
+  <text x="36" y="138" class="small">Два последовательных фрагмента главного экрана · Not paired</text>
+  <text x="36" y="174" class="small">01 / Подключение и мониторинг</text>
+  <text x="586" y="174" class="small">02 / Кнопки — ниже на том же экране</text>
+  <rect x="36" y="190" width="498" height="842" rx="14" fill="#f4f6f9" stroke="#b8c2ce"/>
+  <rect x="586" y="190" width="498" height="842" rx="14" fill="#f4f6f9" stroke="#b8c2ce"/>
+  <rect x="56" y="214" width="458" height="196" rx="12" fill="#e5ecf5"/>
+  <text x="76" y="252" style="font-size:28px;font-weight:700">DroidBridge</text>
+  <text x="76" y="282" class="small"><tspan x="76">Разбудить по Wake-on-LAN, выключить</tspan><tspan x="76" dy="23">или перезагрузить по сети. Телефон и ПК</tspan><tspan x="76" dy="23">должны быть в одной Wi-Fi сети.</tspan></text>
+  <text x="76" y="370" class="small"><tspan x="76">Укажи IP и ключ, чтобы видеть</tspan><tspan x="76" dy="23">состояние ПК.</tspan></text>
+  <path d="M479 366a9 9 0 1 0 2 10m-2-10v7h-7" fill="none" stroke="#536071" stroke-width="2"/>
+  <rect x="56" y="426" width="458" height="148" rx="12" class="card"/>
+  <text x="76" y="455" class="section">Мониторинг</text>
+  <g class="small"><text x="76" y="486">ЦП</text><text x="252" y="486">—</text><text x="305" y="486">ОЗУ</text><text x="480" y="486">—</text><text x="76" y="536">ГП</text><text x="252" y="536">—</text><text x="305" y="536">VRAM</text><text x="480" y="536">—</text></g>
+  <g fill="#e1e6ed"><rect x="76" y="496" width="188" height="4" rx="2"/><rect x="305" y="496" width="188" height="4" rx="2"/><rect x="76" y="546" width="188" height="4" rx="2"/><rect x="305" y="546" width="188" height="4" rx="2"/></g>
+  <rect x="56" y="590" width="458" height="422" rx="12" class="card"/>
+  <text x="78" y="624" class="section">Подключение</text>
+  <g class="small"><text x="78" y="657">MAC-адрес сетевой карты ПК</text><text x="78" y="731">Адрес рассылки (broadcast)</text><text x="78" y="805">IP-адрес ПК (для выключения)</text><text x="78" y="879">Ключ доступа</text></g>
+  <g class="field"><rect x="78" y="669" width="414" height="42" rx="6"/><rect x="78" y="743" width="414" height="42" rx="6"/><rect x="78" y="817" width="414" height="42" rx="6"/><rect x="78" y="891" width="414" height="42" rx="6"/></g>
+  <rect x="78" y="949" width="414" height="44" rx="8" class="button"/><text x="285" y="977" class="label">Сохранить настройки</text>
+  <text x="608" y="230" class="section">Кнопки</text>
+  <rect x="608" y="248" width="454" height="62" rx="9" fill="#dceee3" stroke="#88ab97"/>
+  <path d="M638 268v12m-7-8a12 12 0 1 0 14 0" stroke="#365b44" stroke-width="2" fill="none"/>
+  <text x="835" y="286" class="label">Включить</text>
+  <rect x="608" y="324" width="454" height="62" rx="9" fill="#f7e3e3" stroke="#c69696"/>
+  <path d="M638 344v12m-7-8a12 12 0 1 0 14 0" stroke="#804343" stroke-width="2" fill="none"/>
+  <text x="835" y="362" class="label">Выключить</text>
+  <g class="button"><rect x="608" y="400" width="454" height="62" rx="9"/><rect x="608" y="476" width="454" height="62" rx="9"/><rect x="608" y="552" width="454" height="62" rx="9"/><rect x="608" y="628" width="454" height="62" rx="9"/><rect x="608" y="704" width="454" height="62" rx="9"/><rect x="608" y="780" width="454" height="62" rx="9"/><rect x="608" y="856" width="454" height="62" rx="9"/></g>
+  <g class="label"><text x="835" y="438">Перезагрузить</text><text x="835" y="514">Заблокировать</text><text x="835" y="590">Погасить экран</text><text x="835" y="666">Смотреть экран ПК</text><text x="835" y="742">Трансляция на ПК</text><text x="835" y="818">Загрузить файл на ПК</text><text x="835" y="894">Тема: авто</text></g>
+  <g stroke="#536071" stroke-width="2" fill="none"><path d="M646 427a11 11 0 1 0 1 10m-1-10v8h-8"/><rect x="629" y="503" width="19" height="16" rx="2"/><path d="M633 503v-5a6 6 0 0 1 12 0v5"/><rect x="626" y="572" width="25" height="17" rx="2"/><path d="M638 589v6m-7 0h14"/><path d="M625 660q13-15 27 0-14 15-27 0z"/><circle cx="638" cy="660" r="4"/><rect x="626" y="722" width="25" height="17" rx="2"/><path d="M626 732q8 0 8 8m-8-3q3 0 3 3"/><path d="M638 814v-17m-7 7 7-7 7 7m-19 13v6h25v-6"/><circle cx="638" cy="886" r="11"/><path d="M638 875v22"/></g>
+  <text x="608" y="966" class="small"><tspan x="608">Фрагмент заканчивается здесь.</tspan><tspan x="608" dy="24">Ниже в приложении — команды,</tspan><tspan x="608" dy="24">приложения и журнал.</tspan></text>
+  <text x="36" y="1069" class="small">Иллюстрация по существующей разметке, не снимок устройства. Системное оформление схематично.</text>
+  <text x="36" y="1095" class="small">Поля намеренно пусты · нет адресов, ключей, личных данных или реального подключения.</text>
+</svg>

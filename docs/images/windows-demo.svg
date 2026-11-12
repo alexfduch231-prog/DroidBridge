@@ -1,0 +1,58 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="940" viewBox="0 0 1400 940" role="img" aria-labelledby="title desc">
+  <title id="title">DroidBridge — Windows interface illustration</title>
+  <desc id="desc">Documentation illustration, not a screenshot. Launcher and local Applications editor based on the existing Tk source. Server has not started; phone address field is empty. Calculator and Notepad are synthetic sample catalog entries, not installed-program discovery. No paths, secrets or pairing codes are shown. Native widget styling is schematic.</desc>
+  <style>
+    text { font-family: 'Segoe UI', Arial, sans-serif; fill: #20252c; }
+    .body { font-size: 16px; }
+    .note { font-size: 16px; fill: #526174; }
+    .native { fill: #f5f5f5; stroke: #aab0b7; }
+    .button { fill: #fafafa; stroke: #a5abb3; }
+    .buttontext { font-size: 16px; text-anchor: middle; }
+  </style>
+  <rect width="1400" height="940" fill="#e9edf2"/>
+  <rect width="1400" height="68" fill="#202c3b"/>
+  <text x="36" y="42" style="font-size:23px;font-weight:700;fill:white">DEMO · interface illustration / иллюстрация интерфейса</text>
+  <text x="36" y="114" style="font-size:27px;font-weight:700">DroidBridge · Windows</text>
+  <text x="36" y="146" class="note">Launcher и локальный каталог программ · Not paired · системное оформление схематично</text>
+  <rect x="36" y="176" width="616" height="690" rx="7" fill="#f4f6fa" stroke="#a5afb9"/>
+  <path d="M43 176h602q7 0 7 7v32H36v-32q0-7 7-7" fill="#fff"/>
+  <text x="52" y="202" class="body">DroidBridge</text>
+  <g stroke="#414a56" fill="none"><path d="M533 195h12"/><rect x="577" y="190" width="10" height="10"/><path d="m620 190 10 10m0-10-10 10"/></g>
+  <text x="60" y="263" style="font-size:30px;font-weight:700">DroidBridge</text>
+  <text x="60" y="294" class="body">Твой ПК и телефон — в одной локальной сети.</text>
+  <text x="60" y="335" class="body">Сервер ещё не запущен. Автозапуска нет.</text>
+  <rect x="60" y="355" width="187" height="39" rx="3" class="button"/><text x="153" y="380" class="buttontext">Запустить сервер</text>
+  <rect x="257" y="355" width="133" height="39" rx="3" class="button"/><text x="323" y="380" class="buttontext">Остановить</text>
+  <rect x="60" y="410" width="301" height="39" rx="3" class="button"/><text x="210" y="435" class="buttontext">Подключить телефон безопасно</text>
+  <text x="60" y="476" class="body"><tspan x="60">Сопряжение доступно сразу;</tspan><tspan x="60" dy="24">для управления запусти сервер.</tspan></text>
+  <rect x="60" y="518" width="268" height="39" rx="3" class="button"/><text x="194" y="543" class="buttontext">Программы / Applications</text>
+  <path d="M60 582h568" stroke="#c4c9d0"/>
+  <text x="60" y="619" style="font-size:20px;font-weight:700">Экран телефона на ПК</text>
+  <text x="60" y="650" class="body">Включи трансляцию в приложении и введи IP телефона.</text>
+  <rect x="60" y="666" width="568" height="38" fill="white" stroke="#a5abb3"/>
+  <rect x="60" y="720" width="258" height="39" rx="3" class="button"/><text x="189" y="745" class="buttontext">Открыть экран телефона</text>
+  <text x="60" y="795" class="body"><tspan x="60">Данные и ключи хранятся только в профиле Windows.</tspan><tspan x="60" dy="24">Не открывай порты роутера в интернет.</tspan></text>
+  <text x="692" y="205" class="note">Отдельное окно «Программы»</text>
+  <text x="692" y="233" style="font-size:17px;font-weight:600;fill:#44576b">sample local catalog · синтетические примеры</text>
+  <rect x="692" y="253" width="672" height="508" rx="7" fill="#f4f6fa" stroke="#a5afb9"/>
+  <path d="M699 253h658q7 0 7 7v32H692v-32q0-7 7-7" fill="white"/>
+  <text x="708" y="279" class="body">Программы</text>
+  <path d="m1330 266 10 10m0-10-10 10" stroke="#414a56"/>
+  <text x="712" y="326" class="body">Выбери программы на этом ПК для запуска с телефона.</text>
+  <text x="712" y="355" class="body">Только EXE и ярлыки LNK. Ничего не добавляется автоматически.</text>
+  <rect x="712" y="375" width="632" height="223" fill="white" stroke="#adb4bd"/>
+  <rect x="713" y="376" width="614" height="33" fill="#f0f0f0"/>
+  <text x="726" y="399" class="body">Название</text>
+  <path d="M713 409h614" stroke="#d4d8df"/>
+  <text x="726" y="438" class="body">Calculator</text>
+  <text x="726" y="470" class="body">Notepad</text>
+  <rect x="1327" y="376" width="16" height="221" fill="#f0f0f0"/>
+  <path d="m1331 386 4-4 4 4m-8 201 4 4 4-4" stroke="#697586" fill="none"/>
+  <rect x="712" y="615" width="111" height="38" rx="3" class="button"/><text x="767" y="640" class="buttontext">Добавить…</text>
+  <rect x="831" y="615" width="170" height="38" rx="3" class="native"/><text x="916" y="640" class="buttontext" style="fill:#818791">Переименовать…</text>
+  <rect x="1009" y="615" width="102" height="38" rx="3" class="native"/><text x="1060" y="640" class="buttontext" style="fill:#818791">Удалить</text>
+  <rect x="1238" y="615" width="106" height="38" rx="3" class="button"/><text x="1291" y="640" class="buttontext">Закрыть</text>
+  <text x="712" y="689" class="body"><tspan x="712">Изменения доступны только на этом ПК.</tspan><tspan x="712" dy="24">Пути программ не передаются телефону.</tspan></text>
+  <text x="692" y="807" class="note"><tspan x="692">Список вымышленный; не сканирование компьютера.</tspan><tspan x="692" dy="25">Нет выбранной строки — переименование и удаление неактивны.</tspan></text>
+  <text x="36" y="905" class="note">Не снимок экрана. Поле подключения пустое; реальные программы, файлы, адреса и ключи не использованы.</text>
+</svg>

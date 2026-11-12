@@ -1,0 +1,111 @@
+import importlib.util
+from pathlib import Path
+import tempfile
+import unittest
+
+ROOT = Path(__file__).resolve().parents[1]
+
+def load(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+class PackagingTests(unittest.TestCase):
+    def test_staging_is_exact_allowlist_not_recursive_copy(self):
+        p = load('build_support', ROOT / 'packaging' / 'build_support.py')
+        with tempfile.TemporaryDirectory() as tmp:
+            source, target = Path(tmp) / 'src', Path(tmp) / 'dst'
+            for relative in p.SOURCE_FILES:
+                file = source / relative
+                file.parent.mkdir(parents=True, exist_ok=True)
+                file.write_text('# public source', encoding='utf-8')
+            for relative in ['listener/token.txt', 'listener/apps.json', 'listener/listener.log', 'client/client.pid', 'keystore.jks', 'desktop/private.py']:
+                file = source / relative
+                file.parent.mkdir(parents=True, exist_ok=True)
+                file.write_text('PRIVATE SENTINEL', encoding='utf-8')
+            p.stage_sources(source, target)
+            actual = {f.relative_to(target).as_posix() for f in target.rglob('*') if f.is_file()}
+            self.assertEqual(actual, set(p.SOURCE_FILES))
+            self.assertNotIn('PRIVATE SENTINEL', ''.join(f.read_text() for f in target.rglob('*') if f.is_file()))
+
+    def test_existing_stage_is_rejected_to_avoid_stale_secrets(self):
+        p = load('build_support', ROOT / 'packaging' / 'build_support.py')
+        with tempfile.TemporaryDirectory() as tmp:
+            with self.assertRaises(FileExistsError):
+                p.stage_sources(Path(tmp), Path(tmp))
+
+    def test_allowlisted_link_cannot_escape_source(self):
+        p = load('build_support', ROOT / 'packaging' / 'build_support.py')
+        with tempfile.TemporaryDirectory() as tmp:
+            source = Path(tmp) / 'src'
+            for relative in p.SOURCE_FILES:
+                file = source / relative
+                file.parent.mkdir(parents=True, exist_ok=True)
+                file.write_text('# source')
+            first = source / p.SOURCE_FILES[0]
+            first.unlink()
+            secret = Path(tmp) / 'secret.py'
+            secret.write_text('PRIVATE SENTINEL')
+            try:
+                first.symlink_to(secret)
+            except OSError:
+                self.skipTest('Host does not permit file symlinks')
+            with self.assertRaises(ValueError):
+                p.stage_sources(source, Path(tmp) / 'stage')
+
+    def test_invalid_component_cannot_be_spawned(self):
+        p = load('desktop_runtime', ROOT / 'desktop' / 'runtime.py')
+        with self.assertRaises(ValueError):
+            p.child_command('calc.exe')
+
+    def test_invalid_component_cannot_be_loaded(self):
+        p = load('desktop_runtime', ROOT / 'desktop' / 'runtime.py')
+        with self.assertRaises(ValueError):
+            p.load_component('calc.exe')
+
+    def test_phone_address_is_ip_only_and_no_command_injection(self):
+        p = load('desktop_runtime', ROOT / 'desktop' / 'runtime.py')
+        self.assertEqual(p.phone_address(' 192.168.1.2 '), '192.168.1.2')
+        self.assertEqual(p.phone_address('::1'), '::1')
+        for value in ['localhost', '--help', '1.2.3.4 & calc', '', '999.1.1.1']:
+            with self.assertRaises(ValueError):
+                p.phone_address(value)
+
+    def test_audit_checks_installer_hashes(self):
+        import json
+        import sys
+        sys.path.insert(0, str(ROOT / 'packaging'))
+        p = load('artifact_audit', ROOT / 'packaging' / 'audit_artifact.py')
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / 'build'
+            source = Path(tmp) / 'source'
+            (output / 'dist' / 'DroidBridge').mkdir(parents=True)
+            (output / 'artifacts').mkdir()
+            (output / 'build-manifest.json').write_text(json.dumps({'source_sha256': {}, 'payload_sha256': {}, 'contains_ffmpeg': False, 'self_test': {'ok': True}}))
+            (output / 'artifacts' / 'setup.exe').write_bytes(b'altered installer')
+            (output / 'artifacts' / 'SHA256SUMS.json').write_text(json.dumps({'setup.exe': 'incorrect'}))
+            with self.assertRaises(ValueError):
+                p.audit(output, source)
+
+    def test_integrity_success_does_not_authorize_publication(self):
+        import json
+        import sys
+        sys.path.insert(0, str(ROOT / 'packaging'))
+        p = load('artifact_audit', ROOT / 'packaging' / 'audit_artifact.py')
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / 'build'
+            source = Path(tmp) / 'source'
+            (output / 'dist' / 'DroidBridge').mkdir(parents=True)
+            for full, validated, expected in [(False, False, False), (True, True, False), (False, True, True)]:
+                (output / 'build-manifest.json').write_text(json.dumps({'source_sha256': {}, 'payload_sha256': {}, 'contains_ffmpeg': full, 'self_test': {'ok': True}, 'public_release_ready': validated}))
+                result = p.audit(output, source)
+                self.assertTrue(result['integrity_ok'])
+                self.assertEqual(result['publish_allowed'], expected)
+
+    def test_data_path_is_not_install_directory(self):
+        p = load('desktop_runtime', ROOT / 'desktop' / 'runtime.py')
+        self.assertEqual(p.data_directory({'LOCALAPPDATA': 'D:/test-user'}), Path('D:/test-user') / 'VzaimoPult')
+
+if __name__ == '__main__':
+    unittest.main()

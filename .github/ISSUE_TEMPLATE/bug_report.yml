@@ -1,0 +1,25 @@
+name: Bug report / Ошибка
+description: Report a reproducible problem / Сообщить об ошибке
+title: "[Bug]: "
+body:
+  - type: markdown
+    attributes:
+      value: "Do not include keys, personal IP/MAC, private files or unredacted logs. Не прикладывай секреты и личные данные."
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce / Шаги воспроизведения
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected and actual behavior / Ожидание и результат
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: App, Android and Windows versions / Версии
+    validations:
+      required: true

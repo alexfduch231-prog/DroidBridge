@@ -1,0 +1,153 @@
+"""Visible opt-in launcher: control, temporary pairing, viewer start on explicit actions."""
+import argparse
+from pathlib import Path
+import sys
+
+# PyInstaller analysis needs these imports; they do not start any service.
+import tkinter as tk
+from tkinter import ttk, messagebox
+from runtime import data_directory, phone_address, run_component, start_child
+
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--component', choices=['server', 'viewer'])
+    parser.add_argument('--self-test', metavar='OUTPUT_JSON')
+    args, remaining = parser.parse_known_args()
+    if args.self_test:
+        import json
+        from PIL import Image, ImageTk, ImageGrab
+        import ssl
+        import ctypes
+        import os
+        import tempfile
+        from runtime import load_component
+        # Import entrypoints only, never call main or bind sockets. Modules create DATA_DIR
+        # at import, so isolate it and restore the caller's environment afterwards.
+        previous_data = os.environ.get('VZAIMOPULT_DATA_DIR')
+        try:
+            with tempfile.TemporaryDirectory(prefix='vzaimopult-selftest-') as isolated:
+                os.environ['VZAIMOPULT_DATA_DIR'] = isolated
+                load_component('server')
+                load_component('viewer')
+                import pairing
+                import app_catalog
+                import pairing_panel
+                import apps_panel
+                import qrcode
+                test_root = tk.Tk()
+                test_root.withdraw()
+                try:
+                    qr = qrcode.make('vzaimopult-selftest-not-a-pairing-ticket')
+                    image = ImageTk.PhotoImage(qr.get_image(), master=test_root)
+                    if image.width() < 1:
+                        raise RuntimeError('QR/Tk image creation failed')
+                    test_root.update_idletasks()
+                finally:
+                    test_root.destroy()
+        finally:
+            if previous_data is None:
+                os.environ.pop('VZAIMOPULT_DATA_DIR', None)
+            else:
+                os.environ['VZAIMOPULT_DATA_DIR'] = previous_data
+        Path(args.self_test).write_text(json.dumps({'ok': True, 'components_imported': ['server', 'viewer', 'pairing', 'apps'], 'python': sys.version.split()[0],
+            'pillow': Image.__version__, 'tls': ssl.OPENSSL_VERSION,
+            'frozen': bool(getattr(sys, 'frozen', False))}), encoding='utf-8')
+        return 0
+    if args.component:
+        return run_component(args.component, remaining)
+    if remaining:
+        parser.error('Unexpected arguments')
+    root = tk.Tk()
+    root.title('DroidBridge')
+    root.geometry('600x640')
+    root.minsize(600, 640)
+    root.configure(bg='#f4f6fa')
+    style = ttk.Style(root)
+    style.theme_use('vista' if 'vista' in style.theme_names() else 'clam')
+    style.configure('TLabel', font=('Segoe UI', 10))
+    style.configure('TButton', font=('Segoe UI', 10), padding=(10, 7))
+    frame = ttk.Frame(root, padding=24)
+    frame.pack(fill='both', expand=True)
+    ttk.Label(frame, text='DroidBridge', font=('Segoe UI', 22, 'bold')).pack(anchor='w')
+    ttk.Label(frame, text='Твой ПК и телефон — в одной локальной сети.').pack(anchor='w', pady=(2, 18))
+    status = tk.StringVar(value='Сервер ещё не запущен. Автозапуска нет.')
+    ttk.Label(frame, textvariable=status, wraplength=490).pack(anchor='w', pady=(0, 10))
+    children = []
+    server = [None]
+    def start_server():
+        if server[0] is not None and server[0].poll() is None:
+            return
+        try:
+            server[0] = start_child('server')
+            children.append(server[0])
+            status.set('Запуск сервера…')
+        except OSError as error:
+            messagebox.showerror('Не удалось запустить сервер', str(error), parent=root)
+    def stop_server():
+        if server[0] is not None and server[0].poll() is None:
+            server[0].terminate()
+            status.set('Остановка сервера…')
+    row = ttk.Frame(frame)
+    row.pack(fill='x')
+    ttk.Button(row, text='Запустить сервер', command=start_server).pack(side='left')
+    ttk.Button(row, text='Остановить', command=stop_server).pack(side='left', padx=8)
+    def pairing():
+        try:
+            from pairing_panel import show_pairing
+            show_pairing(root, data_directory(), http_port=8765)
+        except (ImportError, OSError, ValueError) as error:
+            messagebox.showerror('Сопряжение недоступно', str(error), parent=root)
+    ttk.Button(frame, text='Подключить телефон безопасно', command=pairing).pack(anchor='w', pady=8)
+    ttk.Label(frame, text='Сопряжение доступно сразу; для управления запусти сервер.', wraplength=540).pack(anchor='w')
+    def applications():
+        try:
+            from apps_panel import show_apps
+            show_apps(root, data_directory())
+        except (ImportError, OSError, ValueError) as error:
+            messagebox.showerror('Программы недоступны', str(error), parent=root)
+    ttk.Button(frame, text='Программы / Applications', command=applications).pack(anchor='w')
+    import shutil
+    media_available = bool(shutil.which('ffmpeg') and shutil.which('ffplay')) or (Path(sys.executable).parent / 'media' / 'ffplay.exe').is_file()
+    if not media_available:
+        ttk.Label(frame, text='FFmpeg / ffplay не найдены. Видео H.264 и звук требуют отдельной установки. Ничего не скачивается автоматически.', wraplength=540).pack(anchor='w', pady=8)
+        def media_help():
+            import webbrowser
+            if messagebox.askyesno('Открыть сайт FFmpeg?', 'Откроется официальный сайт с вариантами установки. Установи ffmpeg и ffplay, добавь в PATH и перезапусти DroidBridge. Лицензия внешней сборки проверяется отдельно.', parent=root):
+                webbrowser.open('https://ffmpeg.org/download.html')
+        ttk.Button(frame, text='Как установить FFmpeg отдельно', command=media_help).pack(anchor='w')
+    ttk.Separator(frame).pack(fill='x', pady=8)
+    ttk.Label(frame, text='Экран телефона на ПК', font=('Segoe UI', 13, 'bold')).pack(anchor='w', pady=6)
+    ttk.Label(frame, text='Включи трансляцию в приложении и введи IP телефона.').pack(anchor='w')
+    host = ttk.Entry(frame, font=('Segoe UI', 12))
+    host.pack(fill='x', pady=8)
+    def viewer():
+        try:
+            address = phone_address(host.get())
+            if not (data_directory() / 'token.txt').is_file():
+                raise ValueError('Сначала запусти сервер и выполни сопряжение.')
+            children.append(start_child('viewer', '--connect', address))
+        except (OSError, ValueError) as error:
+            messagebox.showerror('Не удалось открыть экран', str(error), parent=root)
+    ttk.Button(frame, text='Открыть экран телефона', command=viewer).pack(anchor='w')
+    ttk.Label(frame, text='Данные и ключи хранятся только в профиле Windows.\nНе открывай порты роутера в интернет.', wraplength=490).pack(anchor='w', pady=(16, 0))
+    def tick():
+        if server[0] is not None:
+            code = server[0].poll()
+            status.set('Процесс сервера запущен. Доступность сети не проверялась.' if code is None
+                       else 'Сервер завершён (код %s). См. listener.log в папке данных.' % code)
+        root.after(1000, tick)
+    def close():
+        live = [child for child in children if child.poll() is None]
+        if live and not messagebox.askyesno('Закрыть DroidBridge?', 'Остановить запущенные этим окном сервер и просмотр?', parent=root):
+            return
+        for child in live:
+            child.terminate()
+        root.destroy()
+    root.protocol('WM_DELETE_WINDOW', close)
+    root.after(1000, tick)
+    root.mainloop()
+    return 0
+
+if __name__ == '__main__':
+    raise SystemExit(main())

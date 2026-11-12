@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Ночная палитра: те же имена, другие значения. -->
+    <color name="bg_screen">#FF000000</color>
+    <color name="bg_grad_top">#FF000000</color>
+    <color name="bg_grad_bottom">#FF000000</color>
+    <color name="header_tint">#2E8AB4F8</color>
+    <color name="header_tint_soft">#0D8AB4F8</color>
+    <color name="surface">#FF0B0C0F</color>
+    <color name="surface_alt">#FF14161A</color>
+    <color name="primary">#FF8AB4F8</color>
+    <color name="on_primary">#FF0B1220</color>
+    <color name="danger">#FFF28B82</color>
+    <color name="on_danger">#FF2A0C09</color>
+    <color name="wake_bg_top">#FF339B60</color>
+    <color name="wake_bg_bottom">#FF257444</color>
+    <color name="wake_text">#FFC9FFDB</color>
+    <color name="text_primary">#FFE9ECEF</color>
+    <color name="text_secondary">#FF9BA3AF</color>
+    <color name="outline">#FF6A717D</color>
+    <color name="card_stroke">#33FFFFFF</color>
+    <color name="ripple">#33FFFFFF</color>
+    <color name="track">#1FFFFFFF</color>
+    <color name="icon_bg">#FF0F1319</color>
+    <color name="icon_fg">#FF8AB4F8</color>
+    <color name="ok">#FF6DD58C</color>
+</resources>

@@ -1,0 +1,14 @@
+# Frozen toolchain, Python 3.15 x64. No global installation.
+pyinstaller==6.22.3
+pyinstaller-hooks-contrib==2026.8
+pillow==13.0.0
+altgraph==0.17.5
+packaging==26.3
+pefile==2024.8.26
+pywin32-ctypes==0.2.3
+setuptools==84.0.0
+cryptography==48.0.0
+qrcode==8.2
+cffi==2.1.1
+pycparser==3.12
+colorama==0.4.6

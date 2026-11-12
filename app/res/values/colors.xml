@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Дневная палитра. Ночные значения — в values-night/colors.xml, имена те же. -->
+    <color name="bg_screen">#FFF1F3F8</color>
+    <color name="bg_grad_top">#FFF9FAFD</color>
+    <color name="bg_grad_bottom">#FFE8EDF6</color>
+    <color name="header_tint">#2E1A63E7</color>
+    <color name="header_tint_soft">#0A1A63E7</color>
+    <color name="surface">#FFFFFFFF</color>
+    <color name="surface_alt">#FFF7F8FC</color>
+    <color name="primary">#FF1A63E7</color>
+    <color name="on_primary">#FFFFFFFF</color>
+    <color name="danger">#FFCC2F23</color>
+    <color name="on_danger">#FFFFFFFF</color>
+    <color name="wake_bg_top">#FFA9EDC1</color>
+    <color name="wake_bg_bottom">#FF6BD992</color>
+    <color name="wake_text">#FF0B4A28</color>
+    <color name="text_primary">#FF16181D</color>
+    <color name="text_secondary">#FF5C6270</color>
+    <color name="outline">#FF8A909C</color>
+    <color name="card_stroke">#26000000</color>
+    <color name="ripple">#1F000000</color>
+    <color name="track">#14000000</color>
+    <color name="icon_bg">#FF1A63E7</color>
+    <color name="icon_fg">#FFFFFFFF</color>
+    <color name="ok">#FF178A4C</color>
+</resources>
