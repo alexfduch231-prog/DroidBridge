@@ -77,6 +77,26 @@ class PackagingTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'Unexpected private runtime file in payload:'):
                     p.audit(output, Path(tmp) / 'source')
 
+    def test_android_setup_module_is_allowlisted(self):
+        p = load('build_support', ROOT / 'packaging' / 'build_support.py')
+        self.assertIn('desktop/android_setup.py', p.SOURCE_FILES)
+
+    def test_audit_rejects_android_setup_preferences(self):
+        import hashlib, json, sys
+        sys.path.insert(0, str(ROOT / 'packaging'))
+        p = load('artifact_audit', ROOT / 'packaging' / 'audit_artifact.py')
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / 'build'
+            payload = output / 'dist' / 'DroidBridge'
+            file = payload / '_internal' / 'ANDROID_SETUP.JSON'
+            file.parent.mkdir(parents=True)
+            data = b'{"show_on_startup":false}'
+            file.write_bytes(data)
+            manifest = {'source_sha256': {}, 'payload_sha256': {'_internal/ANDROID_SETUP.JSON': hashlib.sha256(data).hexdigest()}, 'contains_ffmpeg': False, 'self_test': {'ok': True}}
+            (output / 'build-manifest.json').write_text(json.dumps(manifest), encoding='utf-8')
+            with self.assertRaisesRegex(ValueError, 'Unexpected private runtime file in payload:'):
+                p.audit(output, Path(tmp) / 'source')
+
     def test_media_modules_are_staged_without_local_settings(self):
         p = load('build_support', ROOT / 'packaging' / 'build_support.py')
         self.assertIn('listener/media_tools.py', p.SOURCE_FILES)

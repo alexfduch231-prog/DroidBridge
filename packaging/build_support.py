@@ -8,6 +8,7 @@ SOURCE_FILES = (
     'desktop/pairing_panel.py', 'desktop/apps_panel.py',
     'desktop/upload_panel.py', 'listener/upload_settings.py',
     'desktop/media_setup.py', 'listener/media_tools.py',
+    'desktop/android_setup.py',
     'listener/pairing.py', 'listener/app_catalog.py',
     'listener/pc-listener.py', 'listener/file_upload.py',
     'listener/remote_input.py', 'listener/lan_discovery.py',

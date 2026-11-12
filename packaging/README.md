@@ -2,7 +2,7 @@
 
 The launcher does not start services automatically: **Запустить сервер** starts the control listener; **Подключить телефон безопасно** separately starts a temporary HTTPS pairing listener on the selected private-LAN adapter (8767). It opens the existing viewer only on request. Closing the launcher asks to terminate only the children it launched. No startup task, service, router forwarding or firewall rule is created by setup. DroidBridge keeps legacy runtime data at `%LOCALAPPDATA%/VzaimoPult` for compatibility (`VZAIMOPULT_DATA_DIR` override remains supported); uninstall preserves it deliberately.
 
-Windows setup uses its own version **1.0.2**; the Android application currently uses **1.14**. These are independent component versions. Windows 1.0.2 adds a local video/audio setup panel for selecting an extracted FFmpeg folder without editing PATH. The existing Android APK is compatible.
+Windows setup uses its own version **1.0.3**; the Android application currently uses **1.14**. These are independent component versions. Windows 1.0.3 offers an optional Android installation/download QR at startup and an Already installed shortcut to the separate pairing flow. The public download QR contains no pairing credentials. Startup display preference stays in local android_setup.json; the panel can be reopened. Existing Android APK installations remain compatible. Video/audio tools can be selected locally without editing PATH.
 
 ## Toolchain and repeatable recipe
 

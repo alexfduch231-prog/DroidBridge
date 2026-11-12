@@ -20,7 +20,7 @@ def audit(output: Path, source: Path):
     current = {name: inventory_one(source / name) for name in expected}
     if current != expected:
         raise ValueError('Source changed since freeze; rebuild required')
-    forbidden = {'token.txt', 'apps.json', 'upload_settings.json', 'media_settings.json', 'client.pid', 'listener.log', 'client.log'}
+    forbidden = {'token.txt', 'apps.json', 'upload_settings.json', 'media_settings.json', 'android_setup.json', 'client.pid', 'listener.log', 'client.log'}
     forbidden_suffixes = {'.jks', '.keystore', '.pem', '.key', '.log', '.pid'}
     for file in payload.rglob('*'):
         if file.is_file() and (file.name.lower() in forbidden or file.suffix.lower() in forbidden_suffixes):

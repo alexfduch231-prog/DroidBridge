@@ -38,6 +38,7 @@ def main():
                 import upload_panel
                 import media_tools
                 import media_setup
+                import android_setup
                 import qrcode
                 test_root = tk.Tk()
                 test_root.withdraw()
@@ -54,7 +55,7 @@ def main():
                 os.environ.pop('VZAIMOPULT_DATA_DIR', None)
             else:
                 os.environ['VZAIMOPULT_DATA_DIR'] = previous_data
-        Path(args.self_test).write_text(json.dumps({'ok': True, 'components_imported': ['server', 'viewer', 'pairing', 'apps', 'uploads', 'media'], 'python': sys.version.split()[0],
+        Path(args.self_test).write_text(json.dumps({'ok': True, 'components_imported': ['server', 'viewer', 'pairing', 'apps', 'uploads', 'media', 'android_setup'], 'python': sys.version.split()[0],
             'pillow': Image.__version__, 'tls': ssl.OPENSSL_VERSION,
             'frozen': bool(getattr(sys, 'frozen', False))}), encoding='utf-8')
         return 0
@@ -102,7 +103,10 @@ def main():
             show_pairing(root, data_directory(), http_port=8765)
         except (ImportError, OSError, ValueError) as error:
             messagebox.showerror('Сопряжение недоступно', str(error), parent=root)
-    ttk.Button(frame, text='Подключить телефон безопасно', command=pairing).pack(anchor='w', pady=8)
+    from android_setup import should_show_on_startup, show_android_setup
+    def android_setup():
+        show_android_setup(root, data_directory(), pairing)
+    ttk.Button(frame, text='Приложение на телефон / подключить', command=android_setup).pack(anchor='w', pady=8)
     ttk.Label(frame, text='Сопряжение доступно сразу; для управления запусти сервер.', wraplength=540).pack(anchor='w')
     def applications():
         try:
@@ -155,6 +159,12 @@ def main():
         root.destroy()
     root.protocol('WM_DELETE_WINDOW', close)
     root.after(1000, tick)
+    if should_show_on_startup(data_directory()):
+        pending_setup = root.after(0, android_setup)
+        def cancel_pending_setup(event):
+            if event.widget is root:
+                root.after_cancel(pending_setup)
+        root.bind('<Destroy>', cancel_pending_setup, add='+')
     root.mainloop()
     return 0
 

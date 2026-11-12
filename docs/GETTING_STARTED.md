@@ -1,6 +1,6 @@
 # Первое подключение DroidBridge
 
-[На главную](../README.md) · [English](#english) · [Скачать Windows и Android](https://github.com/alexfduch231-prog/DroidBridge/releases/tag/v1.0.2)
+[На главную](../README.md) · [English](#english) · [Скачать Windows и Android](https://github.com/alexfduch231-prog/DroidBridge/releases/tag/v1.0.3)
 
 ## Перед установкой
 
@@ -10,7 +10,7 @@ DroidBridge не подключается через облако. Основн�
 
 ## 1. Установи приложения
 
-1. На [странице релиза 1.0.2](https://github.com/alexfduch231-prog/DroidBridge/releases/tag/v1.0.2) скачай установщик Windows из списка **Assets**. Для телефона нажми ссылку **«Скачать для Android»** в описании релиза: она ведёт к совместимому APK из предыдущего выпуска. Архивы **Source code** для установки не нужны.
+1. На [странице загрузки](https://github.com/alexfduch231-prog/DroidBridge/releases/latest) скачай установщик Windows и Android APK из списка **Assets**. Архивы **Source code** для установки не нужны. При запуске DroidBridge на ПК также предложит **«Установить на телефон»**: отсканируй QR обычной камерой телефона, чтобы скачать APK с GitHub. Если приложение уже есть, нажми **«Уже установлено → подключить к ПК»** — скачивание будет пропущено.
 2. Запусти установщик Windows. Python и зависимости интерфейса уже включены. Сервер не запускается автоматически — его включаешь ты.
 3. Открой APK на телефоне. Если Android запросит разрешение на установку из этого источника, разреши его только для приложения, которым открываешь скачанный файл. После установки разрешение можно отозвать. Не отключай Play Protect и другие средства защиты.
 
@@ -20,10 +20,12 @@ DroidBridge не подключается через облако. Основн�
 
 Проверь, что скачал файл именно из указанного GitHub-репозитория, и просканируй его защитником Windows. Если в релизе опубликована контрольная сумма, сравни её. Если источник или результат проверки вызывает сомнения — остановись. **Не отключай SmartScreen, антивирус и брандмауэр и не добавляй исключения ради установки.**
 
+QR скачивания ведёт только к установочному файлу. Для подключения используется **другой QR** в окне сопряжения. Окно установки можно закрыть или отключить его появление при запуске; открыть его снова можно кнопкой **«Приложение на телефон / подключить»** в главном окне.
+
 ## 2. Соедини телефон и ПК
 
 1. Открой DroidBridge на ПК и нажми **«Запустить сервер»**. Статус запущенного процесса ещё не означает, что сеть доступна с телефона.
-2. Нажми **«Подключить телефон безопасно»**. В окне сопряжения выбери **«Сетевой адаптер»** домашней сети — Wi-Fi или Ethernet, через который ПК связан с телефоном. Если адаптеров несколько, не выбирай VPN или виртуальный адаптер наугад.
+2. Нажми **«Приложение на телефон / подключить» → «Уже установлено → подключить к ПК»**. В окне сопряжения выбери **«Сетевой адаптер»** домашней сети — Wi-Fi или Ethernet, через который ПК связан с телефоном. Если адаптеров несколько, не выбирай VPN или виртуальный адаптер наугад.
 3. Нажми **«Создать новый QR»**. Оставь окно открытым.
 4. На телефоне отсканируй QR камерой и открой ссылку в DroidBridge. Если камера не открывает её, на ПК нажми **«Скопировать ссылку»**, а в Android открой **«Добавить ПК»**, вставь ссылку и нажми **«Подключиться»**. Не отправляй ссылку посторонним.
 5. Сравни код на ПК и телефоне. Только если он совпадает и это твоё устройство, нажми **«Разрешить»** на ПК. Затем на телефоне нажми **«Сохранить ПК»**. Сохранение заменит текущую пару, если она уже была настроена.
@@ -35,7 +37,7 @@ DroidBridge не подключается через облако. Основн�
 
 ## 3. Установи FFmpeg для видео и звука
 
-**Windows-установщик 1.0.2 не включает FFmpeg и ffplay. Скачай их отдельно и выбери папку в DroidBridge — менять PATH не нужно.** Приложение ничего не скачивает автоматически.
+**Windows-установщик 1.0.3 не включает FFmpeg и ffplay. Скачай их отдельно и выбери папку в DroidBridge — менять PATH не нужно.** Приложение ничего не скачивает автоматически.
 
 1. Открой **«Настроить видео и звук» → «Официальный сайт FFmpeg»** либо [страницу загрузки FFmpeg](https://ffmpeg.org/download.html). Перейди к одному из указанных там поставщиков сборок для Windows. Условия лицензии и состав внешней сборки проверяй у её поставщика.
 2. Скачай сборку с **обоими** файлами: `ffmpeg.exe` и `ffplay.exe`. Распакуй архив в постоянную папку на ПК. Не запускай программы из источника, которому не доверяешь.
@@ -90,17 +92,19 @@ DroidBridge не подключается через облако. Основн�
 
 # English
 
-[README](../README.md#english) · [Download Windows and Android](https://github.com/alexfduch231-prog/DroidBridge/releases/tag/v1.0.2)
+[README](../README.md#english) · [Download Windows and Android](https://github.com/alexfduch231-prog/DroidBridge/releases/tag/v1.0.3)
 
 ## Before installing
 
 You need Windows 10/11 x64, Android 5+ and a **trusted local network**. Ethernet on the PC and Wi-Fi on the phone are fine if the router allows communication between them. Guest Wi-Fi often blocks it. There is no cloud relay: the main command, video and file transport is unencrypted. Use only devices you own or have permission to control. **Do not forward router ports to the Internet.**
 
+The download QR only downloads the APK. Pairing uses a **different QR** in its own window. You can hide the startup prompt and reopen it with **«Приложение на телефон / подключить»** (Phone app / connect) in the main window.
+
 ## Install and pair
 
-1. On the [1.0.2 release page](https://github.com/alexfduch231-prog/DroidBridge/releases/tag/v1.0.2), download the Windows installer from **Assets**. Use the **«Скачать для Android»** (Download for Android) link in the release description for the compatible APK from an earlier release. You do not need the **Source code** archives. Windows includes Python and UI dependencies; it does not start the server automatically.
+1. On the [download page](https://github.com/alexfduch231-prog/DroidBridge/releases/latest), download the Windows installer and Android APK from **Assets**. You do not need the **Source code** archives. When DroidBridge starts on the PC, choose **Install on phone** and scan the QR with your phone camera to download the APK from GitHub. Choose **Already installed → connect to PC** to skip downloading and open pairing. Windows includes Python and UI dependencies; it does not start the server automatically.
 2. Install the APK. If Android asks, allow installation only for the app opening this download; you can revoke that permission afterwards. Do not disable Play Protect or other security tools.
-3. Open DroidBridge on Windows and click **«Запустить сервер»** (Start server), then **«Подключить телефон безопасно»** (Pair phone). The main Windows panel currently uses Russian labels; the pairing window has a RU/EN selector.
+3. Open DroidBridge on Windows and click **«Запустить сервер»** (Start server), then **«Приложение на телефон / подключить» → «Уже установлено → подключить к ПК»** (Phone app / connect → Already installed). The main Windows panel currently uses Russian labels; the pairing window has a RU/EN selector.
 4. Choose your home **Network adapter**, not a VPN or virtual adapter, and click **Create new QR**. Keep the window open.
 5. Scan the QR with your phone camera. If the camera cannot open the link, click **Copy pairing link** on the PC, paste it into **Add PC** on Android and tap **Connect**. Keep this temporary link private.
 6. Compare the code on both devices. Only if it matches and this is your device, click **Allow** on the PC and **Save PC** on Android. Saving replaces an existing pair. Try **Lock** to check the connection, then unlock Windows normally.
@@ -115,7 +119,7 @@ The installer has no commercial code-signing certificate, so SmartScreen may rep
 
 ## FFmpeg and ffplay: separate download, no PATH editing
 
-**The Windows 1.0.2 installer does not include FFmpeg or ffplay. Download them separately and select their folder in DroidBridge; no PATH change is needed.** The app never downloads these tools automatically.
+**The Windows 1.0.3 installer does not include FFmpeg or ffplay. Download them separately and select their folder in DroidBridge; no PATH change is needed.** The app never downloads these tools automatically.
 
 1. Open **«Настроить видео и звук» → «Официальный сайт FFmpeg»** (Set up video and audio → Official FFmpeg website), or visit the [FFmpeg download page](https://ffmpeg.org/download.html). Choose a linked Windows build provider and check its license and package contents.
 2. Download a build containing **both** `ffmpeg.exe` and `ffplay.exe`. Extract it to a permanent folder. Only use executables from a source you trust.

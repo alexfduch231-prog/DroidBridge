@@ -23,3 +23,4 @@ dist/
 pairing-tls/
 **/upload_settings.json
 **/media_settings.json
+**/android_setup.json

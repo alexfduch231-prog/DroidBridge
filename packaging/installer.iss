@@ -7,7 +7,7 @@
 [Setup]
 AppId={{C4DA7A3E-0382-4A31-A965-D81455D35B1E}
 AppName=DroidBridge
-AppVersion=1.0.2
+AppVersion=1.0.3
 AppPublisher=DroidBridge contributors
 DefaultDirName={localappdata}\Programs\DroidBridge
 DefaultGroupName=DroidBridge
@@ -16,7 +16,7 @@ ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
 OutputDir={#ArtifactDir}
-OutputBaseFilename=DroidBridge-1.0.2-windows-x64-setup
+OutputBaseFilename=DroidBridge-1.0.3-windows-x64-setup
 Compression=lzma2/normal
 SolidCompression=yes
 WizardStyle=modern
