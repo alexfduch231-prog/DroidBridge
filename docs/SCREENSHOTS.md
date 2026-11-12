@@ -20,6 +20,18 @@
 
 Этот QR ведёт на публичный APK в GitHub, а не подключает телефон к компьютеру. Скачай файл, подтверди установку на Android и нажми «Установлено → подключить к ПК».
 
+## Обязательная первая настройка
+
+![Первичная настройка Wake-on-LAN](images/windows-first-run-wol.png)
+
+Перед первым сопряжением откроется проверка включения ПК по сети. Здесь показана верхняя часть страницы в ожидании проверки; галочки подтверждения находятся ниже. Снимок не показывает успешную настройку или пробуждение.
+
+## Сопряжение телефона
+
+![Сопряжение до создания QR](images/windows-pairing-initial.png)
+
+После настройки выбери домашний сетевой адаптер и создай QR. На этом снимке список адаптеров намеренно пуст, временное соединение не запущено. QR сопряжения на публичных снимках нет — он предназначен только для твоего телефона.
+
 ## Экран телефона
 
 ![Экран телефона](images/windows-phone-screen.png)
@@ -79,6 +91,18 @@ Skip downloading if the app is already installed. The install button opens the n
 ![Public APK download QR](images/windows-public-apk-qr.png)
 
 This QR links to the public APK on GitHub; it does not pair the phone. Download it, confirm installation on Android, then select the installed/continue button.
+
+## Required first-time setup
+
+![First-pair Wake-on-LAN setup](images/windows-first-run-wol.png)
+
+Before first pairing, the app checks Wake-on-LAN settings. This shows the top of the page waiting for the check; confirmation controls are farther down. It does not demonstrate successful configuration or waking.
+
+## Pair the phone
+
+![Pairing before QR creation](images/windows-pairing-initial.png)
+
+After setup, select your home network adapter and create a QR. This screenshot intentionally has an empty adapter list and no active pairing session. Pairing QR codes are not published: they are intended only for your phone.
 
 ## Phone screen
 

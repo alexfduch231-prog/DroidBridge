@@ -1,5 +1,11 @@
 # Изменения / Changelog
 
+## 1.0.8 — в разработке / in development
+
+Windows получает выбор оформления в настройках: **как в Windows**, светлое, тёмное и готовые цветовые темы «Океан», «Лес» и «Слива». Выбор сохраняется и применяется без перезапуска. В системном режиме приложение следует переключению светлой и тёмной темы Windows. Изображение телефона и QR не перекрашиваются. Android остаётся версии **1.16**.
+
+Windows gains appearance settings: **follow Windows**, light, dark and Ocean, Forest and Plum presets. The selection is saved and applied without restarting. System mode follows changes to the Windows light/dark preference. Video and QR images retain their original colors. Android remains **1.16**.
+
 ## 1.0.7 — 2026-11-12
 
 Windows **1.0.7**; Android без изменений — **1.16** (сборка **26**).
