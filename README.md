@@ -2,7 +2,7 @@
 
 Телефон как пульт для домашнего Windows-ПК — и экран телефона на компьютере. Работает в общей локальной сети, без облачного сервиса.
 
-**[Windows и Android — релиз 1.0.4](https://github.com/alexfduch231-prog/DroidBridge/releases/tag/v1.0.4)** · [English](#english)
+**[Windows и Android — скачать](https://github.com/alexfduch231-prog/DroidBridge/releases/latest)** · [English](#english)
 
 Версия 1.0.4 включает Windows-установщик со встроенными FFmpeg и ffplay и Android-приложение 1.15. Новые сценарии на реальном телефоне пока не проверены. В предыдущих slim-установщиках инструменты видео и звука нужно было выбирать отдельно.
 
@@ -54,7 +54,7 @@ DroidBridge сделан с помощью ИИ изначально для се
 
 Use your phone as a remote for your Windows PC, or view your phone on the computer. DroidBridge works on the same local network, without a cloud service.
 
-**[Windows and Android — release 1.0.4](https://github.com/alexfduch231-prog/DroidBridge/releases/tag/v1.0.4)**
+**[Windows and Android — download](https://github.com/alexfduch231-prog/DroidBridge/releases/latest)**
 
 Version 1.0.4 includes the Windows installer with bundled FFmpeg/ffplay and Android app 1.15. New scenarios have not yet been tested on a real phone. Earlier slim installers required a separate media-tool selection.
 

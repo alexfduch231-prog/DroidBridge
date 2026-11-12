@@ -182,13 +182,18 @@ class UpdateController:
     def _offer(self, manifest):
         import tkinter as tk
         from tkinter import ttk
+        try:
+            from theme import apply_theme
+        except ModuleNotFoundError:
+            from desktop.theme import apply_theme
         dialog = tk.Toplevel(self.root)
+        apply_theme(dialog)
         dialog.title('DroidBridge update')
         dialog.transient(self.root)
         self.window = dialog
-        ttk.Label(dialog, text='Доступна версия ' + manifest['windows']['version'] +
+        ttk.Label(dialog, style='DB.TLabel', text='Доступна версия ' + manifest['windows']['version'] +
                   '.\nОбновление добровольное. Настройки и ключи сохранятся.', padding=16).pack()
-        row = ttk.Frame(dialog, padding=12)
+        row = ttk.Frame(dialog, padding=20, style='DB.Card.TFrame')
         row.pack()
         def accept():
             import sys
@@ -222,7 +227,7 @@ class UpdateController:
                 except Exception as error:
                     self.events.put(('failed', str(error)))
             threading.Thread(target=worker, name='update-download', daemon=True).start()
-        ttk.Button(row, text='Update', command=accept).pack(side='left')
+        ttk.Button(row, style='DB.Primary.TButton', text='Update', command=accept).pack(side='left')
         ttk.Button(row, text='Not now', command=dialog.destroy).pack(side='left', padx=8)
 
     def _ready(self, value):

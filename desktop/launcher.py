@@ -12,6 +12,7 @@ if not getattr(sys, 'frozen', False):
 import tkinter as tk
 from tkinter import ttk, messagebox
 from runtime import data_directory, phone_address, run_component, start_child
+from desktop.theme import PALETTE, apply_theme, card
 
 
 def main():
@@ -49,6 +50,7 @@ def main():
                 import update_helper
                 import qrcode
                 test_root = tk.Tk()
+                apply_theme(test_root)
                 test_root.withdraw()
                 try:
                     qr = qrcode.make('vzaimopult-selftest-not-a-pairing-ticket')
@@ -78,19 +80,73 @@ def main():
         return 0
     root = tk.Tk()
     root.title('DroidBridge')
-    root.geometry('640x740')
-    root.minsize(640, 740)
-    root.configure(bg='#f4f6fa')
-    style = ttk.Style(root)
-    style.theme_use('vista' if 'vista' in style.theme_names() else 'clam')
-    style.configure('TLabel', font=('Segoe UI', 10))
-    style.configure('TButton', font=('Segoe UI', 10), padding=(10, 7))
-    frame = ttk.Frame(root, padding=24)
-    frame.pack(fill='both', expand=True)
-    ttk.Label(frame, text='DroidBridge', font=('Segoe UI', 22, 'bold')).pack(anchor='w')
-    ttk.Label(frame, text='Твой ПК и телефон — в одной локальной сети.').pack(anchor='w', pady=(2, 18))
+    root.geometry('940x760')
+    root.minsize(800, 600)
+    apply_theme(root)
+    header = ttk.Frame(root, style='DB.TFrame', padding=(28, 20, 28, 16))
+    header.pack(fill='x')
+    accent = ttk.Frame(header, style='DB.Accent.TFrame', width=5)
+    accent.pack(side='left', fill='y', padx=(0, 16))
+    brand = ttk.Frame(header, style='DB.TFrame')
+    brand.pack(side='left', fill='x', expand=True)
+    ttk.Label(brand, text='DroidBridge', style='DB.Title.TLabel').pack(anchor='w')
+    ttk.Label(brand, text='Твой ПК и телефон — в одной локальной сети.',
+              style='DB.Subtitle.TLabel').pack(anchor='w', pady=(4, 0))
+    shell = ttk.Frame(root, style='DB.TFrame')
+    shell.pack(fill='both', expand=True, padx=(28, 12), pady=(0, 16))
+    canvas = tk.Canvas(shell, background=PALETTE['background'], highlightthickness=0,
+                       borderwidth=0, takefocus=False)
+    scrollbar = ttk.Scrollbar(shell, orient='vertical', command=canvas.yview)
+    scrollbar.pack(side='right', fill='y', padx=(8, 0))
+    canvas.pack(side='left', fill='both', expand=True)
+    canvas.configure(yscrollcommand=scrollbar.set)
+    frame = ttk.Frame(canvas, style='DB.TFrame')
+    content_id = canvas.create_window((0, 0), window=frame, anchor='nw')
+    wrapped = []
+    def resize_content(event):
+        canvas.itemconfigure(content_id, width=event.width)
+        for label in wrapped:
+            label.configure(wraplength=max(200, event.width - 40))
+    canvas.bind('<Configure>', resize_content)
+    frame.bind('<Configure>', lambda event: canvas.configure(scrollregion=canvas.bbox('all')))
+    def scroll_wheel(event):
+        if event.num == 4:
+            units = -1
+        elif event.num == 5:
+            units = 1
+        else:
+            units = -int(event.delta / 120) if abs(event.delta) >= 120 else (-1 if event.delta > 0 else 1)
+        if canvas.yview() != (0.0, 1.0):
+            canvas.yview_scroll(units, 'units')
+    # Root bindings receive events from owned descendants, without bind_all leaks
+    # or hijacking wheel events in the separate tool windows.
+    def wheel_in_main(event):
+        if event.widget.winfo_toplevel() is root:
+            scroll_wheel(event)
+    root.bind('<MouseWheel>', wheel_in_main, add='+')
+    root.bind('<Button-4>', wheel_in_main, add='+')
+    root.bind('<Button-5>', wheel_in_main, add='+')
+    def reveal_focus(event):
+        widget = event.widget
+        if widget.winfo_toplevel() is root and widget is not root:
+            top = widget.winfo_rooty() - frame.winfo_rooty()
+            bottom = top + widget.winfo_height()
+            visible_top = canvas.canvasy(0)
+            height = canvas.winfo_height()
+            if top < visible_top or bottom > visible_top + height:
+                total = max(1, frame.winfo_height())
+                canvas.yview_moveto(max(0, top - 16) / total)
+    frame.bind('<FocusIn>', reveal_focus, add='+')
+    root.bind('<FocusIn>', reveal_focus, add='+')
+    def body_label(parent, text=None, **kwargs):
+        label = ttk.Label(parent, text=text, style='DB.Muted.TLabel', wraplength=780, **kwargs)
+        wrapped.append(label)
+        return label
+    connection = card(frame)
+    connection.pack(fill='x', pady=(0, 12))
+    ttk.Label(connection, text='Подключение', style='DB.Heading.TLabel').pack(anchor='w')
     status = tk.StringVar(value='Сервер ещё не запущен. Автозапуска нет.')
-    ttk.Label(frame, textvariable=status, wraplength=490).pack(anchor='w', pady=(0, 10))
+    body_label(connection, textvariable=status).pack(anchor='w', pady=(8, 12))
     children = []
     server = [None]
     def start_server():
@@ -106,10 +162,10 @@ def main():
         if server[0] is not None and server[0].poll() is None:
             server[0].terminate()
             status.set('Остановка сервера…')
-    row = ttk.Frame(frame)
+    row = ttk.Frame(connection, style='DB.Card.TFrame')
     row.pack(fill='x')
-    ttk.Button(row, text='Запустить сервер', command=start_server).pack(side='left')
-    ttk.Button(row, text='Остановить', command=stop_server).pack(side='left', padx=8)
+    ttk.Button(row, text='Запустить сервер', style='DB.Primary.TButton', command=start_server).pack(side='left')
+    ttk.Button(row, text='Остановить', style='DB.TButton', command=stop_server).pack(side='left', padx=8)
     def pairing():
         try:
             from pairing_panel import show_pairing
@@ -119,15 +175,14 @@ def main():
     from android_setup import should_show_on_startup, show_android_setup
     def android_setup():
         show_android_setup(root, data_directory(), pairing)
-    ttk.Button(frame, text='Приложение на телефон / подключить', command=android_setup).pack(anchor='w', pady=8)
-    ttk.Label(frame, text='Сопряжение доступно сразу; для управления запусти сервер.', wraplength=540).pack(anchor='w')
+    ttk.Button(connection, text='Приложение на телефон / подключить', style='DB.TButton', command=android_setup).pack(anchor='w', pady=(12, 8))
+    body_label(connection, 'Сопряжение доступно сразу; для управления запусти сервер.').pack(anchor='w')
     def applications():
         try:
             from apps_panel import show_apps
             show_apps(root, data_directory())
         except (ImportError, OSError, ValueError) as error:
             messagebox.showerror('Программы недоступны', str(error), parent=root)
-    ttk.Button(frame, text='Программы / Applications', command=applications).pack(anchor='w')
     def uploads():
         try:
             from upload_panel import show_uploads
@@ -135,24 +190,22 @@ def main():
         except (ImportError, OSError, ValueError):
             messagebox.showerror('Приём файлов недоступен',
                                  'Проверь локальную папку и настройки приёма файлов.', parent=root)
-    ttk.Button(frame, text='Приём файлов / Received files', command=uploads).pack(anchor='w', pady=8)
     def media_settings():
         from media_setup import show_media_setup
         show_media_setup(root, data_directory())
-    ttk.Button(frame, text='Настроить видео и звук', command=media_settings).pack(anchor='w', pady=8)
     from listener.media_tools import MediaToolsError, resolve_media_tools
     try:
         media_tools = resolve_media_tools(data_directory())
         media_available = bool(media_tools.ffmpeg and media_tools.ffplay)
     except MediaToolsError:
         media_available = False
-    ttk.Label(frame, text=('Видео и звук готовы. Дополнительная установка не нужна.' if media_available
-              else 'Инструменты видео и звука не найдены. Открой настройку.'), wraplength=540).pack(anchor='w')
-    ttk.Separator(frame).pack(fill='x', pady=8)
-    ttk.Label(frame, text='Экран телефона на ПК', font=('Segoe UI', 13, 'bold')).pack(anchor='w', pady=6)
-    ttk.Label(frame, text='Включи трансляцию в приложении и введи IP телефона.').pack(anchor='w')
-    host = ttk.Entry(frame, font=('Segoe UI', 12))
-    host.pack(fill='x', pady=8)
+    screen = card(frame)
+    screen.pack(fill='x', pady=(0, 12))
+    ttk.Label(screen, text='Экран телефона на ПК', style='DB.Heading.TLabel').pack(anchor='w')
+    body_label(screen, 'Включи трансляцию в приложении и введи IP телефона.').pack(anchor='w', pady=(8, 12))
+    ttk.Label(screen, text='IP-адрес телефона', style='DB.TLabel').pack(anchor='w')
+    host = ttk.Entry(screen)
+    host.pack(fill='x', pady=(4, 12))
     def viewer():
         try:
             address = phone_address(host.get())
@@ -161,8 +214,18 @@ def main():
             children.append(start_child('viewer', '--connect', address))
         except (OSError, ValueError) as error:
             messagebox.showerror('Не удалось открыть экран', str(error), parent=root)
-    ttk.Button(frame, text='Открыть экран телефона', command=viewer).pack(anchor='w')
-    ttk.Label(frame, text='Данные и ключи хранятся только в профиле Windows.\nНе открывай порты роутера в интернет.', wraplength=490).pack(anchor='w', pady=(16, 0))
+    ttk.Button(screen, text='Открыть экран телефона', style='DB.TButton', command=viewer).pack(anchor='w')
+    tools = card(frame)
+    tools.pack(fill='x', pady=(0, 12))
+    ttk.Label(tools, text='Инструменты', style='DB.Heading.TLabel').pack(anchor='w')
+    actions = ttk.Frame(tools, style='DB.Card.TFrame')
+    actions.pack(fill='x', pady=(12, 0))
+    ttk.Button(actions, text='Программы / Applications', style='DB.TButton', command=applications).pack(side='left')
+    ttk.Button(actions, text='Приём файлов / Received files', style='DB.TButton', command=uploads).pack(side='left', padx=(8, 0))
+    ttk.Button(tools, text='Настроить видео и звук', style='DB.TButton', command=media_settings).pack(anchor='w', pady=(12, 8))
+    body_label(tools, ('Видео и звук готовы. Дополнительная установка не нужна.' if media_available
+              else 'Инструменты видео и звука не найдены. Открой настройку.')).pack(anchor='w')
+    ttk.Label(frame, text='Данные и ключи хранятся только в профиле Windows.\nНе открывай порты роутера в интернет.', style='DB.Subtitle.TLabel', wraplength=700).pack(anchor='w', pady=(4, 8))
     tick_timer = [None]
     def tick():
         if server[0] is not None:

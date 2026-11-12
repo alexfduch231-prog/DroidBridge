@@ -278,9 +278,17 @@ class MediaSetupTests(unittest.TestCase):
                     self.assertEqual(str(choose.cget('state')), 'normal')
         texts = [w.cget('text') for w in descendants(window) if isinstance(w, ttk.Label)]
         self.assertTrue(any('исполняемые программы' in text for text in texts))
-        window.update_idletasks()
+        root.deiconify()
+        root.update()
+        canvas = next(w for w in descendants(window) if isinstance(w, tk.Canvas))
+        self.assertLessEqual(canvas.winfo_rooty() + canvas.winfo_height(),
+                             window.winfo_rooty() + window.winfo_height())
         for button in buttons.values():
-            self.assertLessEqual(button.winfo_rooty() + button.winfo_height(), window.winfo_rooty() + window.winfo_height())
+            button.focus_force()
+            root.update()
+            self.assertGreaterEqual(button.winfo_rooty(), canvas.winfo_rooty())
+            self.assertLessEqual(button.winfo_rooty() + button.winfo_height(),
+                                 canvas.winfo_rooty() + canvas.winfo_height())
 
 
 if __name__ == '__main__':

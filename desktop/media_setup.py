@@ -36,18 +36,22 @@ def show_media_setup(parent, data_dir):
     from tkinter import filedialog, messagebox, ttk
     import webbrowser
 
+    try:
+        from theme import apply_theme, scrollable_card
+    except ModuleNotFoundError:
+        from desktop.theme import apply_theme, scrollable_card
     window = tk.Toplevel(parent)
+    apply_theme(window)
     window.title('Настроить видео и звук')
-    window.geometry('690x430')
-    window.minsize(650, 430)
+    window.geometry(f'730x{min(510, max(400, window.winfo_screenheight() - 100))}')
+    window.minsize(520, 400)
     window.transient(parent)
-    frame = ttk.Frame(window, padding=18)
-    frame.pack(fill='both', expand=True)
-    ttk.Label(frame, text='Видео H.264 и звук: FFmpeg / ffplay', font=('Segoe UI', 13, 'bold')).pack(anchor='w')
-    ttk.Label(frame, text='Обычная установка DroidBridge уже содержит инструменты видео и звука. '
+    frame = scrollable_card(window)
+    ttk.Label(frame, text='Видео H.264 и звук: FFmpeg / ffplay', style='DB.Heading.TLabel').pack(anchor='w')
+    ttk.Label(frame, style='DB.Muted.TLabel', text='Обычная установка DroidBridge уже содержит инструменты видео и звука. '
               'Они выбираются автоматически — менять PATH не нужно. '
               'Здесь можно выбрать другую сборку вручную или вернуть автоматический поиск.', wraplength=620).pack(anchor='w', pady=10)
-    ttk.Label(frame, text='Это исполняемые программы. После твоего подтверждения DroidBridge запустит '
+    ttk.Label(frame, style='DB.Danger.TLabel', text='Это исполняемые программы. После твоего подтверждения DroidBridge запустит '
               'оба файла с -version для проверки (до 5 секунд на каждый), а затем будет использовать '
               'их для видео и звука. Выбирай только сборку из доверенного источника.', wraplength=620).pack(anchor='w')
     current = tk.StringVar(master=window)
@@ -57,7 +61,7 @@ def show_media_setup(parent, data_dir):
     entry.configure(xscrollcommand=scroll.set)
     scroll.pack(fill='x')
     status = tk.StringVar(master=window, value=RESTART_NOTICE)
-    ttk.Label(frame, textvariable=status, wraplength=620).pack(anchor='w', pady=10)
+    ttk.Label(frame, style='DB.Muted.TLabel', textvariable=status, wraplength=620).pack(anchor='w', pady=10)
     results = queue.Queue()
     busy = [False]
 
@@ -125,9 +129,9 @@ def show_media_setup(parent, data_dir):
             return
         window.destroy()
 
-    row = ttk.Frame(frame)
+    row = ttk.Frame(frame, style='DB.Card.TFrame')
     row.pack(fill='x', pady=6)
-    choose = ttk.Button(row, text='Выбрать папку…', command=select)
+    choose = ttk.Button(row, style='DB.Primary.TButton', text='Выбрать папку…', command=select)
     choose.pack(side='left')
     reset = ttk.Button(row, text='Автоматический поиск', command=clear)
     reset.pack(side='left', padx=8)

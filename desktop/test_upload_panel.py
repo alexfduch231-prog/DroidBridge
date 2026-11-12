@@ -80,9 +80,13 @@ class UploadPanelTests(unittest.TestCase):
                 windows = [w for w in root.winfo_children() if isinstance(w, tk.Toplevel)]
                 self.assertEqual(len(windows), 1)
                 seen.append(windows[0].title())
+                canvas = next(w for w in descendants(root) if isinstance(w, tk.Canvas))
                 for button in buttons:
+                    button.focus_force()
+                    root.update()
+                    self.assertGreaterEqual(button.winfo_rooty(), canvas.winfo_rooty())
                     bottom = button.winfo_rooty() + button.winfo_height()
-                    self.assertLessEqual(bottom, root.winfo_rooty() + root.winfo_height())
+                    self.assertLessEqual(bottom, canvas.winfo_rooty() + canvas.winfo_height())
             finally:
                 root.destroy()
         with patch.object(sys, 'argv', ['launcher']), patch.object(launcher, 'data_directory', return_value=self.data):

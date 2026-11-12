@@ -1,5 +1,15 @@
 # Изменения / Changelog
 
+## 1.0.5 — в разработке / in development
+
+- Windows-интерфейс приводится к стилю приложения на телефоне: общая светлая палитра, синие акценты, карточки и единое оформление окон.
+- Главное окно разделено на понятные блоки подключения, просмотра экрана и настроек; содержимое доступно при небольшом размере окна.
+- Изменения касаются оформления Windows. Совместимая версия Android — 1.15; повторное сопряжение не требуется.
+
+- The Windows interface is being aligned with the phone app: a shared light palette, blue accents, cards and consistent dialogs.
+- The main window groups connection, screen viewing and settings; content remains accessible at smaller window sizes.
+- This is a Windows visual update. Android 1.15 remains compatible; pairing again is not required.
+
 ## 1.0.4 — 2026-11-12
 
 Windows **1.0.4**, Android **1.15**. Ниже — изменения выпуска и проверенные сценарии; это не гарантия совместимости со всеми устройствами.

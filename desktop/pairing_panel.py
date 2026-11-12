@@ -117,48 +117,52 @@ def show_pairing(parent, data_dir: Path, http_port=8765):
                    expired='QR expired. Create a new one.', rejected='Pairing cancelled.',
                    error='Cannot create QR. Check adapter, port and access to local data.',
                    warning='The camera must support QR links. Fallback: paste the pairing link in the app.\nTLS protects pairing; legacy HTTP commands require a trusted network.')}
+    try:
+        from theme import apply_theme, scrollable_card
+    except ModuleNotFoundError:
+        from desktop.theme import apply_theme, scrollable_card
     window = tk.Toplevel(parent)
-    window.title('VzaimoPult')
-    window.geometry('600x780')
+    apply_theme(window)
+    window.title('DroidBridge')
+    window.geometry(f'640x{min(820, max(400, window.winfo_screenheight() - 100))}')
     controller = PairingController(data_dir, http_port)
     adapters = eligible_adapters(windows_adapters())
     language = tk.StringVar(value='ru')
     copied = ['']
     closed = [False]
     pending_after = [None]
-    frame = ttk.Frame(window, padding=16)
-    frame.pack(fill='both', expand=True)
+    frame = scrollable_card(window)
     ttk.Combobox(frame, textvariable=language, values=['ru', 'en'], state='readonly', width=6).pack(anchor='e')
-    title = ttk.Label(frame, font=('Segoe UI', 18, 'bold'))
+    title = ttk.Label(frame, style='DB.Heading.TLabel')
     title.pack(anchor='w', pady=(0, 12))
-    adapter_label = ttk.Label(frame)
+    adapter_label = ttk.Label(frame, style='DB.TLabel')
     adapter_label.pack(anchor='w')
     selection = ttk.Combobox(frame, values=[a.ip for a in adapters], state='readonly')
     selection.pack(fill='x', pady=6)
     if len(adapters) == 1:
         selection.current(0)
     # With multiple adapters, explicit choice is mandatory; never assume the first MAC.
-    qr = ttk.Label(frame, anchor='center')
+    qr = ttk.Label(frame, style='DB.QR.TLabel', anchor='center')
     qr.pack(fill='both', expand=True, pady=8)
-    status = ttk.Label(frame, wraplength=555, justify='left')
+    status = ttk.Label(frame, style='DB.Muted.TLabel', wraplength=555, justify='left')
     status.pack(fill='x', pady=8)
-    code = ttk.Label(frame, font=('Consolas', 25, 'bold'), anchor='center')
+    code = ttk.Label(frame, style='DB.TLabel', font=('Consolas', 25, 'bold'), anchor='center')
     code.pack(fill='x', pady=5)
-    name = ttk.Label(frame, wraplength=555)
+    name = ttk.Label(frame, style='DB.TLabel', wraplength=555)
     name.pack(fill='x')
-    buttons = ttk.Frame(frame)
+    buttons = ttk.Frame(frame, style='DB.Card.TFrame')
     buttons.pack(fill='x', pady=8)
-    approve = ttk.Button(buttons, command=controller.approve)
+    approve = ttk.Button(buttons, style='DB.Primary.TButton', command=controller.approve)
     approve.pack(side='left')
-    reject = ttk.Button(buttons, command=controller.reject)
+    reject = ttk.Button(buttons, style='DB.Danger.TButton', command=controller.reject)
     reject.pack(side='left', padx=8)
-    controls = ttk.Frame(frame)
+    controls = ttk.Frame(frame, style='DB.Card.TFrame')
     controls.pack(fill='x', pady=8)
-    generate = ttk.Button(controls)
+    generate = ttk.Button(controls, style='DB.Primary.TButton')
     generate.pack(side='left')
     copy = ttk.Button(controls)
     copy.pack(side='left', padx=8)
-    warning = ttk.Label(frame, wraplength=555, justify='left')
+    warning = ttk.Label(frame, style='DB.Danger.TLabel', wraplength=555, justify='left')
     warning.pack(fill='x', pady=8)
     failure = [False]
 
@@ -203,7 +207,7 @@ def show_pairing(parent, data_dir: Path, http_port=8765):
         if closed[0]:
             return
         text = texts[language.get()]
-        window.title('VzaimoPult — ' + text['title'])
+        window.title('DroidBridge — ' + text['title'])
         title.configure(text=text['title'])
         adapter_label.configure(text=text['adapter'])
         generate.configure(text=text['generate'])

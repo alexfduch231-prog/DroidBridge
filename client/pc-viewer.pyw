@@ -58,12 +58,19 @@ try:
 except MediaToolsError:
     MEDIA_TOOLS = MediaTools(None, None, "invalid")
 
-BG = "#0B0C0F"
-PANEL = "#14161A"
-TEXT = "#E6EAF2"
-MUTED = "#8A93A6"
-OK = "#6BD992"
-BAD = "#FF8A80"
+# Share desktop tokens when run directly as well as through the launcher.
+_PROJECT_DIR = os.path.dirname(HERE)
+if _PROJECT_DIR not in sys.path:
+    sys.path.insert(0, _PROJECT_DIR)
+from desktop.theme import PALETTE, apply_theme
+
+BG = PALETTE["background"]
+PANEL = PALETTE["surface"]
+TEXT = PALETTE["text"]
+MUTED = PALETTE["muted"]
+PRIMARY = PALETTE["primary"]
+OK = "#187645"
+BAD = PALETTE["danger"]
 
 
 def log(msg):
@@ -174,6 +181,7 @@ class Viewer(object):
 
     def _build_ui(self):
         self.root.title("Экран телефона — DroidBridge")
+        apply_theme(self.root)
         self.root.configure(bg=BG)
         sw = self.root.winfo_screenwidth()
         sh = self.root.winfo_screenheight()
@@ -188,38 +196,50 @@ class Viewer(object):
                                      anchor="w", font=("Segoe UI", 9))
         self.status_label.pack(side="left", padx=12, pady=8, fill="x", expand=True)
 
+        # Native Tk controls need explicit light/focus states; ttk theme settings
+        # do not affect them. Keep widget layout and all commands unchanged.
+        focus_style = dict(takefocus=True, highlightthickness=1,
+                           highlightcolor=PRIMARY, highlightbackground=PANEL)
+        check_style = dict(bg=PANEL, fg=TEXT, activebackground=PANEL,
+                           activeforeground=TEXT, selectcolor=PANEL,
+                           disabledforeground=MUTED, bd=0,
+                           font=("Segoe UI", 9), **focus_style)
+        button_style = dict(bg=BG, fg=TEXT, activebackground=PALETTE["surface_alt"],
+                            activeforeground=TEXT, disabledforeground=MUTED,
+                            relief="flat", overrelief="flat", **focus_style)
+
         self.on_top = tk.BooleanVar(value=False)
         tk.Checkbutton(top, text="Поверх", variable=self.on_top, command=self._toggle_top,
-                       bg=PANEL, fg=TEXT, activebackground=PANEL, activeforeground=TEXT,
-                       selectcolor="#1A1D23", highlightthickness=0, bd=0,
-                       font=("Segoe UI", 9)).pack(side="right", padx=(0, 6))
+                       **check_style).pack(side="right", padx=(0, 6))
 
         self.audio_var = tk.BooleanVar(value=self.audio_enabled)
         tk.Checkbutton(top, text="Звук", variable=self.audio_var, command=self._toggle_audio,
-                       bg=PANEL, fg=TEXT, activebackground=PANEL, activeforeground=TEXT,
-                       selectcolor="#1A1D23", highlightthickness=0, bd=0,
-                       font=("Segoe UI", 9)).pack(side="right", padx=(0, 6))
+                       **check_style).pack(side="right", padx=(0, 6))
 
         controls = tk.Frame(self.root, bg=PANEL)
         controls.pack(side="top", fill="x")
         self.control_var = tk.BooleanVar(value=False)
         self.control_toggle = tk.Checkbutton(
             controls, text="Управлять", variable=self.control_var, command=self._toggle_control,
-            state="disabled", bg=PANEL, fg=TEXT, activebackground=PANEL,
-            selectcolor="#1A1D23", font=("Segoe UI", 9))
+            state="disabled", **check_style)
         self.control_toggle.pack(side="left", padx=4)
         self.control_widgets = []
         for label, name in (("Назад", "back"), ("Домой", "home"), ("Недавние", "recents")):
             button = tk.Button(controls, text=label, state="disabled",
-                               command=lambda n=name: self._queue_control({"action": "global", "name": n}))
+                               command=lambda n=name: self._queue_control({"action": "global", "name": n}),
+                               **button_style)
             button.pack(side="left", padx=2, pady=4)
             self.control_widgets.append(button)
         textbar = tk.Frame(self.root, bg=PANEL)
         textbar.pack(side="top", fill="x")
-        self.text_entry = tk.Entry(textbar, state="disabled")
+        self.text_entry = tk.Entry(textbar, state="disabled", bg=PANEL, fg=TEXT,
+                                   disabledbackground=BG, disabledforeground=MUTED,
+                                   insertbackground=TEXT, selectbackground=PRIMARY,
+                                   selectforeground=PANEL, relief="flat", **focus_style)
         self.text_entry.pack(side="left", fill="x", expand=True, padx=(6, 3), pady=3)
         self.text_entry.bind("<Return>", self._send_text)
-        send = tk.Button(textbar, text="Текст →", command=self._send_text, state="disabled")
+        send = tk.Button(textbar, text="Текст →", command=self._send_text,
+                         state="disabled", **button_style)
         send.pack(side="right", padx=(0, 6))
         self.control_widgets.extend((self.text_entry, send))
         self.control_label = tk.Label(self.root, text=self.control_message, bg=PANEL,

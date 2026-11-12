@@ -93,6 +93,8 @@ class AndroidSetupTests(unittest.TestCase):
         self.assertFalse(new.winfo_exists())
 
     def test_install_qr_encodes_only_public_url_and_pairs_only_on_explicit_action(self):
+        import tkinter as tk
+        from tkinter import ttk
         import qrcode
         root, paired, payloads = self.root(), [], []
         root.deiconify()
@@ -115,15 +117,22 @@ class AndroidSetupTests(unittest.TestCase):
             self.assertIn('не QR сопряжения', labels)
             self.assertIn('неизвестных', labels)
             self.assertNotIn('\\n', labels)
+            canvas = next(w for w in descendants(window) if isinstance(w, tk.Canvas))
+            self.assertGreaterEqual(canvas.winfo_rooty(), window.winfo_rooty())
+            self.assertLessEqual(canvas.winfo_rooty() + canvas.winfo_height(),
+                                 window.winfo_rooty() + window.winfo_height())
             for widget in descendants(window):
                 self.assertTrue(widget.winfo_ismapped(), str(widget))
-                self.assertGreaterEqual(widget.winfo_rootx(), window.winfo_rootx(), str(widget))
-                self.assertGreaterEqual(widget.winfo_rooty(), window.winfo_rooty(), str(widget))
-                self.assertLessEqual(widget.winfo_rootx() + widget.winfo_width(),
-                                     window.winfo_rootx() + window.winfo_width(), str(widget))
-                self.assertLessEqual(widget.winfo_rooty() + widget.winfo_height(),
-                                     window.winfo_rooty() + window.winfo_height(), str(widget))
-                self.assertGreaterEqual(widget.winfo_height(), widget.winfo_reqheight(), str(widget))
+                if isinstance(widget, (ttk.Button, ttk.Checkbutton)):
+                    self.assertGreaterEqual(widget.winfo_height(), widget.winfo_reqheight(), str(widget))
+                    widget.focus_force()
+                    window.update()
+                    self.assertGreaterEqual(widget.winfo_rooty(), canvas.winfo_rooty(), str(widget))
+                    self.assertLessEqual(widget.winfo_rooty() + widget.winfo_height(),
+                                         canvas.winfo_rooty() + canvas.winfo_height(), str(widget))
+            canvas.yview_moveto(1)
+            window.update()
+            self.assertAlmostEqual(canvas.yview()[1], 1.0)
             button(window, 'Скопировать ссылку APK').invoke()
             self.assertEqual(window.clipboard_get(), PUBLIC_APK)
             button(window, 'Открыть ссылку APK').invoke()
@@ -169,6 +178,17 @@ class AndroidSetupTests(unittest.TestCase):
                 root.update_idletasks()
                 for w in descendants(root):
                     if w.winfo_toplevel() is not root:
+                        continue
+                    # Canvas content may extend below its clipped viewport; the
+                    # launcher resize tests verify scrolling and focus reachability.
+                    ancestor = w.master
+                    in_scroll_content = False
+                    while ancestor is not None and ancestor is not root:
+                        if isinstance(ancestor, tk.Canvas):
+                            in_scroll_content = True
+                            break
+                        ancestor = ancestor.master
+                    if in_scroll_content:
                         continue
                     self.assertTrue(w.winfo_ismapped(), str(w))
                     self.assertGreaterEqual(w.winfo_rootx(), root.winfo_rootx(), str(w))

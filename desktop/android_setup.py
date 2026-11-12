@@ -58,19 +58,23 @@ def show_android_setup(parent, data_dir, on_pair):
         existing.deiconify()
         existing.lift()
         return existing
+    try:
+        from theme import apply_theme, scrollable_card
+    except ModuleNotFoundError:
+        from desktop.theme import apply_theme, scrollable_card
     window = tk.Toplevel(parent)
+    apply_theme(window)
     parent._android_setup_window = window
     window.title('DroidBridge — приложение на телефон')
-    window.geometry('640x700')
-    window.minsize(640, 700)
+    window.geometry(f'680x{min(760, max(400, window.winfo_screenheight() - 100))}')
+    window.minsize(520, 400)
     window.transient(parent)
-    frame = ttk.Frame(window, padding=20)
-    frame.pack(fill='both', expand=True)
-    ttk.Label(frame, text='DroidBridge на Android', font=('Segoe UI', 18, 'bold')).pack(anchor='w')
-    ttk.Label(frame, text='Сначала установи приложение на телефон, затем подключи его к ПК. '
+    frame = scrollable_card(window)
+    ttk.Label(frame, text='DroidBridge на Android', style='DB.Heading.TLabel').pack(anchor='w')
+    ttk.Label(frame, style='DB.Muted.TLabel', text='Сначала установи приложение на телефон, затем подключи его к ПК. '
               'Скачивание APK и безопасное сопряжение — разные шаги.',
               wraplength=590).pack(anchor='w', pady=10)
-    content = ttk.Frame(frame)
+    content = ttk.Frame(frame, style='DB.Card.TFrame')
     content.pack(fill='both', expand=True)
     dont_show = tk.BooleanVar(master=window, value=not should_show_on_startup(data_dir))
 
@@ -82,7 +86,7 @@ def show_android_setup(parent, data_dir, on_pair):
             messagebox.showerror('Настройка не сохранена',
                                  'Не удалось сохранить выбор в локальной папке данных.', parent=window)
 
-    ttk.Checkbutton(frame, text='Больше не показывать при запуске', variable=dont_show,
+    ttk.Checkbutton(frame, style='DB.Card.TCheckbutton', text='Больше не показывать при запуске', variable=dont_show,
                     command=remember).pack(anchor='w', pady=(12, 0))
 
     def close():
@@ -98,8 +102,8 @@ def show_android_setup(parent, data_dir, on_pair):
         for child in content.winfo_children():
             child.destroy()
         ttk.Label(content, text='QR для скачивания APK — не QR сопряжения',
-                  font=('Segoe UI', 11, 'bold')).pack(anchor='w', pady=(0, 6))
-        qr_label = ttk.Label(content, anchor='center')
+                  style='DB.Heading.TLabel').pack(anchor='w', pady=(0, 6))
+        qr_label = ttk.Label(content, style='DB.QR.TLabel', anchor='center')
         qr_label.pack(fill='x')
         try:
             image = qrcode.make(APK_DOWNLOAD_URL, box_size=4, border=4).convert('RGB')
@@ -107,7 +111,7 @@ def show_android_setup(parent, data_dir, on_pair):
             qr_label.configure(image=qr_label.image)
         except (OSError, ValueError, tk.TclError):
             qr_label.configure(text='QR недоступен. Скопируй публичную ссылку ниже.')
-        ttk.Label(content, text='1. Отсканируй QR обычной камерой телефона и скачай APK из GitHub.\n'
+        ttk.Label(content, style='DB.TLabel', text='1. Отсканируй QR обычной камерой телефона и скачай APK из GitHub.\n'
                   '2. Открой APK на Android. При запросе разреши установку из неизвестных '
                   'источников только выбранному браузеру или файловому менеджеру.\n'
                   '3. Подтверди установку вручную. После установки разрешение можно отключить.\n'
@@ -118,7 +122,7 @@ def show_android_setup(parent, data_dir, on_pair):
         link.insert(0, APK_DOWNLOAD_URL)
         link.configure(state='readonly')
         link.pack(fill='x')
-        row = ttk.Frame(content)
+        row = ttk.Frame(content, style='DB.Card.TFrame')
         row.pack(fill='x', pady=6)
 
         def copy():
@@ -131,11 +135,11 @@ def show_android_setup(parent, data_dir, on_pair):
 
         ttk.Button(row, text='Скопировать ссылку APK', command=copy).pack(side='left')
         ttk.Button(row, text='Открыть ссылку APK', command=open_link).pack(side='left', padx=8)
-        ttk.Button(content, text='Установлено → подключить к ПК', command=pair).pack(anchor='w', pady=6)
+        ttk.Button(content, style='DB.Primary.TButton', text='Установлено → подключить к ПК', command=pair).pack(anchor='w', pady=6)
 
-    ttk.Button(content, text='Установить на телефон', command=install).pack(anchor='w', pady=8)
-    ttk.Button(content, text='Уже установлено → подключить к ПК', command=pair).pack(anchor='w', pady=8)
-    ttk.Label(content, text='При подключении откроется отдельное окно для создания временного QR '
+    ttk.Button(content, style='DB.Primary.TButton', text='Установить на телефон', command=install).pack(anchor='w', pady=8)
+    ttk.Button(content, style='DB.Primary.TButton', text='Уже установлено → подключить к ПК', command=pair).pack(anchor='w', pady=8)
+    ttk.Label(content, style='DB.Muted.TLabel', text='При подключении откроется отдельное окно для создания временного QR '
               'сопряжения. Просто закрыть это окно — ничего не запускать.',
               wraplength=590).pack(anchor='w', pady=10)
     window.protocol('WM_DELETE_WINDOW', close)

@@ -62,14 +62,18 @@ def show_uploads(parent, data_dir):
     except (ValueError, TypeError):
         language = 'en'
     words = _LABELS[language]
+    try:
+        from theme import apply_theme, scrollable_card
+    except ModuleNotFoundError:
+        from desktop.theme import apply_theme, scrollable_card
     window = tk.Toplevel(parent)
+    apply_theme(window)
     window.title(words['title'])
-    window.geometry('660x230')
-    window.minsize(620, 230)
+    window.geometry(f'700x{min(290, max(400, window.winfo_screenheight() - 100))}')
+    window.minsize(520, 400)
     window.transient(parent)
-    frame = ttk.Frame(window, padding=18)
-    frame.pack(fill='both', expand=True)
-    ttk.Label(frame, text=words['intro'], wraplength=580).pack(anchor='w')
+    frame = scrollable_card(window)
+    ttk.Label(frame, style='DB.Heading.TLabel', text=words['intro'], wraplength=580).pack(anchor='w')
     current = tk.StringVar(master=window)
     # Horizontal scrolling keeps long local paths accessible without clipping the window.
     entry = ttk.Entry(frame, textvariable=current, state='readonly')
@@ -102,11 +106,11 @@ def show_uploads(parent, data_dir):
         if selected:
             guarded(lambda: model.select_from_picker(selected))
 
-    row = ttk.Frame(frame)
+    row = ttk.Frame(frame, style='DB.Card.TFrame')
     row.pack(fill='x', pady=(0, 12))
-    ttk.Button(row, text=words['choose'], command=select).pack(side='left')
+    ttk.Button(row, style='DB.Primary.TButton', text=words['choose'], command=select).pack(side='left')
     ttk.Button(row, text=words['reset'], command=lambda: guarded(model.reset)).pack(side='left', padx=8)
     ttk.Button(row, text=words['close'], command=window.destroy).pack(side='right')
-    ttk.Label(frame, text=words['local'], wraplength=580).pack(anchor='w')
+    ttk.Label(frame, style='DB.Muted.TLabel', text=words['local'], wraplength=580).pack(anchor='w')
     refresh()
     return window
