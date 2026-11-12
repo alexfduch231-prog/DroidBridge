@@ -261,6 +261,12 @@ class AndroidSetupTests(unittest.TestCase):
             seen.append((data_dir, http_port))
             return ttk.Frame(parent)
         old_pages = []
+        continuation = []
+        def gate(parent, data_dir, on_completed):
+            from tkinter import ttk
+            self.assertEqual(data_dir, self.data)
+            continuation.append(on_completed)
+            return ttk.Frame(parent)
         def inspect(root):
             try:
                 root.update()
@@ -268,10 +274,19 @@ class AndroidSetupTests(unittest.TestCase):
                 old_pages.append(page)
                 button(page, 'Уже установлено → подключить к ПК').invoke()
                 self.assertEqual(root.navigation.current_key, 'connection')
+                self.assertEqual(seen, [], 'Android installation must not bypass the mandatory WoL gate')
+                continuation[0]()
+                self.assertEqual(seen, [], 'missing completion must still block QR creation')
+                self.data.mkdir(parents=True, exist_ok=True)
+                (self.data / 'wol_onboarding.json').write_text(json.dumps({
+                    'schema': 1, 'adapter_guid': '00000000-0000-0000-0000-000000000001',
+                    'bios_manual_ack': True, 'network_compatible': True, 'completed': True}), encoding='utf-8')
+                continuation[0]()
                 self.assertFalse(any(isinstance(w, tk.Toplevel) for w in descendants(root)))
             finally:
                 root.destroy()
         with patch.object(sys, 'argv', ['launcher']), patch.object(launcher, 'data_directory', return_value=self.data), \
+             patch('desktop.wol_onboarding.build_onboarding_page', side_effect=gate), \
              patch('pairing_panel.build_pairing_page', side_effect=pair), patch.object(tk.Tk, 'mainloop', inspect):
             self.assertEqual(launcher.main(), 0)
         self.assertEqual(seen, [(self.data, 8765)])

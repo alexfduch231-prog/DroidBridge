@@ -259,7 +259,7 @@ def progress_text(step, label):
     return f'{step}/3 · {round(step * 100 / 3)}% · {label}'
 
 
-def build_wol_page(parent, data_dir):
+def build_wol_page(parent, data_dir, *, on_report=None, auto_check=True):
     """Build an unpacked local settings page. data_dir is intentionally not written."""
     import tkinter as tk
     from tkinter import messagebox, ttk
@@ -283,7 +283,8 @@ def build_wol_page(parent, data_dir):
               'После настройки без перезапуска карты драйвер может применить параметр только при следующем '
               'плановом перезапуске. Приложение не перезапускает карту или компьютер.',
               style='DB.Muted.TLabel', wraplength=620).pack(anchor='w', pady=6)
-    results = queue.Queue()
+    window.content = frame
+    results = queue.Queue(maxsize=8)
     state = {'disposed': False, 'timer': None, 'busy': False, 'report': None, 'setup': False}
 
     def cleanup(event=None):
@@ -311,7 +312,7 @@ def build_wol_page(parent, data_dir):
         refresh.configure(state='disabled' if value else 'normal')
         report = state['report']
         configure.configure(state='normal' if not value and setup_available() and report and report.adapter_guid and
-                            report.magic_packet in ('disabled', 'unknown') else 'disabled')
+                            report.magic_packet == 'disabled' else 'disabled')
 
     def poll():
         state['timer'] = None
@@ -332,6 +333,10 @@ def build_wol_page(parent, data_dir):
                                   'Windows завершила команду, но повторная проверка не подтвердила включение; проверь вручную. ')
                     status.set(prefix + summary_text(value))
                     set_busy(False)
+                    if on_report is not None:
+                        on_report(value)
+                    if state['disposed']:
+                        return
                 elif kind == 'error':
                     status.set(value)
                     progress_label.set('Проверка/настройка не подтверждена · смотри инструкцию ниже')
@@ -341,8 +346,10 @@ def build_wol_page(parent, data_dir):
                 state['timer'] = window.after(75, poll)
 
     def check():
-        if state['busy']:
+        if state['busy'] or state['disposed']:
             return
+        if on_report is not None:
+            on_report(None)
         state['setup'] = False
         state['report'] = None
         progress['value'] = 0
@@ -396,5 +403,7 @@ def build_wol_page(parent, data_dir):
               wraplength=620, style='DB.Muted.TLabel').pack(anchor='w')
     ttk.Label(frame, text='Дальше — BIOS/UEFI и ручной тест', style='DB.Heading.TLabel').pack(anchor='w', pady=(16, 6))
     ttk.Label(frame, text=BIOS_GUIDE, wraplength=620, style='DB.Muted.TLabel').pack(anchor='w')
-    check()
+    window.check = check
+    if auto_check:
+        check()
     return window

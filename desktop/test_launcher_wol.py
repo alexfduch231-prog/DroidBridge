@@ -1,4 +1,4 @@
-"""GUI-only, read-only deferred WOL diagnostics and embedded navigation."""
+"""Startup never probes WoL; explicit new pairing owns a disposable gate."""
 import importlib
 import os
 from pathlib import Path
@@ -17,10 +17,11 @@ def descendants(widget):
 
 
 class LauncherWolTests(unittest.TestCase):
-    def run_shell(self, inspect, start):
-        path = str(Path(__file__).resolve().parent)
-        sys.path.insert(0, path)
-        self.addCleanup(lambda: sys.path.remove(path))
+    def run_shell(self, inspect):
+        for folder in ('desktop', 'listener'):
+            path = str(Path(__file__).resolve().parents[1] / folder)
+            sys.path.insert(0, path)
+            self.addCleanup(lambda path=path: sys.path.remove(path))
         launcher = importlib.import_module('desktop.launcher')
         pending = {}
         serial = [0]
@@ -31,15 +32,11 @@ class LauncherWolTests(unittest.TestCase):
             return key
         def cancel(root, key):
             pending.pop(key, None)
-        def run_delay(delay):
-            key = next(key for key, item in pending.items() if item[0] == delay)
-            _, callback, args = pending.pop(key)
-            callback(*args)
         errors = []
         def mainloop(root):
             root.report_callback_exception = lambda *args: errors.append(args)
             try:
-                inspect(root, pending, run_delay)
+                inspect(root, pending, Path(directory))
             finally:
                 try:
                     root.destroy()
@@ -47,54 +44,49 @@ class LauncherWolTests(unittest.TestCase):
                     pass
             self.assertFalse(pending, 'root cleanup must cancel every owned timer')
             self.assertEqual(errors, [])
-        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ), patch.object(sys, 'argv', ['launcher']), patch.object(launcher, 'data_directory', return_value=Path(directory)), patch('runtime.create_update_signal', return_value=None), patch('update_manager.start_startup_check'), patch('desktop.mirror_handoff.GuiMirrorHandoff'), patch('wol_setup.start_diagnostics', side_effect=start) as worker, patch('wol_setup.configure_windows', side_effect=AssertionError('no automatic changes')), patch.object(tk.Tk, 'after', after), patch.object(tk.Tk, 'after_cancel', cancel), patch.object(tk.Tk, 'mainloop', mainloop):
+        with tempfile.TemporaryDirectory() as directory, patch.dict(os.environ), patch.object(sys, 'argv', ['launcher']), patch.object(launcher, 'data_directory', return_value=Path(directory)), patch('runtime.create_update_signal', return_value=None), patch('update_manager.start_startup_check'), patch('desktop.mirror_handoff.GuiMirrorHandoff'), patch('wol_setup.start_diagnostics', side_effect=AssertionError('no startup probe')), patch('desktop.wol_setup.start_diagnostics', side_effect=AssertionError('no startup probe')), patch('wol_setup.configure_windows', side_effect=AssertionError('no automatic changes')), patch.object(tk.Tk, 'after', after), patch.object(tk.Tk, 'after_cancel', cancel), patch.object(tk.Tk, 'mainloop', mainloop):
             self.assertEqual(launcher.main(), 0)
-        return worker
 
-    def test_deferred_once_progress_result_and_embedded_page(self):
-        from desktop.wol_setup import WolReport
-        queues = []
-        def start(results):
-            queues.append(results)
-            self.assertGreater(results.maxsize, 0)
-            results.put(('progress', 2))
-        def inspect(root, pending, run_delay):
+    def test_no_startup_probe_and_first_pairing_opens_embedded_gate(self):
+        def inspect(root, pending, data):
             root.update()
-            self.assertEqual(queues, [])
-            run_delay(1500)
-            self.assertEqual(len(queues), 1)
-            run_delay(100)
-            self.assertIn('2/3', root.wol_status.get())
-            queues[0].put(('done', WolReport('Ethernet', '', 'enabled')))
-            run_delay(100)
-            self.assertIn('не проверено', root.wol_status.get())
-            self.assertNotIn(100, [value[0] for value in pending.values()])
-            root.geometry('800x600')
-            for scaling in (2.0, 3.0):
-                root.tk.call('tk', 'scaling', scaling)
-                root.update()
-                for widget in descendants(root):
-                    if isinstance(widget, ttk.Button) and widget.cget('text') in ('Включение ПК', 'Настройки'):
-                        self.assertLessEqual(widget.winfo_rooty() + widget.winfo_height(), root.winfo_rooty() + root.winfo_height())
-            root.show_section('screen')
-            root.show_section('connection')
-            self.assertEqual(len(queues), 1)
-            with patch('wol_setup.build_wol_page', side_effect=lambda parent, data: ttk.Frame(parent)) as build:
-                next(w for w in descendants(root) if isinstance(w, ttk.Button) and w.cget('text') == 'Включение ПК').invoke()
-                self.assertEqual(root.navigation.current_key, 'wol')
-                build.assert_called_once()
+            self.assertNotIn(1500, [item[0] for item in pending.values()])
+            with patch('desktop.wol_onboarding.build_onboarding_page', side_effect=lambda parent, data, on_completed: ttk.Frame(parent)) as gate, patch('pairing_panel.build_pairing_page', side_effect=AssertionError('pairing cannot bypass gate')):
+                root.connection_pairing()
+                self.assertEqual(root.navigation.current_key, 'connection')
+                gate.assert_called_once()
+                root.show_section('screen')
+                root.show_section('connection')
+                root.connection_pairing()
+                self.assertEqual(gate.call_count, 2)
             self.assertFalse(any(isinstance(w, tk.Toplevel) for w in descendants(root)))
-        self.run_shell(inspect, start).assert_called_once()
+        self.run_shell(inspect)
 
-    def test_closed_root_ignores_late_worker_result(self):
-        queues = []
-        def inspect(root, pending, run_delay):
-            run_delay(1500)
-            self.assertEqual(len(queues), 1)
-            root.destroy()
-            self.assertFalse(pending)
-            queues[0].put(('error', 'late result'))
-        self.run_shell(inspect, lambda results: queues.append(results)).assert_called_once()
+    def test_existing_token_preserved_but_does_not_bypass_first_new_pairing(self):
+        def inspect(root, pending, data):
+            token = data / 'token.txt'
+            token.write_text('existing-connection-key', encoding='utf-8')
+            with patch('desktop.wol_onboarding.build_onboarding_page', side_effect=lambda parent, data, on_completed: ttk.Frame(parent)), patch('pairing_panel.build_pairing_page', side_effect=AssertionError('existing token is not completion')):
+                root.connection_pairing()
+                self.assertEqual(token.read_text('utf-8'), 'existing-connection-key')
+        self.run_shell(inspect)
 
-    def test_close_before_deferred_start_never_probes(self):
-        self.run_shell(lambda root, pending, run_delay: root.destroy(), lambda results: None).assert_not_called()
+    def test_stale_gate_callback_cannot_open_pairing_after_navigation(self):
+        import json
+        def inspect(root, pending, data):
+            callbacks = []
+            def gate(parent, data_dir, on_completed):
+                callbacks.append(on_completed)
+                return ttk.Frame(parent)
+            with patch('desktop.wol_onboarding.build_onboarding_page', side_effect=gate), patch('pairing_panel.build_pairing_page', side_effect=AssertionError('stale gate cannot open QR')):
+                root.connection_pairing()
+                (data / 'wol_onboarding.json').write_text(json.dumps({
+                    'schema': 1, 'adapter_guid': '00000000-0000-0000-0000-000000000001',
+                    'bios_manual_ack': True, 'network_compatible': True, 'completed': True}), encoding='utf-8')
+                root.show_section('screen')
+                callbacks[0]()
+                self.assertEqual(root.navigation.current_key, 'screen')
+        self.run_shell(inspect)
+
+    def test_root_close_without_explicit_pairing_never_probes(self):
+        self.run_shell(lambda root, pending, data: root.destroy())

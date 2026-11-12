@@ -8,7 +8,7 @@ SOURCE_FILES = (
     'desktop/launcher.py', 'desktop/runtime.py', 'desktop/theme.py', 'desktop/navigation.py', 'desktop/mirror_handoff.py',
     'desktop/pairing_panel.py', 'desktop/apps_panel.py',
     'desktop/upload_panel.py', 'listener/upload_settings.py',
-    'desktop/media_setup.py', 'listener/media_tools.py', 'desktop/wol_setup.py',
+    'desktop/media_setup.py', 'listener/media_tools.py', 'desktop/wol_setup.py', 'desktop/wol_onboarding.py',
     'desktop/android_setup.py',
     'desktop/update_protocol.py', 'desktop/update_manager.py', 'desktop/update_helper.py',
     'listener/pairing.py', 'listener/app_catalog.py', 'listener/app_icons.py',

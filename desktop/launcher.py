@@ -99,7 +99,6 @@ def run_launcher(update_signal=None):
     host = tk.StringVar(root, value='')
     status = tk.StringVar(root, value='Сервер ещё не запущен. Автозапуска нет.')
     tick_timer, update_timer, mirror_timer = [None], [None], [None]
-    wol_start_timer, wol_poll_timer = [None], [None]
     from desktop.mirror_handoff import GuiMirrorHandoff
     mirror_handoff = GuiMirrorHandoff(data)
     try:
@@ -133,7 +132,7 @@ def run_launcher(update_signal=None):
 
     ttk.Button(controls, text='Запустить сервер', style='DB.Primary.TButton', command=start_server).pack(side='left')
     ttk.Button(controls, text='Остановить', style='DB.TButton', command=stop_server).pack(side='left', padx=(8, 0))
-    wol_status = tk.StringVar(root, value='Включение ПК по сети: проверка Windows скоро начнётся. Настройки не меняются.')
+    wol_status = tk.StringVar(root, value='Включение ПК по сети настраивается один раз перед первым сопряжением. Автопроверок при запуске нет.')
     root.wol_status = wol_status
     wol_summary = ttk.Label(header, textvariable=wol_status, style='DB.Muted.TLabel', wraplength=720)
     wol_summary.pack(fill='x', pady=(8, 0))
@@ -168,13 +167,25 @@ def run_launcher(update_signal=None):
         return page
 
     def pairing():
-        from pairing_panel import build_pairing_page
-        def build_pairing(parent):
-            # Only this visit is a pairing flow. Any later return to connection
-            # requires another explicit already-installed action.
+        from desktop.wol_onboarding import build_onboarding_page, load_completion
+        gate_page = [None]
+        def continue_pairing():
+            # Only the live gate can authorize this visit. Returning to connection
+            # requires another explicit pairing action and fresh adapter validation.
+            if (closing[0] or navigation.current_key != 'connection'
+                    or navigation.pages.get('connection') is not gate_page[0] or not load_completion(data)):
+                return
+            from pairing_panel import build_pairing_page
+            def build_pairing(parent):
+                navigation.builders['connection'] = connection_page
+                return build_pairing_page(parent, data, http_port=8765)
+            navigation.builders['connection'] = build_pairing
+            show_section('connection', refresh=True)
+        def build_gate(parent):
             navigation.builders['connection'] = connection_page
-            return build_pairing_page(parent, data, http_port=8765)
-        navigation.builders['connection'] = build_pairing
+            gate_page[0] = build_onboarding_page(parent, data, on_completed=continue_pairing)
+            return gate_page[0]
+        navigation.builders['connection'] = build_gate
         show_section('connection', refresh=True)
 
     root.connection_pairing = pairing
@@ -278,49 +289,6 @@ def run_launcher(update_signal=None):
                        else 'Сервер завершён (код %s). См. listener.log в папке данных.' % code)
         tick_timer[0] = root.after(1000, tick)
 
-    import queue
-    wol_results = queue.Queue(maxsize=8)
-    wol_started = [False]
-    def poll_wol():
-        wol_poll_timer[0] = None
-        if closing[0]:
-            return
-        finished = False
-        from wol_setup import progress_text
-        for _ in range(8):
-            try:
-                kind, result = wol_results.get_nowait()
-            except queue.Empty:
-                break
-            if kind == 'progress' and result in (1, 2, 3):
-                wol_status.set('Включение ПК: ' + progress_text(result, 'Проверяем Windows без изменений'))
-            elif kind == 'done':
-                state = {'enabled': 'Magic Packet включён', 'disabled': 'Magic Packet выключен',
-                         'unsupported': 'драйвер не поддерживает Magic Packet', 'unknown': 'настройка Windows неизвестна'}
-                detail = state.get(result.magic_packet, state['unknown']) if result.adapter_name else 'адаптер не найден'
-                wol_status.set('Включение ПК: ' + detail + '. Пробуждение не проверено. Подробнее — в разделе слева.')
-                finished = True
-            elif kind == 'error':
-                wol_status.set('Включение ПК: проверка Windows не завершена. Открой раздел «Включение ПК».')
-                finished = True
-            if finished:
-                break
-        if not finished:
-            wol_poll_timer[0] = root.after(100, poll_wol)
-    def start_wol():
-        wol_start_timer[0] = None
-        if closing[0] or wol_started[0]:
-            return
-        wol_started[0] = True
-        from wol_setup import start_diagnostics
-        try:
-            start_diagnostics(wol_results)
-        except Exception:
-            wol_status.set('Включение ПК: проверка Windows недоступна. Открой раздел «Включение ПК».')
-            return
-        poll_wol()
-    wol_start_timer[0] = root.after(1500, start_wol)
-
     def cleanup(event):
         if event.widget is not root or closing[0]:
             return
@@ -329,7 +297,7 @@ def run_launcher(update_signal=None):
             mirror_handoff.close()
         except OSError:
             pass
-        for timer in (tick_timer, update_timer, mirror_timer, wol_start_timer, wol_poll_timer):
+        for timer in (tick_timer, update_timer, mirror_timer):
             if timer[0] is not None:
                 root.after_cancel(timer[0])
                 timer[0] = None

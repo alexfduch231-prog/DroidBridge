@@ -146,7 +146,7 @@ class PackagingTests(unittest.TestCase):
         p = load('build_support', ROOT / 'packaging' / 'build_support.py')
         modules = {'desktop/update_protocol.py', 'desktop/update_manager.py', 'desktop/update_helper.py'}
         self.assertTrue(modules <= set(p.SOURCE_FILES))
-        self.assertEqual(len(p.SOURCE_FILES), 27)
+        self.assertEqual(len(p.SOURCE_FILES), 28)
         with tempfile.TemporaryDirectory() as tmp:
             source, target = Path(tmp) / 'source', Path(tmp) / 'staged'
             for relative in p.SOURCE_FILES:
@@ -180,6 +180,45 @@ class PackagingTests(unittest.TestCase):
                 (output / 'build-manifest.json').write_text(json.dumps(manifest))
                 with self.assertRaisesRegex(ValueError, 'Unexpected private runtime file in payload:'):
                     p.audit(output, Path(tmp) / 'source')
+
+    def test_wol_onboarding_is_staged_without_private_completion_state(self):
+        support = load('wol_onboarding_support', ROOT / 'packaging' / 'build_support.py')
+        with tempfile.TemporaryDirectory() as tmp:
+            source, target = Path(tmp) / 'source', Path(tmp) / 'staged'
+            for relative in set(support.SOURCE_FILES) | {'desktop/wol_onboarding.py'}:
+                file = source / relative
+                file.parent.mkdir(parents=True, exist_ok=True)
+                file.write_text('# public onboarding module', encoding='utf-8')
+            for relative in ('wol_onboarding.json', 'desktop/WOL_ONBOARDING.JSON',
+                             'listener/Wol_Onboarding.Json'):
+                file = source / relative
+                file.parent.mkdir(parents=True, exist_ok=True)
+                file.write_text('PRIVATE ONBOARDING STATE', encoding='utf-8')
+            support.stage_sources(source, target)
+            self.assertTrue((target / 'desktop/wol_onboarding.py').is_file())
+            self.assertEqual((target / 'desktop/wol_onboarding.py').read_text(),
+                             '# public onboarding module')
+            self.assertFalse(any(file.name.lower() == 'wol_onboarding.json'
+                                 for file in target.rglob('*')))
+
+    def test_audit_rejects_wol_onboarding_state_nested_case_insensitive(self):
+        import json, sys
+        sys.path.insert(0, str(ROOT / 'packaging'))
+        from build_support import inventory
+        module = load('wol_onboarding_audit', ROOT / 'packaging' / 'audit_artifact.py')
+        for relative in ('wol_onboarding.json', '_internal/desktop/WOL_ONBOARDING.JSON',
+                         'media/sources/Wol_Onboarding.Json'):
+            with self.subTest(relative=relative), tempfile.TemporaryDirectory() as tmp:
+                output = Path(tmp) / 'build'
+                payload = output / 'dist' / 'DroidBridge'
+                file = payload / relative
+                file.parent.mkdir(parents=True)
+                file.write_text('{"completed":true}', encoding='utf-8')
+                manifest = {'source_sha256': {}, 'payload_sha256': inventory(payload),
+                            'contains_ffmpeg': False, 'self_test': {'ok': True}}
+                (output / 'build-manifest.json').write_text(json.dumps(manifest), encoding='utf-8')
+                with self.assertRaisesRegex(ValueError, 'Unexpected private runtime file in payload:'):
+                    module.audit(output, Path(tmp) / 'source')
 
     def test_wol_readiness_module_is_allowlisted(self):
         p = load('build_support', ROOT / 'packaging' / 'build_support.py')

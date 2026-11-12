@@ -8,9 +8,9 @@
 
 DroidBridge не подключается через облако. Основные команды, видео и файлы передаются без транспортного шифрования. Используй приложение только на своих устройствах или с согласия владельца и **не пробрасывай порты роутера в Интернет**.
 
-Эта инструкция описывает Windows **1.0.6** и Android **1.16** (сборка **26**). Android **1.15** остаётся совместимым для прежних функций, но для значков программ нужны обе новые версии. Обычный Windows-установщик содержит FFmpeg и ffplay; у прежних slim-установщиков медиакомплект отсутствует.
+Эта инструкция описывает Windows **1.0.7** и Android **1.16** (сборка **26**). Android **1.15** остаётся совместимым для прежних функций, но для значков программ нужны обе новые версии. Обычный Windows-установщик содержит FFmpeg и ffplay; у прежних slim-установщиков медиакомплект отсутствует.
 
-В 1.0.6 работа идёт в одном основном окне: слева **«Подключение»**, **«Экран телефона»**, **«Программы»**, **«Приём файлов»**, **«Включение ПК»** и **«Настройки»**. Установка Android-приложения, сопряжение и просмотр телефона открываются внутри этих разделов. Выбор файлов, подтверждения и системные запросы разрешений могут оставаться отдельными диалогами.
+В 1.0.7 работа идёт в одном основном окне: слева **«Подключение»**, **«Экран телефона»**, **«Программы»**, **«Приём файлов»**, **«Включение ПК»** и **«Настройки»**. Установка Android-приложения, сопряжение и просмотр телефона открываются внутри этих разделов. Выбор файлов, подтверждения и системные запросы разрешений могут оставаться отдельными диалогами.
 
 ## 1. Установи приложения
 
@@ -26,10 +26,22 @@ DroidBridge не подключается через облако. Основн�
 
 QR скачивания ведёт только к установочному файлу. Для подключения используется **другой QR** на странице сопряжения внутри раздела **«Подключение»**. После установки выбери **«Установлено → подключить к ПК»**; с начальной страницы — **«Уже установлено → подключить к ПК»**. Отдельное окно установки или сопряжения открывать не нужно.
 
+## Одноразовая настройка перед новым сопряжением
+
+В Windows **1.0.7** перед новым сопряжением обязательно завершить настройку включения ПК. Она открывается **внутри «Подключение»**, когда выбираешь подключение телефона; обычный раздел **«Включение ПК»** предназначен для диагностики и настройки, но не завершает этот шаг.
+
+1. Выполни проверку Windows. Для завершения нужен статус **Magic Packet «включено»** у той же физической сетевой карты. Если настройка выключена, но поддерживается, **«Настроить Windows»** предлагает изменение только после твоего согласия и UAC. Можно отказаться; новое сопряжение останется недоступным. «Выключено», «не поддерживается», «неизвестно», отсутствие карты и ошибки проверки завершить шаг не позволяют.
+2. Сам проверь BIOS/UEFI по инструкции производителя и совместимость локальной сети. Отметь оба подтверждения только после проверки. Приложение не входит в BIOS, не меняет его и не перезагружает ПК туда автоматически. [Подробности настройки](#включение-и-выключение-пк).
+3. Нажми **«Проверить и завершить настройку»**. Приложение заново проверит включённый Magic Packet у той же карты и сохранит завершение только при выполненных условиях. Затем нажми **«Продолжить сопряжение»**.
+
+Это не напоминание при каждом запуске: при старте автоматических проверок Windows нет. При явном новом сопряжении выполняется свежая проверка; сохранённое завершение для той же карты с включённым Magic Packet позволяет пропустить повторную настройку. Если карта изменилась или настройка больше не подтверждается, новое сопряжение снова требует завершить шаг. **Существующая рабочая пара не отключается**, повторно подключать уже работающий телефон ради обновления не нужно.
+
+Проверка только читает настройки, изменения Windows требуют отдельного согласия. Завершение шага и 100% **не доказывают реального пробуждения**: тест выполняется отдельно вручную, после сохранения работы.
+
 ## 2. Соедини телефон и ПК
 
 1. Открой DroidBridge на ПК и нажми **«Запустить сервер»**. Статус запущенного процесса ещё не означает, что сеть доступна с телефона.
-2. Слева открой **«Подключение» → «Уже установлено → подключить к ПК»**. На странице сопряжения выбери **«Сетевой адаптер»** домашней сети — Wi-Fi или Ethernet, через который ПК связан с телефоном. Если адаптеров несколько, не выбирай VPN или виртуальный адаптер наугад.
+2. Слева открой **«Подключение» → «Уже установлено → подключить к ПК»**. Если открылся одноразовый шаг настройки включения ПК, заверши его по инструкции выше и нажми **«Продолжить сопряжение»**. На странице сопряжения выбери **«Сетевой адаптер»** домашней сети — Wi-Fi или Ethernet, через который ПК связан с телефоном. Если адаптеров несколько, не выбирай VPN или виртуальный адаптер наугад.
 3. Нажми **«Создать новый QR»**. Оставайся на этой странице до завершения сопряжения: переход в другой раздел закрывает временное подключение и делает QR недействительным.
 4. На телефоне отсканируй QR камерой и открой ссылку в DroidBridge. Если камера не открывает её, на ПК нажми **«Скопировать ссылку»**, а в Android открой **«Добавить ПК»**, вставь ссылку и нажми **«Подключиться»**. Не отправляй ссылку посторонним.
 5. Сравни код на ПК и телефоне. Только если он совпадает и это твоё устройство, нажми **«Разрешить»** на ПК. Затем на телефоне нажми **«Сохранить ПК»**. Сохранение заменит текущую пару, если она уже была настроена.
@@ -77,7 +89,7 @@ H.264 экрана ПК сейчас использует **NVIDIA NVENC**: ну
 
 ### Экран телефона на ПК
 
-Оставь основное окно DroidBridge на ПК открытым и запусти сервер. На уже сопряжённом телефоне нажми **«Трансляция на ПК»** и подтверди системный запрос Android на захват экрана. В 1.0.6 этого достаточно: на ПК откроется встроенный раздел **«Экран телефона»**; адрес берётся из проверенного запроса телефона, вводить IP вручную не нужно. Если главное окно закрыто, открой DroidBridge и повтори запрос с телефона: один сервер без интерфейса может обслуживать команды, но не встроенный просмотр.
+Оставь основное окно DroidBridge на ПК открытым и запусти сервер. На уже сопряжённом телефоне нажми **«Трансляция на ПК»** и подтверди системный запрос Android на захват экрана. В 1.0.7 этого достаточно: на ПК откроется встроенный раздел **«Экран телефона»**; адрес берётся из проверенного запроса телефона, вводить IP вручную не нужно. Если главное окно закрыто, открой DroidBridge и повтори запрос с телефона: один сервер без интерфейса может обслуживать команды, но не встроенный просмотр.
 
 Для ручного подключения открой слева **«Экран телефона»**, введи локальный IP телефона и нажми **«Открыть экран телефона»**. Адрес телефона можно посмотреть в настройках текущей Wi-Fi-сети Android.
 
@@ -94,15 +106,15 @@ H.264 экрана ПК сейчас использует **NVIDIA NVENC**: ну
 - Незавершённая передача хранится до **7 дней**, после чего может потребоваться начать заново. Пауза сохраняет возможность продолжить. **«Удалить передачу»** позволяет удалить незавершённую копию на исходном ПК, если он доступен с прежним сохранённым подключением. Если ПК недоступен или подключение изменилось, выбери в следующем диалоге **«Только на телефоне»**: приложение забудет передачу и очистит её локальные данные, но частичная копия на ПК останется до истечения 7 дней. Уже готовый файл не удаляется. Если сохранённая передача на ПК уже истекла или отсутствует, **«Продолжить»** покажет ошибку, а не начнёт заново в другой папке; удали запись передачи и выбери файл снова явно. Частичная копия на ПК **ещё не готовый файл**: обычный файл появляется только после полной передачи и проверки. Во время подготовки и отправки держи Android-приложение **на экране** — работа в фоне или при заблокированном телефоне не гарантируется.
 - Для продолжения передачи папка приёма должна находиться на диске с поддержкой жёстких ссылок, например **NTFS**. Диски **FAT/exFAT не поддерживаются**: приложение сообщит об этом до начала новой передачи. Выбери папку на NTFS; не форматируй диск ради этой функции.
 - По умолчанию файл сохраняется в **«Загрузки»** на ПК. Чтобы изменить место, открой на Windows **«Приём файлов / Received files» → «Выбрать папку…»**. Новая папка применяется со следующей загрузки, уже начатую не переносит, в том числе при её продолжении. **«Сбросить в „Загрузки“»** возвращает папку по умолчанию. Если выбранная папка недоступна, выбери другую: приложение не сохраняет файл в другое место молча. Одноимённые файлы не перезаписываются.
-- Для кнопок запуска программ открой **«Программы / Applications» → «Добавить…»** на ПК, выбери локальный EXE или ярлык LNK и задай название. На телефоне нажми **«Обновить программы»**, если список ещё не появился. В Windows **1.0.6** и Android **1.16** (сборка **26**) телефон получает значки этих программ с ПК. Если значок неизвестен или извлечь его не удалось, показывается обычный значок программы; запуск от этого не меняется. Со старой версией на одной из сторон список и запуск остаются доступны, но без новых значков.
+- Для кнопок запуска программ открой **«Программы / Applications» → «Добавить…»** на ПК, выбери локальный EXE или ярлык LNK и задай название. На телефоне нажми **«Обновить программы»**, если список ещё не появился. В Windows **1.0.7** и Android **1.16** (сборка **26**) телефон получает значки этих программ с ПК. Если значок неизвестен или извлечь его не удалось, показывается обычный значок программы; запуск от этого не меняется. Со старой версией на одной из сторон список и запуск остаются доступны, но без новых значков.
 
 ### Включение и выключение ПК
 
 **«Включить»** на телефоне отправляет Wake-on-LAN — сетевой пакет пробуждения. Эта функция зависит от сетевой карты, питания, BIOS/UEFI и состояния компьютера; приложение не может гарантировать включение.
 
-В Windows 1.0.6:
+В Windows 1.0.7:
 
-1. Пока ПК включён, открой **«Включение ПК»**. При запуске DroidBridge читает настройки сетевых адаптеров без изменений. Результат проверки — не испытание пробуждения.
+1. Пока ПК включён, открой **«Включение ПК»**. Запусти проверку настроек сетевых адаптеров: она ничего не меняет. Автоматической проверки при запуске приложения нет. Результат проверки — не испытание пробуждения.
 2. Выбери свою физическую сетевую карту. **«Настроить Windows»** сначала запросит явное подтверждение, затем системное разрешение администратора UAC. Действие включает только поддерживаемую настройку **WakeOnMagicPacket** выбранной карты; неподдерживаемую возможность добавить не сможет. Можно отказаться. Сетевой адаптер не перезапускается автоматически (**NoRestart**), поэтому не считай, что изменение уже вступило в силу.
 3. Если требуется, самостоятельно открой BIOS/UEFI по инструкции производителя. Ищи **Wake-on-LAN**, **Power On by PCI-E / PCIe** или похожий пункт. **ErP / Deep Sleep** иногда отключает питание сетевой карты после выключения; проверь руководство своей платы, прежде чем менять настройку. DroidBridge не меняет BIOS автоматически.
 4. Обычно нужен подключённый Ethernet-кабель. Пробуждение по Wi-Fi зависит от конкретного оборудования и драйвера и поддерживается не везде. Сначала подключи телефон к включённому ПК, чтобы сохранить его сетевые данные.
@@ -131,9 +143,9 @@ H.264 экрана ПК сейчас использует **NVIDIA NVENC**: ну
 
 [README](../README.md#english) · [Download Windows and Android](https://github.com/alexfduch231-prog/DroidBridge/releases/latest)
 
-This guide describes Windows **1.0.6** and Android **1.16** (build **26**). Android **1.15** remains compatible with existing features, but program icons require both new versions. The standard Windows installer includes FFmpeg/ffplay; earlier slim installers do not.
+This guide describes Windows **1.0.7** and Android **1.16** (build **26**). Android **1.15** remains compatible with existing features, but program icons require both new versions. The standard Windows installer includes FFmpeg/ffplay; earlier slim installers do not.
 
-In 1.0.6, one main window contains **«Подключение»** (Connection), **«Экран телефона»** (Phone screen), **«Программы»** (Applications), **«Приём файлов»** (Received files), **«Включение ПК»** (Wake PC) and **«Настройки»** (Settings). Android download, pairing and phone viewing open inside these sections. File pickers, confirmations and system permission prompts can still open dialogs. The sidebar currently uses Russian labels.
+In 1.0.7, one main window contains **«Подключение»** (Connection), **«Экран телефона»** (Phone screen), **«Программы»** (Applications), **«Приём файлов»** (Received files), **«Включение ПК»** (Wake PC) and **«Настройки»** (Settings). Android download, pairing and phone viewing open inside these sections. File pickers, confirmations and system permission prompts can still open dialogs. The sidebar currently uses Russian labels.
 
 ## Before installing
 
@@ -141,11 +153,23 @@ You need Windows 10/11 x64, Android 5+ and a **trusted local network**. Ethernet
 
 The download QR only downloads the APK. Pairing uses a **different QR** on the pairing page inside **«Подключение»** (Connection). After installing, choose **«Установлено → подключить к ПК»** (Installed → connect to PC); from the initial page, choose **«Уже установлено → подключить к ПК»** (Already installed → connect to PC). No separate setup or pairing window is needed.
 
+## One-time setup before new pairing
+
+Windows **1.0.7** requires waking setup before new pairing. It opens **inside Connection** when you choose to connect a phone; the regular **«Включение ПК»** (Wake PC) section is for diagnostics and configuration, not for completing this step.
+
+1. Run the Windows check. Completion requires **Magic Packet enabled** on the same physical adapter. If the setting is disabled but supported, **«Настроить Windows»** (Configure Windows) offers a change only with your consent and UAC approval. You may decline; new pairing will remain unavailable. Disabled, unsupported or unknown status, a missing adapter and check errors cannot complete the step.
+2. Check BIOS/UEFI manually using the manufacturer's instructions, and check local-network compatibility. Select both acknowledgements only after checking. The app does not enter or change BIOS, or automatically reboot the PC into it. [Setup details](#waking-and-shutting-down-the-pc).
+3. Choose **«Проверить и завершить настройку»** (Check and complete setup). The app freshly checks that Magic Packet is enabled on the same adapter and saves completion only when the conditions are met. Then choose **«Продолжить сопряжение»** (Continue pairing).
+
+This is not a reminder on every launch: startup runs no automatic Windows check. Explicit new pairing runs a fresh check; saved completion for the same adapter with Magic Packet enabled skips repeated setup. A changed adapter or an unconfirmed setting requires completing setup again before new pairing. **An existing working pair is not disconnected**; you do not need to pair an already-working phone again just to update.
+
+Checking only reads settings; Windows changes need separate consent. Completion and 100% **do not prove real waking**: test separately by hand after saving your work.
+
 ## Install and pair
 
 1. On the [download page](https://github.com/alexfduch231-prog/DroidBridge/releases/latest), download the Windows installer and Android APK from **Assets**. You do not need the **Source code** archives. In Windows **«Подключение»** (Connection), choose **«Установить на телефон»** (Install on phone) and scan the QR with your phone camera to download the APK from GitHub. Choose **«Уже установлено → подключить к ПК»** (Already installed → connect to PC) to skip downloading and open pairing. The standard Windows installer includes Python, UI dependencies, FFmpeg and ffplay; media tools are selected automatically. No separate download or PATH edit is needed. The server does not start automatically.
 2. Install the APK. If Android asks, allow installation only for the app opening this download; you can revoke that permission afterwards. Do not disable Play Protect or other security tools.
-3. Open DroidBridge on Windows and click **«Запустить сервер»** (Start server) at the top of the window. Open **«Подключение» → «Уже установлено → подключить к ПК»** (Connection → Already installed → connect to PC). The pairing page has a RU/EN selector.
+3. Open DroidBridge on Windows and click **«Запустить сервер»** (Start server) at the top of the window. Open **«Подключение» → «Уже установлено → подключить к ПК»** (Connection → Already installed → connect to PC). If the one-time waking setup opens, complete it as described above and choose **«Продолжить сопряжение»** (Continue pairing). The pairing page has a RU/EN selector.
 4. Choose your home **Network adapter**, not a VPN or virtual adapter, and click **Create new QR**. Stay on this page until pairing finishes: navigating to another section closes the temporary session and invalidates its QR.
 5. Scan the QR with your phone camera. If the camera cannot open the link, click **Copy pairing link** on the PC, paste it into **Add PC** on Android and tap **Connect**. Keep this temporary link private.
 6. Compare the code on both devices. Only if it matches and this is your device, click **Allow** on the PC and **Save PC** on Android. Saving replaces an existing pair. Try **Lock** to check the connection, then unlock Windows normally.
@@ -191,7 +215,7 @@ Manual updating from the release page remains available. A digitally signed rele
 ## Using it
 
 - **PC screen:** tap **View PC screen** on Android and enable control in that screen for clicks and text. Tap for left click, hold for right click, move to drag. Scroll buttons and text input are available. Windows UAC/elevated windows are not bypassed.
-- **Phone screen:** keep the DroidBridge main window open and start its server. On the already-paired phone, tap **Cast phone to PC** and approve Android's system screen-capture prompt. In 1.0.6, this opens the embedded **«Экран телефона»** (Phone screen) section on the PC; its address comes from the authenticated phone request, so you do not need to type an IP. If the main window is closed, open DroidBridge and retry on the phone; a server alone can handle commands, but not embedded viewing. Manual connection is still available: open Phone screen, enter the phone's local IP and click **«Открыть экран телефона»** (Open phone screen). Find the phone IP in Android's current Wi-Fi network details. Navigating to another section closes the viewer connection; return and open it again to reconnect. Closing the PC viewer does not replace stopping Android casting: when finished, tap **Stop casting** on the phone or use its notification.
+- **Phone screen:** keep the DroidBridge main window open and start its server. On the already-paired phone, tap **Cast phone to PC** and approve Android's system screen-capture prompt. In 1.0.7, this opens the embedded **«Экран телефона»** (Phone screen) section on the PC; its address comes from the authenticated phone request, so you do not need to type an IP. If the main window is closed, open DroidBridge and retry on the phone; a server alone can handle commands, but not embedded viewing. Manual connection is still available: open Phone screen, enter the phone's local IP and click **«Открыть экран телефона»** (Open phone screen). Find the phone IP in Android's current Wi-Fi network details. Navigating to another section closes the viewer connection; return and open it again to reconnect. Closing the PC viewer does not replace stopping Android casting: when finished, tap **Stop casting** on the phone or use its notification.
 - **Phone control:** a phone-initiated session enables control automatically **only if** you have already enabled **Control phone from PC** in Android Accessibility settings. Otherwise it is view-only. To grant control, separately open **Allow phone control from PC** on Android, read the explanation and enable the service in system settings, then start casting again from the phone. The app cannot grant itself this permission. Gestures require Android 7+; revoke access in the same settings at any time. Automatic enabling applies to a new phone-initiated session, not every manual connection or reconnection; background operation and automatic control recovery are not guaranteed.
 - **Phone audio:** requires Android 10+, the requested audio permission and an app that allows playback capture. Not every app allows it. Protected screens may appear black. Restart mirroring after an APK update, phone rotation or enabling Accessibility. Stop it with **Stop casting** or the Android notification.
 - **Files:** choose **Upload file to PC** on Android. The maximum is 50 GiB. The app reads the source for an integrity check before sending, so preparing a large file may take time before any bytes are shown as sent.
@@ -199,16 +223,16 @@ Manual updating from the release page remains available. A digitally signed rele
 - Incomplete transfers are kept for up to **7 days**; afterwards you may need to start again. Pausing keeps the transfer available. **Discard transfer** can remove the incomplete copy on the original PC when it is online with the same saved connection. If the PC is unavailable or the connection has changed, choose **Phone only** in the next dialog: this clears the phone's pending entry and local data, but leaves the PC's partial copy until its 7-day expiry. An already completed file is not deleted. If the PC session has expired or is missing, **Continue** reports an error rather than silently restarting in another folder; explicitly discard the pending entry and select the file again. A partial copy on the PC **is not a finished file**: the normal file appears only after the entire transfer and integrity check succeed. Keep Android **in the foreground** during preparation and sending; background or locked-screen operation is not guaranteed.
 - Resumable uploads require a destination disk that supports hard links, such as **NTFS**. **FAT/exFAT disks are unsupported** and will be rejected before a new transfer starts. Choose a folder on NTFS; do not format a disk just for this feature.
 - On Windows, open **Приём файлов / Received files → Choose folder…** to select a destination, or **Reset to Downloads**. Changes affect the next upload, not the current one or its resumed transfer. An unavailable folder causes an error, not a silent save elsewhere. Existing files are not overwritten.
-- **Programs:** open **Программы / Applications → Add…** on Windows, choose a local EXE or LNK shortcut and name it. Tap **Refresh programs** on Android if needed. Windows **1.0.6** and Android **1.16** (build **26**) send these program icons from the PC to the phone. If an icon is unknown or cannot be extracted, a generic program icon is shown; launching is unchanged. With an older version on either side, the list and launching remain available without the new icons.
+- **Programs:** open **Программы / Applications → Add…** on Windows, choose a local EXE or LNK shortcut and name it. Tap **Refresh programs** on Android if needed. Windows **1.0.7** and Android **1.16** (build **26**) send these program icons from the PC to the phone. If an icon is unknown or cannot be extracted, a generic program icon is shown; launching is unchanged. With an older version on either side, the list and launching remain available without the new icons.
 - **Shutdown/restart:** save work first. You have 20 seconds to tap **Cancel command**. A lost response does not mean the command failed; avoid repeating it blindly.
 
 ### Waking and shutting down the PC
 
 **Wake** on the phone sends a Wake-on-LAN packet. Success depends on the adapter, power, BIOS/UEFI and PC state; the app cannot guarantee startup.
 
-In Windows 1.0.6:
+In Windows 1.0.7:
 
-1. While the PC is on, open **«Включение ПК»** (Wake PC). At startup, DroidBridge reads network-adapter settings without changing them. This check is not a wake test.
+1. While the PC is on, open **«Включение ПК»** (Wake PC). Run the network-adapter check; it changes no settings. Startup does not run this check automatically. This check is not a wake test.
 2. Select your physical network adapter. **«Настроить Windows»** (Configure Windows) asks for explicit confirmation, followed by Windows administrator approval through UAC. It enables only the selected adapter's supported **WakeOnMagicPacket** setting; it cannot add unsupported hardware capabilities. You can decline. The adapter is not restarted automatically (**NoRestart**), so do not assume the change has already taken effect.
 3. If needed, open BIOS/UEFI yourself using the manufacturer's instructions. Look for **Wake-on-LAN**, **Power On by PCI-E / PCIe** or a similar option. **ErP / Deep Sleep** may remove adapter power after shutdown; consult your motherboard's manual before changing it. DroidBridge does not change BIOS automatically.
 4. A connected Ethernet cable is usually needed. Wi-Fi waking depends on the hardware and driver and is not universally supported. Connect the phone while the PC is on first, so it saves network details.

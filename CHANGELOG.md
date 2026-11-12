@@ -1,5 +1,21 @@
 # Изменения / Changelog
 
+## 1.0.7 — 2026-11-12
+
+Windows **1.0.7**; Android без изменений — **1.16** (сборка **26**).
+
+- Перед новым сопряжением нужно один раз завершить настройку Wake-on-LAN внутри **«Подключение»**, затем нажать **«Продолжить сопряжение»**. Свежая проверка Windows должна подтвердить включённый Magic Packet у той же физической карты; также нужны явные подтверждения ручной проверки BIOS/UEFI и совместимости локальной сети. «Выключено», «не поддерживается», «неизвестно», отсутствие карты и ошибки проверки завершить шаг не позволяют.
+- Завершение сохраняется локально: при старте Windows не опрашивается и напоминание каждый раз не появляется. Свежая проверка нужна только при явном новом сопряжении; сохранённый результат для той же карты с включённым Magic Packet позволяет пропустить повторную настройку. Существующая рабочая пара не отключается и не требует повторного сопряжения ради обновления.
+- Проверка не меняет настройки. Изменения Windows — только после согласия и UAC; BIOS/UEFI настраивается вручную. Приложение не принуждает к правам администратора, не входит в BIOS и не выключает ПК для теста. Завершение и 100% не доказывают реальное пробуждение.
+- Одноразовый шаг доступен внутри подключения; обычный раздел **«Включение ПК»** остаётся для диагностики и настройки.
+
+Windows **1.0.7**; Android is unchanged at **1.16** (build **26**).
+
+- Before new pairing, complete Wake-on-LAN setup once inside **«Подключение»** (Connection), then choose **«Продолжить сопряжение»** (Continue pairing). A fresh Windows check must confirm Magic Packet enabled on the same physical adapter, with explicit acknowledgements of a manual BIOS/UEFI check and local-network compatibility. Disabled, unsupported or unknown status, a missing adapter and check errors cannot complete the step.
+- Completion is saved locally: startup does not probe Windows or repeat a reminder. A fresh check runs only for explicit new pairing; saved completion for the same adapter with Magic Packet enabled skips repeated setup. An existing working pair is not disconnected and does not need re-pairing just to update.
+- Checking changes no settings. Windows changes require consent and UAC; BIOS/UEFI setup stays manual. The app does not force administrator access, enter BIOS or shut down the PC for a test. Completion and 100% do not prove real waking.
+- The one-time step is inside Connection; the regular Wake PC section remains for diagnostics and configuration.
+
 ## 1.0.6 — 2026-11-12
 
 Windows **1.0.6**, Android **1.16** (сборка **26**). Скачать — на [странице релизов](https://github.com/alexfduch231-prog/DroidBridge/releases/latest).
