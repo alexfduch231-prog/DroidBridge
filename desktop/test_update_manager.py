@@ -407,7 +407,7 @@ class HelperTests(unittest.TestCase):
                     script = self.h.helper_script(exe, setup, hashlib.sha256(setup.read_bytes()).hexdigest(), setup.stat().st_size, sequence=sequence, expires=expiry)
                     # Suppress blocking message box in negative-only native tests.
                     script = script.replace("  Add-Type -AssemblyName System.Windows.Forms", "  Write-Output $_.Exception.Message\n  # no dialog in offline test")
-                    script = script.replace("  [System.Windows.Forms.MessageBox]::Show('DroidBridge update stopped safely. ' + $_.Exception.Message, 'DroidBridge update') | Out-Null", '')
+                    script = script.replace("  [System.Windows.Forms.MessageBox]::Show('PConDistance update stopped safely. ' + $_.Exception.Message, 'PConDistance update') | Out-Null", '')
                     backend = "function Start-Process { throw 'UNEXPECTED_INSTALL' }; "
                     result = subprocess.run(['C:/Windows/System32/WindowsPowerShell/v1.0/powershell.exe', '-NoProfile', '-NonInteractive', '-EncodedCommand', base64.b64encode((backend + script).encode('utf-16le')).decode()], capture_output=True, timeout=20)
                     self.assertEqual(result.returncode, 0, result.stderr.decode(errors='replace'))

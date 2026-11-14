@@ -1,6 +1,6 @@
 # Security
 
-DroidBridge is intended for your own devices on a trusted LAN. It is not hardened for exposure to the Internet. HTTP/video/file streams do not provide transport encryption. Authenticated discovery does not make other traffic encrypted.
+PConDistance is intended for your own devices on a trusted LAN. It is not hardened for exposure to the Internet. HTTP/video/file streams do not provide transport encryption. Authenticated discovery does not make other traffic encrypted.
 
 Never forward the listener port on your router. Use a trusted network or an authenticated encrypted tunnel. Keep access keys private and rotate them if disclosed. Android screen capture and Accessibility control require explicit device-owner consent.
 

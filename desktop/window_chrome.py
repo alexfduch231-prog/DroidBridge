@@ -290,7 +290,7 @@ class WindowChrome:
     Custom buttons are keyboard-focusable; Alt+Space opens the native system menu.
     Windows 11 hover Snap Layouts are not emulated (Win+arrows still work).
     """
-    def __init__(self, root, on_close, *, title='DroidBridge'):
+    def __init__(self, root, on_close, *, title='PConDistance'):
         self.root, self.on_close = root, on_close
         self._disposed = False
         self.native_active = False

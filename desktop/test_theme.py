@@ -108,7 +108,7 @@ class ThemeTests(unittest.TestCase):
                     self.assertLessEqual(nav.master.winfo_width(), int(root.winfo_width() * .45))
                     self.assertLessEqual(nav.winfo_reqwidth(), nav.winfo_width())
                     from update_protocol import CURRENT_VERSION
-                    version = next(w for w in descendants(nav.master) if isinstance(w, ttk.Label) and w.cget('text') == 'DroidBridge ' + CURRENT_VERSION)
+                    version = next(w for w in descendants(nav.master) if isinstance(w, ttk.Label) and w.cget('text') == 'PConDistance ' + CURRENT_VERSION)
                     manual_update = next(w for w in descendants(nav.master) if isinstance(w, ttk.Button) and ''.join(str(w.cget('text')).split()) == 'Проверитьобновления')
                     manual_update.invoke()
                     manual_check.assert_called_once_with(root, Path(isolated), None)

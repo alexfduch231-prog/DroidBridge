@@ -51,7 +51,7 @@ def make_opener():
 
 def open_url(url):
     validate_https_url(url)
-    request = urllib.request.Request(url, headers={'User-Agent': 'DroidBridge/' + CURRENT_VERSION,
+    request = urllib.request.Request(url, headers={'User-Agent': 'PConDistance/' + CURRENT_VERSION,
                                                   'Accept': 'application/octet-stream'})
     return make_opener().open(request, timeout=10)
 
@@ -206,7 +206,7 @@ class UpdateController:
                     self._offer(value)
                 elif kind == 'latest' and self.manual:
                     from tkinter import messagebox
-                    messagebox.showinfo('Проверка обновлений', 'Установлена актуальная версия DroidBridge.', parent=self.root)
+                    messagebox.showinfo('Проверка обновлений', 'Установлена актуальная версия PConDistance.', parent=self.root)
                 elif kind == 'check_failed' and self.manual:
                     from tkinter import messagebox
                     messagebox.showerror('Проверка обновлений', value, parent=self.root)
@@ -242,7 +242,7 @@ class UpdateController:
             from desktop.theme import apply_theme
         dialog = tk.Toplevel(self.root)
         apply_theme(dialog)
-        dialog.title('DroidBridge update')
+        dialog.title('PConDistance update')
         dialog.transient(self.root)
         self.window = dialog
         dialog.protocol('WM_DELETE_WINDOW', self._dismiss_offer)
@@ -259,8 +259,8 @@ class UpdateController:
                 self._dismiss_offer()
                 return
             from tkinter import messagebox
-            if not messagebox.askyesno('Остановить DroidBridge для обновления?',
-                    'После загрузки будут закрыты все окна DroidBridge из этой установки, сервер и просмотр. '
+            if not messagebox.askyesno('Остановить PConDistance для обновления?',
+                    'После загрузки будут закрыты все окна PConDistance из этой установки, сервер и просмотр. '
                     'Текущие передачи файлов прервутся; дождись их завершения, если это важно. '
                     'После успешной установки откроется только главное окно, без запуска сервера. Продолжить?', parent=dialog):
                 return

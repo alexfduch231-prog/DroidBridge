@@ -12,7 +12,7 @@ from listener.media_tools import (MediaToolsError, resolve_media_tools,
                                   save_media_directory, reset_media_directory)
 
 
-RESTART_NOTICE = 'Изменения применятся при новом запуске сервера и окна просмотра. Останови и запусти их заново; закрывать DroidBridge не нужно.'
+RESTART_NOTICE = 'Изменения применятся при новом запуске сервера и окна просмотра. Останови и запусти их заново; закрывать PConDistance не нужно.'
 
 
 _jobs_lock = threading.Lock()
@@ -70,10 +70,10 @@ def build_media_page(parent, data_dir):
     window = ttk.Frame(parent, style='DB.TFrame')
     frame = scrollable_card(window)
     ttk.Label(frame, text='Видео H.264 и звук: FFmpeg / ffplay', style='DB.Heading.TLabel').pack(anchor='w')
-    ttk.Label(frame, style='DB.Muted.TLabel', text='Обычная установка DroidBridge уже содержит инструменты видео и звука. '
+    ttk.Label(frame, style='DB.Muted.TLabel', text='Обычная установка PConDistance уже содержит инструменты видео и звука. '
               'Они выбираются автоматически — менять PATH не нужно. '
               'Здесь можно выбрать другую сборку вручную или вернуть автоматический поиск.', wraplength=620).pack(anchor='w', pady=10)
-    ttk.Label(frame, style='DB.Danger.TLabel', text='Это исполняемые программы. После твоего подтверждения DroidBridge запустит '
+    ttk.Label(frame, style='DB.Danger.TLabel', text='Это исполняемые программы. После твоего подтверждения PConDistance запустит '
               'оба файла с -version для проверки (до 5 секунд на каждый), а затем будет использовать '
               'их для видео и звука. Выбирай только сборку из доверенного источника.', wraplength=620).pack(anchor='w')
     current = tk.StringVar(master=window)
@@ -114,7 +114,7 @@ def build_media_page(parent, data_dir):
             if tools.ffmpeg and tools.ffplay:
                 labels = {
                     'configured': 'Выбраны вручную',
-                    'distribution': 'В комплекте DroidBridge',
+                    'distribution': 'В комплекте PConDistance',
                     'path': 'Найдены в PATH',
                     'detected': 'Найдены на компьютере',
                 }

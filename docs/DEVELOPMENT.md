@@ -1,4 +1,4 @@
-# Разработка DroidBridge / Development
+# Разработка PConDistance / Development
 
 [README](../README.md) · [Пользовательская инструкция / User guide](GETTING_STARTED.md) · [Contributing](../CONTRIBUTING.md) · [Security](../SECURITY.md)
 
@@ -71,9 +71,9 @@ Minimum Android is API 21; control gestures require API 24 and playback-audio ca
 
 ### QR dependency / Зависимость QR
 
-Android uses ZXing core **3.3.3** (Apache-2.0), pinned for the API-21 Java build. The build downloads it from Maven Central and requires SHA-256 `5820f81e943e4bce0329306621e2d6255d2930b0a6ce934c5c23c0d6d3f20599`. The JAR is not committed; run the build once before Java decoder tests. The license is included in `app/assets/ZXING-LICENSE.txt` and the APK. This older version is not a claim of a security audit; dependency upgrades require API-21 device/build testing. Scanner inputs accept only validated DroidBridge pairing links, not arbitrary actions or URLs.
+Android uses ZXing core **3.3.3** (Apache-2.0), pinned for the API-21 Java build. The build downloads it from Maven Central and requires SHA-256 `5820f81e943e4bce0329306621e2d6255d2930b0a6ce934c5c23c0d6d3f20599`. The JAR is not committed; run the build once before Java decoder tests. The license is included in `app/assets/ZXING-LICENSE.txt` and the APK. This older version is not a claim of a security audit; dependency upgrades require API-21 device/build testing. Scanner inputs accept only validated PConDistance pairing links, not arbitrary actions or URLs.
 
-Android использует ZXing core **3.3.3**, Apache-2.0. Сборка скачивает закреплённый JAR из Maven Central и проверяет SHA-256; бинарник не хранится в Git. Перед Java-тестами декодера сначала запусти сборку. Лицензия включена в APK. Версия выбрана для совместимости с текущей сборкой API 21; это не заявление о независимом аудите безопасности. Сканер принимает только проверенные ссылки сопряжения DroidBridge.
+Android использует ZXing core **3.3.3**, Apache-2.0. Сборка скачивает закреплённый JAR из Maven Central и проверяет SHA-256; бинарник не хранится в Git. Перед Java-тестами декодера сначала запусти сборку. Лицензия включена в APK. Версия выбрана для совместимости с текущей сборкой API 21; это не заявление о независимом аудите безопасности. Сканер принимает только проверенные ссылки сопряжения PConDistance.
 
 ## Windows installer
 
@@ -174,9 +174,9 @@ Do not document public port forwarding, UAC bypass or protected-screen bypass as
 
 ## Совместимость и локальные данные / Compatibility and local data
 
-Бренд DroidBridge не совпадает с некоторыми прежними техническими именами; они сохранены для совместимости, а не являются отдельными приложениями:
+Бренд PConDistance не совпадает с некоторыми прежними техническими именами; они сохранены для совместимости, а не являются отдельными приложениями:
 
-Some technical names predate the DroidBridge brand and remain for compatibility:
+Some technical names predate the PConDistance brand and remain for compatibility:
 
 - Android package: `ru.alexv.pcmote`.
 - Pairing URI: `pcmote://pair`.

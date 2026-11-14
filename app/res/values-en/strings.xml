@@ -1,16 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="update_title">DroidBridge update</string>
+    <string name="update_title">PConDistance update</string>
     <string name="update_available">Version %1$s is available. Download the update? Android will require installation confirmation.</string>
     <string name="update_now">Update</string>
     <string name="update_later">Not now</string>
     <string name="update_progress">Downloading update</string>
     <string name="update_cancel">Cancel</string>
     <string name="update_failed">The update could not be verified or downloaded. Your current version continues to work.</string>
-    <string name="update_permission">Allow updates from DroidBridge in system settings. After returning, Android will ask you to confirm installation.</string>
-    <string name="update_reopen">Update installed. Tap to open DroidBridge.</string>
-    <string name="app_name">DroidBridge</string>
-    <string name="title">DroidBridge</string>
+    <string name="update_permission">Allow updates from PConDistance in system settings. After returning, Android will ask you to confirm installation.</string>
+    <string name="update_reopen">Update installed. Tap to open PConDistance.</string>
+    <string name="app_name">PConDistance</string>
+    <string name="title">PConDistance</string>
     <string name="subtitle">Wake with Wake-on-LAN, shut down or restart over your network. Your phone and PC must be on the same Wi-Fi network.</string>
     <string name="sec_conn">Connection</string>
     <string name="sec_buttons">Power controls</string>
@@ -79,7 +79,7 @@
     <string name="mirror_pc_unreachable">PC did not open the cast. Check the connection and key; stop casting and try again.</string>
     <string name="mirror_stopping">Stopping cast…</string>
     <string name="mirror_notif_channel">Cast to PC</string>
-    <string name="mirror_notif_title">DroidBridge · casting</string>
+    <string name="mirror_notif_title">PConDistance · casting</string>
     <string name="mirror_notif_wait">Waiting for the PC window…</string>
     <string name="mirror_notif_live">Phone screen and audio are being sent to PC</string>
     <string name="mirror_notif_client_gone">PC disconnected</string>
@@ -175,7 +175,7 @@
     <string name="power_response_lost">Connected but no response arrived (%1$s). Check the PC log: the command may have run.</string>
     <string name="power_unreachable">No connection: %1$s. Check the PC listener and open port.</string>
     <string name="pair_title">Add PC</string>
-    <string name="pair_instructions">On the PC open DroidBridge → Connect phone. Paste the link or open it with a camera that supports these links. Compare the code on both devices and approve on the PC. Start again after rotating or closing this screen.</string>
+    <string name="pair_instructions">On the PC open PConDistance → Connect phone. Paste the link or open it with a camera that supports these links. Compare the code on both devices and approve on the PC. Start again after rotating or closing this screen.</string>
     <string name="pair_link_hint">pcmote://pair… link</string>
     <string name="pair_connect">Connect</string>
     <string name="pair_replace_warning">Only connect to your own PC on a trusted local network. After approval the new pairing replaces the current one.</string>
@@ -188,7 +188,7 @@
     <string name="pair_save">Save PC</string>
     <string name="pair_saved">PC paired</string>
     <string name="pair_failed">Pairing did not complete. Check the network and PC approval, then get a new link. The current pairing was not changed.</string>
-    <string name="apps_empty">No programs yet. On the PC open DroidBridge → Programs and add programs.</string>
+    <string name="apps_empty">No programs yet. On the PC open PConDistance → Programs and add programs.</string>
     <string name="apps_unavailable">Connect to the PC to load programs.</string>
     <string name="apps_refresh">Refresh programs</string>
     <string name="upload_resume">Continue</string>
@@ -236,10 +236,10 @@
     <string name="theme_forest">Forest</string>
     <string name="theme_plum">Plum</string>
     <string name="scan_qr">Scan QR</string>
-    <string name="scan_instructions">Point the camera at the pairing QR in DroidBridge on your PC</string>
+    <string name="scan_instructions">Point the camera at the pairing QR in PConDistance on your PC</string>
     <string name="scan_permission">Allow camera access or paste the link manually in the pairing screen</string>
     <string name="scan_unavailable">Camera unavailable. Close other camera apps and try again</string>
-    <string name="scan_invalid">Not a DroidBridge pairing QR</string>
+    <string name="scan_invalid">Not a PConDistance pairing QR</string>
     <string name="scan_retry">Retry / allow camera</string>
     <string name="screen_keyboard">Keyboard</string>
 </resources>

@@ -1,6 +1,6 @@
 # Contributing · Как предложить улучшение
 
-Спасибо за помощь DroidBridge!
+Спасибо за помощь PConDistance!
 
 ## Ошибка или идея / Bug or feature
 

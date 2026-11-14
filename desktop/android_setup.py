@@ -4,7 +4,7 @@ import os
 from pathlib import Path
 import tempfile
 
-APK_DOWNLOAD_URL = 'https://github.com/alexfduch231-prog/DroidBridge/releases/download/v1.0.10/DroidBridge-1.20-android.apk'
+APK_DOWNLOAD_URL = 'https://github.com/alexfduch231-prog/PConDistance/releases/download/v1.0.11/PConDistance-1.21-android.apk'
 _CONFIG_LIMIT = 4096
 
 
@@ -60,7 +60,7 @@ def build_android_setup_page(parent, data_dir, on_pairing):
     window = ttk.Frame(parent, style='DB.TFrame')
     closed = [False]
     frame = scrollable_card(window)
-    ttk.Label(frame, text='DroidBridge на Android', style='DB.Heading.TLabel').pack(anchor='w')
+    ttk.Label(frame, text='PConDistance на Android', style='DB.Heading.TLabel').pack(anchor='w')
     ttk.Label(frame, style='DB.Muted.TLabel', text='Сначала установи приложение на телефон, затем подключи его к ПК. '
               'Скачивание APK и безопасное сопряжение — разные шаги.',
               wraplength=590).pack(anchor='w', pady=10)
@@ -159,7 +159,7 @@ def show_android_setup(parent, data_dir, on_pair):
     window = tk.Toplevel(parent)
     apply_theme(window)
     parent._android_setup_window = window
-    window.title('DroidBridge — приложение на телефон')
+    window.title('PConDistance — приложение на телефон')
     window.geometry(f'680x{min(760, max(400, window.winfo_screenheight() - 100))}')
     window.minsize(520, 400)
     window.transient(parent)

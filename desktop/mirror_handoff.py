@@ -22,7 +22,7 @@ _HEARTBEAT = 'mirror-gui-heartbeat.json'
 _LIMIT = 1024
 _MAX_AGE = 10.0
 _ID = re.compile(r'[0-9a-f]{32}\Z')
-_OPEN_GUI = 'Открой главное окно DroidBridge'
+_OPEN_GUI = 'Открой главное окно PConDistance'
 
 
 @dataclass(frozen=True)

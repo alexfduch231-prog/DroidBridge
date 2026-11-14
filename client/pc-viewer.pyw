@@ -194,7 +194,7 @@ class Viewer(object):
 
     def _build_ui(self):
         if not getattr(self, "embedded", False):
-            self.root.title("Экран телефона — DroidBridge")
+            self.root.title("Экран телефона — PConDistance")
             apply_theme(self.root)
             sw = self.root.winfo_screenwidth()
             sh = self.root.winfo_screenheight()

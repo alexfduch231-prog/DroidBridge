@@ -221,12 +221,12 @@ def run_launcher(update_signal=None, single_instance=None):
     root = tk.Tk()
     if single_instance is not None:
         single_instance.attach(root)
-    root.title('DroidBridge')
+    root.title('PConDistance')
     data = data_directory()
     from desktop.theme import ThemeController
     theme_controller = ThemeController(root, data)
     from desktop.window_chrome import WindowChrome
-    chrome = WindowChrome(root, lambda: close(), title='DroidBridge')
+    chrome = WindowChrome(root, lambda: close(), title='PConDistance')
     root.window_chrome = chrome
     # Leave room for the taskbar and native resize frame. On tiny work areas,
     # allow scrolling instead of pushing native controls off-screen or shrinking fonts.
@@ -266,12 +266,12 @@ def run_launcher(update_signal=None, single_instance=None):
         label.pack(anchor='w', padx=12, **packing)
         sidebar_view.labels.append(label)
         return label
-    sidebar_label(sidebar, 'DroidBridge', 'DB.Title.TLabel', pady=(0, 4))
+    sidebar_label(sidebar, 'PConDistance', 'DB.Title.TLabel', pady=(0, 4))
     sidebar_label(sidebar, 'ПК и телефон, рядом', 'DB.Subtitle.TLabel', pady=(0, 22))
     from update_protocol import CURRENT_VERSION
     footer = ttk.Frame(sidebar, style='DB.TFrame')
     footer.pack(side='bottom', fill='x')
-    sidebar_label(footer, 'DroidBridge ' + CURRENT_VERSION, 'DB.Subtitle.TLabel', pady=(12, 4))
+    sidebar_label(footer, 'PConDistance ' + CURRENT_VERSION, 'DB.Subtitle.TLabel', pady=(12, 4))
     def check_updates():
         from update_manager import start_manual_check
         start_manual_check(root, data, update_signal)
@@ -527,7 +527,7 @@ def run_launcher(update_signal=None, single_instance=None):
     root.bind('<Destroy>', cleanup, add='+')
     def close():
         live = [child for child in children if child.poll() is None]
-        if live and not messagebox.askyesno('Закрыть DroidBridge?', 'Остановить запущенные этим окном сервер и просмотр?', parent=root):
+        if live and not messagebox.askyesno('Закрыть PConDistance?', 'Остановить запущенные этим окном сервер и просмотр?', parent=root):
             return
         root.destroy()
     root.protocol('WM_DELETE_WINDOW', close)

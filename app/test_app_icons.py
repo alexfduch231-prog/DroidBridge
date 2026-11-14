@@ -69,5 +69,5 @@ public class IconProbe {
    self.assertIn(part,text)
   self.assertIn('host.equals(prefs.getString(K_HOST',text); self.assertIn('key.equals(prefs.getString(K_KEY',text)
   manifest=(ROOT/'AndroidManifest.xml').read_text(encoding='utf-8')
-  self.assertIn('android:versionCode="30"',manifest); self.assertIn('android:versionName="1.20"',manifest)
+  self.assertIn('android:versionCode="31"',manifest); self.assertIn('android:versionName="1.21"',manifest)
 if __name__=='__main__':unittest.main(verbosity=2)

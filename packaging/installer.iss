@@ -9,17 +9,17 @@
 #endif
 [Setup]
 AppId={{C4DA7A3E-0382-4A31-A965-D81455D35B1E}
-AppName=DroidBridge
-AppVersion=1.0.10
-AppPublisher=DroidBridge contributors
+AppName=PConDistance
+AppVersion=1.0.11
+AppPublisher=PConDistance contributors
 DefaultDirName={localappdata}\Programs\DroidBridge
-DefaultGroupName=DroidBridge
+DefaultGroupName=PConDistance
 PrivilegesRequired=lowest
 ArchitecturesAllowed=x64compatible
 ArchitecturesInstallIn64BitMode=x64compatible
 MinVersion=10.0
 OutputDir={#ArtifactDir}
-OutputBaseFilename=DroidBridge-1.0.10-windows-x64-setup
+OutputBaseFilename=PConDistance-1.0.11-windows-x64-setup
 Compression=lzma2/normal
 SolidCompression=yes
 WizardStyle=modern
@@ -36,6 +36,10 @@ Name: desktopicon; Description: Создать ярлык на рабочем с
 [Files]
 Source: {#PayloadDir}\*; DestDir: {app}; Flags: ignoreversion recursesubdirs createallsubdirs
 [Icons]
-Name: {group}\DroidBridge; Filename: {app}\DroidBridge.exe
-Name: {autodesktop}\DroidBridge; Filename: {app}\DroidBridge.exe; Tasks: desktopicon
+Name: {userprograms}\PConDistance\PConDistance; Filename: {app}\DroidBridge.exe; IconFilename: {app}\_internal\assets\droidbridge.ico
+Name: {autodesktop}\PConDistance; Filename: {app}\DroidBridge.exe; IconFilename: {app}\_internal\assets\droidbridge.ico; Tasks: desktopicon
 ; Deliberately no Run, services, autorun, firewall or runtime-data uninstall actions.
+
+[InstallDelete]
+Type: files; Name: {autodesktop}\DroidBridge.lnk
+Type: files; Name: {userprograms}\DroidBridge\DroidBridge.lnk

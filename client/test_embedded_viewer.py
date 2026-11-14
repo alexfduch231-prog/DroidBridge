@@ -349,7 +349,7 @@ class EmbeddedViewerTests(unittest.TestCase):
 
     def test_standalone_still_configures_window_and_close_destroys_it(self):
         viewer = self.module.Viewer(self.root, "localhost", 8768, "test-token", audio=False)
-        self.assertEqual(self.root.title(), "Экран телефона — DroidBridge")
+        self.assertEqual(self.root.title(), "Экран телефона — PConDistance")
         self.module.apply_theme.assert_called_once_with(self.root)
         self.assertNotEqual(self.root.protocol("WM_DELETE_WINDOW"), self.protocol)
         viewer.close()

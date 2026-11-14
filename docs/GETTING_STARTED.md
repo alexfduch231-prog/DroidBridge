@@ -1,12 +1,12 @@
-# Первое подключение DroidBridge
+# Первое подключение PConDistance
 
-[На главную](../README.md) · [Экраны с пояснениями](SCREENSHOTS.md) · [English](#english) · [Скачать Windows и Android](https://github.com/alexfduch231-prog/DroidBridge/releases/latest)
+[На главную](../README.md) · [Экраны с пояснениями](SCREENSHOTS.md) · [English](#english) · [Скачать Windows и Android](https://github.com/alexfduch231-prog/PConDistance/releases/latest)
 
 ## Перед установкой
 
 Нужны Windows 10/11 x64, Android 5+ и общая **доверенная локальная сеть**. Компьютер может быть подключён к роутеру кабелем, телефон — по Wi-Fi; важно, чтобы роутер разрешал связь между ними. Гостевая Wi-Fi-сеть часто её запрещает.
 
-DroidBridge не подключается через облако. Основные команды, видео и файлы передаются без транспортного шифрования. Используй приложение только на своих устройствах или с согласия владельца и **не пробрасывай порты роутера в Интернет**.
+PConDistance не подключается через облако. Основные команды, видео и файлы передаются без транспортного шифрования. Используй приложение только на своих устройствах или с согласия владельца и **не пробрасывай порты роутера в Интернет**.
 
 Эта инструкция описывает Windows **1.0.8** и Android **1.17** (сборка **27**). Android **1.15** остаётся совместимым для прежних функций; значки программ поддерживаются начиная с Windows **1.0.7** и Android **1.16**. Обычный Windows-установщик содержит FFmpeg и ffplay; у прежних slim-установщиков медиакомплект отсутствует.
 
@@ -14,7 +14,7 @@ DroidBridge не подключается через облако. Основн�
 
 ## 1. Установи приложения
 
-1. На [странице загрузки](https://github.com/alexfduch231-prog/DroidBridge/releases/latest) скачай установщик Windows и Android APK из списка **Assets**. Архивы **Source code** для установки не нужны. В разделе Windows **«Подключение»** нажми **«Установить на телефон»**: отсканируй QR обычной камерой телефона, чтобы скачать APK с GitHub. Если приложение уже есть, нажми **«Уже установлено → подключить к ПК»** — скачивание будет пропущено.
+1. На [странице загрузки](https://github.com/alexfduch231-prog/PConDistance/releases/latest) скачай установщик Windows и Android APK из списка **Assets**. Архивы **Source code** для установки не нужны. В разделе Windows **«Подключение»** нажми **«Установить на телефон»**: отсканируй QR обычной камерой телефона, чтобы скачать APK с GitHub. Если приложение уже есть, нажми **«Уже установлено → подключить к ПК»** — скачивание будет пропущено.
 2. Запусти установщик Windows. В обычную установку входят Python, зависимости интерфейса, FFmpeg и ffplay; инструменты видео и звука выбираются автоматически. Ничего отдельно скачивать или добавлять в PATH не нужно. Сервер не запускается автоматически — его включаешь ты.
 3. Открой APK на телефоне. Если Android запросит разрешение на установку из этого источника, разреши его только для приложения, которым открываешь скачанный файл. После установки разрешение можно отозвать. Не отключай Play Protect и другие средства защиты.
 
@@ -40,10 +40,10 @@ QR скачивания ведёт только к установочному ф
 
 ## 2. Соедини телефон и ПК
 
-1. Открой DroidBridge на ПК и нажми **«Запустить сервер»**. Статус запущенного процесса ещё не означает, что сеть доступна с телефона.
+1. Открой PConDistance на ПК и нажми **«Запустить сервер»**. Статус запущенного процесса ещё не означает, что сеть доступна с телефона.
 2. Слева открой **«Подключение» → «Уже установлено → подключить к ПК»**. Если открылся одноразовый шаг настройки включения ПК, заверши его по инструкции выше и нажми **«Продолжить сопряжение»**. На странице сопряжения выбери **«Сетевой адаптер»** домашней сети — Wi-Fi или Ethernet, через который ПК связан с телефоном. Если адаптеров несколько, не выбирай VPN или виртуальный адаптер наугад.
 3. Нажми **«Создать новый QR»**. Оставайся на этой странице до завершения сопряжения: переход в другой раздел закрывает временное подключение и делает QR недействительным.
-4. В DroidBridge на телефоне открой **«Настройки» → «Сканировать QR»** и разреши камеру. Наведи её на QR сопряжения на ПК: распознавание выполняется на телефоне, кадры не сохраняются и не отправляются. Можно также отсканировать QR обычной камерой и открыть ссылку в DroidBridge. Если камера не открывает её, на ПК нажми **«Скопировать ссылку»**, а в Android открой **«Добавить ПК»**, вставь ссылку и нажми **«Подключиться»**. Не отправляй ссылку посторонним.
+4. В PConDistance на телефоне открой **«Настройки» → «Сканировать QR»** и разреши камеру. Наведи её на QR сопряжения на ПК: распознавание выполняется на телефоне, кадры не сохраняются и не отправляются. Можно также отсканировать QR обычной камерой и открыть ссылку в PConDistance. Если камера не открывает её, на ПК нажми **«Скопировать ссылку»**, а в Android открой **«Добавить ПК»**, вставь ссылку и нажми **«Подключиться»**. Не отправляй ссылку посторонним.
 5. Сравни код на ПК и телефоне. Только если он совпадает и это твоё устройство, нажми **«Разрешить»** на ПК. Затем на телефоне нажми **«Сохранить ПК»**. Сохранение заменит текущую пару, если она уже была настроена.
 6. Для проверки нажми на телефоне **«Заблокировать»**: Windows должна перейти на экран блокировки. Для дальнейшей работы разблокируй ПК обычным способом.
 
@@ -81,8 +81,8 @@ H.264 экрана ПК сейчас использует **NVIDIA NVENC**: ну
 
 1. Если инструментов нет, сначала восстанови обычную установку. Для своей сборки можно открыть **«Настройки» → «Официальный сайт FFmpeg»** или [страницу FFmpeg](https://ffmpeg.org/download.html) и выбрать доверенного поставщика Windows-сборки с **обоими** файлами: `ffmpeg.exe` и `ffplay.exe`. Распакуй её в постоянную папку.
 2. Нажми **«Настройки» → «Выбрать папку…»**. Укажи `bin` с обоими EXE или родительскую папку, если внутри есть `bin`.
-3. Прочитай **«Запустить выбранные программы для проверки?»**. Только после твоего согласия DroidBridge запустит оба выбранных EXE с `-version`, до 5 секунд на каждый. Дождись **«Проверка пройдена, папка сохранена»**. При отказе или ошибке настройки не меняются.
-4. Перезапусти сервер кнопками **«Остановить» → «Запустить сервер»** вверху окна. Затем открой раздел **«Экран телефона»** и подключи просмотр заново. Закрывать DroidBridge не нужно.
+3. Прочитай **«Запустить выбранные программы для проверки?»**. Только после твоего согласия PConDistance запустит оба выбранных EXE с `-version`, до 5 секунд на каждый. Дождись **«Проверка пройдена, папка сохранена»**. При отказе или ошибке настройки не меняются.
+4. Перезапусти сервер кнопками **«Остановить» → «Запустить сервер»** вверху окна. Затем открой раздел **«Экран телефона»** и подключи просмотр заново. Закрывать PConDistance не нужно.
 
 **«Автоматический поиск»** отменяет ручной выбор и возвращает поиск комплектных инструментов, PATH и стандартных мест установки. Он ничего не устанавливает и не запускает EXE для проверки. Ручной выбор имеет приоритет: если выбранную папку удалили, выбери её заново или нажми **«Автоматический поиск»**; скрытой подмены другой сборкой нет.
 
@@ -95,7 +95,7 @@ H.264 экрана ПК сейчас использует **NVIDIA NVENC**: ну
 - При запуске Windows- и Android-приложение проверят наличие новой версии через Интернет. Для этого используется фиксированный публичный адрес со списком версий и цифровой подписью; учётная запись, личный ключ или настройка сервера тебе не нужны. Это отдельная проверка обновлений, не облачный канал управления устройствами.
 - Если есть новая версия, появятся **«Позже»** и **«Обновить»**. **«Позже»** оставляет текущую версию. Если Интернет недоступен или проверка не удалась, обновление не устанавливается; можно продолжить работу и попробовать позже.
 - **Windows:** после **«Обновить»** приложение скачает установщик и проверит его по подписанным сведениям о выпуске. Только после успешной проверки закроет свой сервер, просмотр и главное окно, чтобы запустить установку. Сохрани работу и заверши передачу файлов заранее. Главное окно откроется снова только после успешной установки; настройки и сохранённые подключения должны остаться. При ошибке или отмене не считай обновление установленным — открой приложение вручную и проверь версию.
-- **Android:** после скачивания и проверки APK откроется **системное подтверждение установки**. При необходимости разреши установку из этого источника именно для DroidBridge; подтверждение Android обязательно и не обходится. Обновляй поверх установленного приложения, чтобы сохранить настройки. После установки приложение попробует открыться снова или предложить уведомление, но Android может это ограничить; если не открылось — запусти его обычным способом.
+- **Android:** после скачивания и проверки APK откроется **системное подтверждение установки**. При необходимости разреши установку из этого источника именно для PConDistance; подтверждение Android обязательно и не обходится. Обновляй поверх установленного приложения, чтобы сохранить настройки. После установки приложение попробует открыться снова или предложить уведомление, но Android может это ограничить; если не открылось — запусти его обычным способом.
 
 Для ручного обновления всегда можно использовать страницу релиза. Цифровая подпись списка обновлений не означает, что Windows-установщик имеет коммерческую подпись или что SmartScreen не покажет предупреждение.
 
@@ -107,7 +107,7 @@ H.264 экрана ПК сейчас использует **NVIDIA NVENC**: ну
 
 ### Экран телефона на ПК
 
-Оставь основное окно DroidBridge на ПК открытым и запусти сервер. На уже сопряжённом телефоне нажми **«Трансляция на ПК»** и подтверди системный запрос Android на захват экрана. В 1.0.8 этого достаточно: на ПК откроется встроенный раздел **«Экран телефона»**; адрес берётся из проверенного запроса телефона, вводить IP вручную не нужно. Если главное окно закрыто, открой DroidBridge и повтори запрос с телефона: один сервер без интерфейса может обслуживать команды, но не встроенный просмотр.
+Оставь основное окно PConDistance на ПК открытым и запусти сервер. На уже сопряжённом телефоне нажми **«Трансляция на ПК»** и подтверди системный запрос Android на захват экрана. В 1.0.8 этого достаточно: на ПК откроется встроенный раздел **«Экран телефона»**; адрес берётся из проверенного запроса телефона, вводить IP вручную не нужно. Если главное окно закрыто, открой PConDistance и повтори запрос с телефона: один сервер без интерфейса может обслуживать команды, но не встроенный просмотр.
 
 Для ручного подключения открой слева **«Экран телефона»**, введи локальный IP телефона и нажми **«Открыть экран телефона»**. Адрес телефона можно посмотреть в настройках текущей Wi-Fi-сети Android.
 
@@ -138,7 +138,7 @@ H.264 экрана ПК сейчас использует **NVIDIA NVENC**: ну
 
 1. Пока ПК включён, открой **«Включение ПК»**. Запусти проверку настроек сетевых адаптеров: она ничего не меняет. Автоматической проверки при запуске приложения нет. Результат проверки — не испытание пробуждения.
 2. Выбери свою физическую сетевую карту. **«Настроить Windows»** сначала запросит явное подтверждение, затем системное разрешение администратора UAC. Действие включает только поддерживаемую настройку **WakeOnMagicPacket** выбранной карты; неподдерживаемую возможность добавить не сможет. Можно отказаться. Сетевой адаптер не перезапускается автоматически (**NoRestart**), поэтому не считай, что изменение уже вступило в силу.
-3. Если требуется, самостоятельно открой BIOS/UEFI по инструкции производителя. Ищи **Wake-on-LAN**, **Power On by PCI-E / PCIe** или похожий пункт. **ErP / Deep Sleep** иногда отключает питание сетевой карты после выключения; проверь руководство своей платы, прежде чем менять настройку. DroidBridge не меняет BIOS автоматически.
+3. Если требуется, самостоятельно открой BIOS/UEFI по инструкции производителя. Ищи **Wake-on-LAN**, **Power On by PCI-E / PCIe** или похожий пункт. **ErP / Deep Sleep** иногда отключает питание сетевой карты после выключения; проверь руководство своей платы, прежде чем менять настройку. PConDistance не меняет BIOS автоматически.
 4. Обычно нужен подключённый Ethernet-кабель. Пробуждение по Wi-Fi зависит от конкретного оборудования и драйвера и поддерживается не везде. Сначала подключи телефон к включённому ПК, чтобы сохранить его сетевые данные.
 5. Проверь пробуждение вручную в подходящее время: сохрани работу, сам переведи ПК в нужный режим и нажми **«Включить»** на телефоне. Приложение не выключает компьютер ради проверки. Успех из сна не гарантирует включение после полного выключения.
 
@@ -150,20 +150,20 @@ H.264 экрана ПК сейчас использует **NVIDIA NVENC**: ну
 
 Проверяй по порядку:
 
-1. ПК включён и не спит, DroidBridge открыт, сервер запущен. Для чистого повтора нажми **«Остановить»**, затем **«Запустить сервер»**.
+1. ПК включён и не спит, PConDistance открыт, сервер запущен. Для чистого повтора нажми **«Остановить»**, затем **«Запустить сервер»**.
 2. Телефон использует домашний Wi-Fi, не мобильную сеть. Устройства не находятся в гостевых или изолированных сегментах. Один и тот же роутер не всегда означает доступ между устройствами.
 3. При создании QR выбран именно домашний адаптер ПК. VPN может менять маршруты; проверь его настройки локального доступа.
 4. В брандмауэре разрешены нужные порты только для частной локальной сети. Не отключай брандмауэр целиком. В управляемой сети обратись к администратору.
 5. Ссылка ещё действительна и подтверждена на обоих устройствах. Создай новую и выполни сопряжение заново, если есть сомнения. Коды должны совпадать.
 6. Команды работают, а видео или звук — нет? Проверь статус инструментов в разделе **«Настройки»**. Если они не найдены, восстанови установку; если ранее выбирал свою папку — проверь её или верни **«Автоматический поиск»**. После изменения настройки перезапусти сервер и просмотр. Для H.264 экрана ПК проверь поддержку NVIDIA NVENC и драйвер, для звука — версию Android и приложение, разрешающее захват.
 
-Для вопроса в [Issues](https://github.com/alexfduch231-prog/DroidBridge/issues) укажи версии Windows, Android и приложений, что нажал и какой текст ошибки увидел. Не публикуй ключ доступа, QR, ссылки сопряжения, личные адреса устройств и полные логи без проверки. О проблеме безопасности сообщай по [правилам безопасности](../SECURITY.md).
+Для вопроса в [Issues](https://github.com/alexfduch231-prog/PConDistance/issues) укажи версии Windows, Android и приложений, что нажал и какой текст ошибки увидел. Не публикуй ключ доступа, QR, ссылки сопряжения, личные адреса устройств и полные логи без проверки. О проблеме безопасности сообщай по [правилам безопасности](../SECURITY.md).
 
 ---
 
 # English
 
-[README](../README.md#english) · [Download Windows and Android](https://github.com/alexfduch231-prog/DroidBridge/releases/latest)
+[README](../README.md#english) · [Download Windows and Android](https://github.com/alexfduch231-prog/PConDistance/releases/latest)
 
 This guide describes Windows **1.0.8** and Android **1.17** (build **27**). Android **1.15** remains compatible with existing features; program icons are supported from Windows **1.0.7** and Android **1.16** onwards. The standard Windows installer includes FFmpeg/ffplay; earlier slim installers do not.
 
@@ -189,11 +189,11 @@ Checking only reads settings; Windows changes need separate consent. Completion 
 
 ## Install and pair
 
-1. On the [download page](https://github.com/alexfduch231-prog/DroidBridge/releases/latest), download the Windows installer and Android APK from **Assets**. You do not need the **Source code** archives. In Windows **«Подключение»** (Connection), choose **«Установить на телефон»** (Install on phone) and scan the QR with your phone camera to download the APK from GitHub. Choose **«Уже установлено → подключить к ПК»** (Already installed → connect to PC) to skip downloading and open pairing. The standard Windows installer includes Python, UI dependencies, FFmpeg and ffplay; media tools are selected automatically. No separate download or PATH edit is needed. The server does not start automatically.
+1. On the [download page](https://github.com/alexfduch231-prog/PConDistance/releases/latest), download the Windows installer and Android APK from **Assets**. You do not need the **Source code** archives. In Windows **«Подключение»** (Connection), choose **«Установить на телефон»** (Install on phone) and scan the QR with your phone camera to download the APK from GitHub. Choose **«Уже установлено → подключить к ПК»** (Already installed → connect to PC) to skip downloading and open pairing. The standard Windows installer includes Python, UI dependencies, FFmpeg and ffplay; media tools are selected automatically. No separate download or PATH edit is needed. The server does not start automatically.
 2. Install the APK. If Android asks, allow installation only for the app opening this download; you can revoke that permission afterwards. Do not disable Play Protect or other security tools.
-3. Open DroidBridge on Windows and click **«Запустить сервер»** (Start server) at the top of the window. Open **«Подключение» → «Уже установлено → подключить к ПК»** (Connection → Already installed → connect to PC). If the one-time waking setup opens, complete it as described above and choose **«Продолжить сопряжение»** (Continue pairing). The pairing page has a RU/EN selector.
+3. Open PConDistance on Windows and click **«Запустить сервер»** (Start server) at the top of the window. Open **«Подключение» → «Уже установлено → подключить к ПК»** (Connection → Already installed → connect to PC). If the one-time waking setup opens, complete it as described above and choose **«Продолжить сопряжение»** (Continue pairing). The pairing page has a RU/EN selector.
 4. Choose your home **Network adapter**, not a VPN or virtual adapter, and click **Create new QR**. Stay on this page until pairing finishes: navigating to another section closes the temporary session and invalidates its QR.
-5. In the Android app, open **Settings → Scan QR**, allow camera access and point it at the PC pairing QR. Decoding stays on the phone; frames are not saved or uploaded. Alternatively, scan with the system camera and open the link in DroidBridge. If the camera cannot open the link, click **Copy pairing link** on the PC, paste it into **Add PC** on Android and tap **Connect**. Keep this temporary link private.
+5. In the Android app, open **Settings → Scan QR**, allow camera access and point it at the PC pairing QR. Decoding stays on the phone; frames are not saved or uploaded. Alternatively, scan with the system camera and open the link in PConDistance. If the camera cannot open the link, click **Copy pairing link** on the PC, paste it into **Add PC** on Android and tap **Connect**. Keep this temporary link private.
 6. Compare the code on both devices. Only if it matches and this is your device, click **Allow** on the PC and **Save PC** on Android. Saving replaces an existing pair. Try **Lock** to check the connection, then unlock Windows normally.
 
 If the QR expires, you leave the pairing page, close the app or the phone rotates during pairing, create a new QR and start again. Discovery only locates a previously paired, running PC; it does not pair unknown devices. TLS protects pairing, **not subsequent remote-control traffic**.
@@ -234,8 +234,8 @@ Use this for source runs, earlier slim installers or a deliberate media-bundle r
 
 1. If tools are missing, try repairing the standard installation first. For your own build, use **«Настройки» → «Официальный сайт FFmpeg»** (Settings → Official FFmpeg website), or the [FFmpeg download page](https://ffmpeg.org/download.html). Pick a trusted Windows build containing **both** `ffmpeg.exe` and `ffplay.exe` and extract it to a permanent folder.
 2. Click **«Настройки» → «Выбрать папку…»** (Choose folder). Select `bin` containing both EXEs, or its parent folder if it contains `bin`. These controls currently use Russian labels.
-3. Read **«Запустить выбранные программы для проверки?»** (Run selected programs to check?). Only with your consent does DroidBridge run both selected EXEs with `-version`, allowing up to 5 seconds each. Wait for **«Проверка пройдена, папка сохранена»** (Check passed, folder saved). Declining or a failed check leaves settings unchanged.
-4. Click **«Остановить»** (Stop), then **«Запустить сервер»** (Start server) at the top of the window. Open **«Экран телефона»** (Phone screen) and reconnect the viewer. DroidBridge itself can stay open.
+3. Read **«Запустить выбранные программы для проверки?»** (Run selected programs to check?). Only with your consent does PConDistance run both selected EXEs with `-version`, allowing up to 5 seconds each. Wait for **«Проверка пройдена, папка сохранена»** (Check passed, folder saved). Declining or a failed check leaves settings unchanged.
+4. Click **«Остановить»** (Stop), then **«Запустить сервер»** (Start server) at the top of the window. Open **«Экран телефона»** (Phone screen) and reconnect the viewer. PConDistance itself can stay open.
 
 **«Автоматический поиск»** (Automatic search) clears the manual override and returns to the bundled tools, PATH and standard installation locations. It installs nothing and does not probe executables. A manual selection takes priority: if its folder is deleted, choose it again or reset to automatic search; another build is not silently substituted.
 
@@ -248,7 +248,7 @@ Without available tools, commands, files and JPEG viewing may still work, but H.
 - At startup, both Windows and Android will check for a newer version over the Internet using a fixed public, digitally signed release list. You do not need an account, personal key or server setup. This update check is separate from device control; it is not a cloud relay.
 - If an update exists, choose **Later** or **Update**. **Later** keeps the current version. If the Internet is unavailable or verification fails, no update is installed; you can keep using the app and retry later.
 - **Windows:** after **Update**, the app will download the installer and verify it against the signed release information. Only after successful verification will it close its server, viewer and main window for installation. Save work and finish file transfers first. The main window will reopen only after installation succeeds; settings and saved connections are intended to remain. If installation fails or is cancelled, do not assume it updated: open the app manually and check the version.
-- **Android:** after downloading and verifying the APK, the app will open the **system installation confirmation**. If necessary, permit DroidBridge to install from this source. Android approval is mandatory and is not bypassed. Update in place to keep settings. Afterwards the app will try to reopen or offer a notification, but Android can restrict either action; open it normally if needed.
+- **Android:** after downloading and verifying the APK, the app will open the **system installation confirmation**. If necessary, permit PConDistance to install from this source. Android approval is mandatory and is not bypassed. Update in place to keep settings. Afterwards the app will try to reopen or offer a notification, but Android can restrict either action; open it normally if needed.
 
 Manual updating from the release page remains available. A digitally signed release list does not give the Windows installer a commercial code-signing certificate or prevent SmartScreen warnings.
 
@@ -259,7 +259,7 @@ Manual updating from the release page remains available. A digitally signed rele
 The limit is **50 GiB per file**. The PC needs space for its prepared snapshot; the phone needs both a private resumable cache and the destination copy, potentially twice the file size. Pause or moving the app into the background stops receiving; **Continue download** resumes from a verified chunk boundary. The full SHA-256 is checked before saving and again against the saved document. A transfer identifier is added to the filename; existing files are not overwritten. Keep the app visible while receiving. The PC queue lasts up to seven days and can be cleared locally. Canceling on Android removes its unfinished copy but keeps the PC queue entry. The phone never receives arbitrary PC filesystem access.
 
 - **PC screen:** tap **View PC screen** on Android. Taps click the selected position; one-finger swipes move the pointer like a trackpad, long taps right-click and two fingers scroll. Clicking an editable field opens the current Android keyboard when Windows exposes editable-focus metadata; the keyboard button remains available manually. Windows field contents are not read. UAC/elevated windows are not bypassed.
-- **Phone screen:** keep the DroidBridge main window open and start its server. On the already-paired phone, tap **Cast phone to PC** and approve Android's system screen-capture prompt. In 1.0.8, this opens the embedded **«Экран телефона»** (Phone screen) section on the PC; its address comes from the authenticated phone request, so you do not need to type an IP. If the main window is closed, open DroidBridge and retry on the phone; a server alone can handle commands, but not embedded viewing. Manual connection is still available: open Phone screen, enter the phone's local IP and click **«Открыть экран телефона»** (Open phone screen). Find the phone IP in Android's current Wi-Fi network details. Navigating to another section closes the viewer connection; return and open it again to reconnect. Closing the PC viewer does not replace stopping Android casting: when finished, tap **Stop casting** on the phone or use its notification.
+- **Phone screen:** keep the PConDistance main window open and start its server. On the already-paired phone, tap **Cast phone to PC** and approve Android's system screen-capture prompt. In 1.0.8, this opens the embedded **«Экран телефона»** (Phone screen) section on the PC; its address comes from the authenticated phone request, so you do not need to type an IP. If the main window is closed, open PConDistance and retry on the phone; a server alone can handle commands, but not embedded viewing. Manual connection is still available: open Phone screen, enter the phone's local IP and click **«Открыть экран телефона»** (Open phone screen). Find the phone IP in Android's current Wi-Fi network details. Navigating to another section closes the viewer connection; return and open it again to reconnect. Closing the PC viewer does not replace stopping Android casting: when finished, tap **Stop casting** on the phone or use its notification.
 - **Phone control:** a phone-initiated session enables control automatically **only if** you have already enabled **Control phone from PC** in Android Accessibility settings. Otherwise it is view-only. To grant control, separately open **Allow phone control from PC** on Android, read the explanation and enable the service in system settings, then start casting again from the phone. The app cannot grant itself this permission. Gestures require Android 7+; revoke access in the same settings at any time. Automatic enabling applies to a new phone-initiated session, not every manual connection or reconnection; background operation and automatic control recovery are not guaranteed.
 - **Phone audio:** requires Android 10+, the requested audio permission and an app that allows playback capture. Not every app allows it. Protected screens may appear black. Restart mirroring after an APK update, phone rotation or enabling Accessibility. Stop it with **Stop casting** or the Android notification.
 - **Files:** choose **Upload file to PC** on Android. The maximum is 50 GiB. The app reads the source for an integrity check before sending, so preparing a large file may take time before any bytes are shown as sent.
@@ -278,7 +278,7 @@ In Windows 1.0.8:
 
 1. While the PC is on, open **«Включение ПК»** (Wake PC). Run the network-adapter check; it changes no settings. Startup does not run this check automatically. This check is not a wake test.
 2. Select your physical network adapter. **«Настроить Windows»** (Configure Windows) asks for explicit confirmation, followed by Windows administrator approval through UAC. It enables only the selected adapter's supported **WakeOnMagicPacket** setting; it cannot add unsupported hardware capabilities. You can decline. The adapter is not restarted automatically (**NoRestart**), so do not assume the change has already taken effect.
-3. If needed, open BIOS/UEFI yourself using the manufacturer's instructions. Look for **Wake-on-LAN**, **Power On by PCI-E / PCIe** or a similar option. **ErP / Deep Sleep** may remove adapter power after shutdown; consult your motherboard's manual before changing it. DroidBridge does not change BIOS automatically.
+3. If needed, open BIOS/UEFI yourself using the manufacturer's instructions. Look for **Wake-on-LAN**, **Power On by PCI-E / PCIe** or a similar option. **ErP / Deep Sleep** may remove adapter power after shutdown; consult your motherboard's manual before changing it. PConDistance does not change BIOS automatically.
 4. A connected Ethernet cable is usually needed. Wi-Fi waking depends on the hardware and driver and is not universally supported. Connect the phone while the PC is on first, so it saves network details.
 5. Test waking manually at a convenient time: save your work, put the PC into the intended state yourself, then tap **Wake** on the phone. The app does not shut the PC down to test it. Waking from sleep does not prove that waking after a full shutdown will work.
 
@@ -286,11 +286,11 @@ In Windows 1.0.8:
 
 ## Cannot connect?
 
-1. Check that the PC is awake, DroidBridge is open and its server is running. **«Остановить»** (Stop), then **«Запустить сервер»** restarts it. A running-process status does not confirm network reachability.
+1. Check that the PC is awake, PConDistance is open and its server is running. **«Остановить»** (Stop), then **«Запустить сервер»** restarts it. A running-process status does not confirm network reachability.
 2. Use home Wi-Fi, not mobile data. Avoid guest networks and client isolation. The same router can still separate the devices.
 3. Check the home adapter selected for the QR and any VPN's local-network routing settings.
 4. Check Private/local-subnet firewall rules for the ports above. Do not disable the firewall. Ask the network administrator on a managed network.
 5. Generate a new pairing link and repeat approval on both devices. Never accept mismatched codes.
 6. Commands work but video/audio does not? Check the media-tool status under **«Настройки»** (Settings). Repair the installation if tools are missing; if you previously chose your own folder, check it or reset to **«Автоматический поиск»** (Automatic search). Restart the server and viewer after settings changes. Check NVIDIA NVENC support and drivers for PC-screen H.264; for audio, check Android version and an app that permits capture.
 
-For [Issues](https://github.com/alexfduch231-prog/DroidBridge/issues), include Windows/Android/app versions, your steps and the exact error text. Do not share access keys, QR codes, pairing links, personal device addresses or unchecked full logs. See [security reporting](../SECURITY.md) for security concerns.
+For [Issues](https://github.com/alexfduch231-prog/PConDistance/issues), include Windows/Android/app versions, your steps and the exact error text. Do not share access keys, QR codes, pairing links, personal device addresses or unchecked full logs. See [security reporting](../SECURITY.md) for security concerns.

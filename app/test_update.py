@@ -86,7 +86,7 @@ public class Probe {
    self.assertIn(s,p)
   self.assertNotIn('setDefaultSSLSocketFactory',u); self.assertNotIn('setHostnameVerifier',u)
   manifest=(ROOT/'AndroidManifest.xml').read_text(encoding='utf-8')
-  for s in ['versionCode="30"','versionName="1.20"','REQUEST_INSTALL_PACKAGES','MY_PACKAGE_REPLACED','android:grantUriPermissions="true"']:
+  for s in ['versionCode="31"','versionName="1.21"','REQUEST_INSTALL_PACKAGES','MY_PACKAGE_REPLACED','android:grantUriPermissions="true"']:
    self.assertIn(s,manifest)
   main=(SRC/'MainActivity.java').read_text(encoding='utf-8')
   for s in ['startupUpdate.onResume()','startupUpdate.onPause()','startupUpdate.dispose()']:

@@ -1,8 +1,8 @@
-# DroidBridge
+# PConDistance
 
 Телефон вместо пульта для компьютера. Или наоборот — экран телефона на ПК и управление мышью. Всё работает в одной домашней сети, без аккаунтов и облака.
 
-**[Скачать для Windows и Android](https://github.com/alexfduch231-prog/DroidBridge/releases/latest)** · [English](#english)
+**[Скачать для Windows и Android](https://github.com/alexfduch231-prog/PConDistance/releases/latest)** · [English](#english)
 
 ## Что можно делать
 
@@ -35,7 +35,7 @@
 
 ## Скриншоты
 
-![DroidBridge — Windows](docs/images/windows-connection-1.0.10.png)
+![Предыдущая версия — Windows](docs/images/windows-connection-1.0.10.png)
 
 [Остальные экраны](docs/SCREENSHOTS.md)
 
@@ -43,7 +43,7 @@
 
 Сделал с помощью ИИ для себя, потом решил поделиться — вдруг ещё кому пригодится.
 
-Нашёл баг или хочешь что-то добавить — [пиши в Issues](https://github.com/alexfduch231-prog/DroidBridge/issues). Хочешь помочь кодом — [как участвовать](CONTRIBUTING.md) и [как собрать проект](docs/DEVELOPMENT.md).
+Нашёл баг или хочешь что-то добавить — [пиши в Issues](https://github.com/alexfduch231-prog/PConDistance/issues). Хочешь помочь кодом — [как участвовать](CONTRIBUTING.md) и [как собрать проект](docs/DEVELOPMENT.md).
 
 [Что нового](CHANGELOG.md) · [Безопасность](SECURITY.md) · [Лицензия MIT](LICENSE)
 
@@ -53,7 +53,7 @@
 
 Use your phone as a remote for your PC — or put your phone screen on the PC and control it with a mouse. Both devices stay on your home network. No accounts or cloud service.
 
-**[Download for Windows and Android](https://github.com/alexfduch231-prog/DroidBridge/releases/latest)**
+**[Download for Windows and Android](https://github.com/alexfduch231-prog/PConDistance/releases/latest)**
 
 ## What you can do
 
@@ -92,6 +92,6 @@ Keep the transfer screen open while sending or receiving. Resumable uploads to t
 
 Built with AI for my own setup, then shared in case someone else finds it useful.
 
-Found a bug or have an idea? [Open an Issue](https://github.com/alexfduch231-prog/DroidBridge/issues). Want to help with the code? See [contributing](CONTRIBUTING.md) and the [build guide](docs/DEVELOPMENT.md).
+Found a bug or have an idea? [Open an Issue](https://github.com/alexfduch231-prog/PConDistance/issues). Want to help with the code? See [contributing](CONTRIBUTING.md) and the [build guide](docs/DEVELOPMENT.md).
 
 [What's new](CHANGELOG.md) · [Security](SECURITY.md) · [MIT license](LICENSE)

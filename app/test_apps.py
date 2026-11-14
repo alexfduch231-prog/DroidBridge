@@ -12,7 +12,7 @@ class AppsTests(unittest.TestCase):
     self.assertNotIn('::',code, str(source.name)+' requires unsupported method-reference desugaring')
   for folder in ('values','values-en'):
    text=(ROOT/'res'/folder/'strings.xml').read_text(encoding='utf-8')
-   self.assertIn('<string name="app_name">DroidBridge</string>',text)
+   self.assertIn('<string name="app_name">PConDistance</string>',text)
    self.assertNotIn('VzaimoPult',text)
    self.assertNotIn('ВзаимоПульт',text)
 

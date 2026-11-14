@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="update_title">Обновление DroidBridge</string>
+    <string name="update_title">Обновление PConDistance</string>
     <string name="update_available">Доступна версия %1$s. Скачать обновление? Установка потребует подтверждения Android.</string>
     <string name="update_now">Обновить</string>
     <string name="update_later">Не сейчас</string>
     <string name="update_progress">Загрузка обновления</string>
     <string name="update_cancel">Отмена</string>
     <string name="update_failed">Не удалось проверить или загрузить обновление. Текущая версия продолжает работать.</string>
-    <string name="update_permission">Разреши установку обновлений из DroidBridge в системных настройках. После возвращения Android запросит подтверждение установки.</string>
-    <string name="update_reopen">Обновление установлено. Нажми, чтобы открыть DroidBridge.</string>
+    <string name="update_permission">Разреши установку обновлений из PConDistance в системных настройках. После возвращения Android запросит подтверждение установки.</string>
+    <string name="update_reopen">Обновление установлено. Нажми, чтобы открыть PConDistance.</string>
     <string name="phone_control_label">Управление телефоном с ПК</string>
     <string name="phone_control_setup">Разрешить управление телефоном с ПК</string>
     <string name="phone_control_explanation">Эта служба специальных возможностей позволяет доверенному ПК нажимать на экран, выполнять свайпы, открывать Главный экран и вводить текст в выбранное редактируемое поле. Она работает только во время трансляции телефона и после проверки ключа ПК. Буфер обмена не используется; парольные поля и защищённые экраны не обходятся. Включи службу «Управление телефоном с ПК» вручную в системных настройках. Для жестов нужен Android 7 или новее. После включения перезапусти трансляцию; при повороте экрана также перезапусти её. Разрешение можно отозвать в любой момент здесь же.</string>
     <string name="phone_control_open_settings">Открыть настройки</string>
     <string name="phone_control_settings_missing">Системные настройки специальных возможностей недоступны</string>
-    <string name="app_name">DroidBridge</string>
-    <string name="title">DroidBridge</string>
+    <string name="app_name">PConDistance</string>
+    <string name="title">PConDistance</string>
     <string name="subtitle">Разбудить по Wake-on-LAN, выключить или перезагрузить по сети. Телефон и ПК должны быть в одной Wi-Fi сети.</string>
     <string name="sec_conn">Подключение</string>
     <string name="sec_buttons">Кнопки</string>
@@ -84,7 +84,7 @@
     <string name="mirror_pc_unreachable">ПК не открыл трансляцию. Проверь подключение и ключ; останови трансляцию и попробуй снова.</string>
     <string name="mirror_stopping">Останавливаю трансляцию…</string>
     <string name="mirror_notif_channel">Трансляция на ПК</string>
-    <string name="mirror_notif_title">DroidBridge · трансляция</string>
+    <string name="mirror_notif_title">PConDistance · трансляция</string>
     <string name="mirror_notif_wait">Жду окно на ПК…</string>
     <string name="mirror_notif_live">Экран и звук телефона идут на ПК</string>
     <string name="mirror_notif_client_gone">ПК отключился</string>
@@ -175,7 +175,7 @@
     <string name="power_response_lost">Соединение было, но ответ не дошёл (%1$s). Проверь журнал на ПК: команда могла выполниться.</string>
     <string name="power_unreachable">Связи нет: %1$s. Проверь слушатель на ПК и открытый порт.</string>
     <string name="pair_title">Добавить ПК</string>
-    <string name="pair_instructions">На ПК открой DroidBridge → Подключить телефон. Вставь ссылку или открой её камерой, если она поддерживает такие ссылки. Сверь код на обоих устройствах и подтверди на ПК. При повороте экрана или закрытии начни заново.</string>
+    <string name="pair_instructions">На ПК открой PConDistance → Подключить телефон. Вставь ссылку или открой её камерой, если она поддерживает такие ссылки. Сверь код на обоих устройствах и подтверди на ПК. При повороте экрана или закрытии начни заново.</string>
     <string name="pair_link_hint">Ссылка pcmote://pair…</string>
     <string name="pair_connect">Подключиться</string>
     <string name="pair_replace_warning">Подключаться только к своему ПК в доверенной локальной сети. После подтверждения новая пара заменит текущую.</string>
@@ -188,7 +188,7 @@
     <string name="pair_save">Сохранить ПК</string>
     <string name="pair_saved">ПК подключён</string>
     <string name="pair_failed">Подключение не завершено. Проверь сеть и подтверждение на ПК, затем получи новую ссылку. Текущая пара не изменена.</string>
-    <string name="apps_empty">Список пуст. На ПК открой DroidBridge → Программы и добавь программы.</string>
+    <string name="apps_empty">Список пуст. На ПК открой PConDistance → Программы и добавь программы.</string>
     <string name="apps_unavailable">Подключи ПК, чтобы получить список программ.</string>
     <string name="apps_refresh">Обновить программы</string>
     <string name="upload_resume">Продолжить</string>
@@ -236,10 +236,10 @@
     <string name="theme_forest">Лес</string>
     <string name="theme_plum">Слива</string>
     <string name="scan_qr">Сканировать QR</string>
-    <string name="scan_instructions">Наведи камеру на QR сопряжения в DroidBridge на ПК</string>
+    <string name="scan_instructions">Наведи камеру на QR сопряжения в PConDistance на ПК</string>
     <string name="scan_permission">Разреши доступ к камере или вставь ссылку вручную в экране сопряжения</string>
     <string name="scan_unavailable">Камера недоступна. Закрой другие приложения камеры и попробуй снова</string>
-    <string name="scan_invalid">Это не QR сопряжения DroidBridge</string>
+    <string name="scan_invalid">Это не QR сопряжения PConDistance</string>
     <string name="scan_retry">Повторить / разрешить камеру</string>
     <string name="screen_keyboard">Клавиатура</string>
 </resources>

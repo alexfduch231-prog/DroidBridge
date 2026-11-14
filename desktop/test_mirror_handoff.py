@@ -27,7 +27,7 @@ class MirrorHandoffTests(unittest.TestCase):
         return path
 
     def test_request_requires_main_gui_and_never_spawns(self):
-        self.assertEqual(self.h.request_mirror(self.data, '192.168.1.3', 8768), (False, 'Открой главное окно DroidBridge'))
+        self.assertEqual(self.h.request_mirror(self.data, '192.168.1.3', 8768), (False, 'Открой главное окно PConDistance'))
         self.assertFalse((self.data / 'mirror-request.json').exists())
 
     def test_roundtrip_only_latest_and_consume_once_no_token(self):

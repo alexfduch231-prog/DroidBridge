@@ -1,5 +1,11 @@
 # Изменения / Changelog
 
+## 1.0.11 / Android 1.21 — 2026-11-14
+
+Приложение теперь называется **PConDistance**. Новое имя появилось в Windows, Android, установщике и ярлыках. Настройки и подключённый ПК сохраняются — заново создавать пару не нужно.
+
+The app is now **PConDistance** on Windows, Android, the installer and shortcuts. Your settings and paired PC stay in place; no pairing reset is needed.
+
 ## 1.0.10 / Android 1.20 — 2026-11-13
 
 Добавлена передача файлов с ПК на телефон: локальная очередь выбранных файлов, выбор папки Android системным диалогом, прогресс, пауза и продолжение, проверка блоков и итогового SHA-256. Лимит — 50 ГиБ на файл, очередь до 7 дней; исходные пути ПК не публикуются телефону. Для докачки и сохранения нужна дополнительная память. Одноимённые файлы не перезаписываются. На ПК доступны отмена подготовки и удаление файла из очереди.
@@ -58,7 +64,7 @@ Windows **1.0.7**; Android is unchanged at **1.16** (build **26**).
 
 ## 1.0.6 — 2026-11-12
 
-Windows **1.0.6**, Android **1.16** (сборка **26**). Скачать — на [странице релизов](https://github.com/alexfduch231-prog/DroidBridge/releases/latest).
+Windows **1.0.6**, Android **1.16** (сборка **26**). Скачать — на [странице релизов](https://github.com/alexfduch231-prog/PConDistance/releases/latest).
 
 - Основные действия Windows перенесены в одно основное окно с разделами слева: **«Подключение»**, **«Экран телефона»**, **«Программы»**, **«Приём файлов»**, **«Включение ПК»** и **«Настройки»**. Выбор файлов, подтверждения и системные запросы могут оставаться диалогами.
 - QR скачивания Android-приложения и сопряжение находятся внутри **«Подключение»**. При уходе со страницы сопряжения временное подключение закрывается и QR перестаёт действовать; для повтора нужно создать новый.
@@ -67,7 +73,7 @@ Windows **1.0.6**, Android **1.16** (сборка **26**). Скачать — н
 - Раздел **«Включение ПК»** показывает проверку настроек Wake-on-LAN без изменений при запуске. **«Настроить Windows»** требует подтверждения и UAC и включает только поддерживаемый WakeOnMagicPacket выбранной физической карты, без автоматического перезапуска адаптера. BIOS/UEFI настраивается вручную; 100% означает завершённую проверку или настройку, а не гарантированное пробуждение. Компьютер не выключается автоматически для теста.
 - Инструкции RU/EN обновлены под разделы единого окна. Android **1.15** остаётся совместимым для прежних функций. Новые сценарии на реальном телефоне пока не заявлены как проверенные.
 
-Windows **1.0.6**, Android **1.16** (build **26**). Download from the [release page](https://github.com/alexfduch231-prog/DroidBridge/releases/latest).
+Windows **1.0.6**, Android **1.16** (build **26**). Download from the [release page](https://github.com/alexfduch231-prog/PConDistance/releases/latest).
 
 - Windows tasks move into one main window with sidebar sections: **«Подключение»** (Connection), **«Экран телефона»** (Phone screen), **«Программы»** (Applications), **«Приём файлов»** (Received files), **«Включение ПК»** (Wake PC) and **«Настройки»** (Settings). File pickers, confirmations and system prompts can remain dialogs.
 - The Android download QR and pairing are inside Connection. Leaving pairing closes its temporary session and invalidates the QR; create a new one to retry.

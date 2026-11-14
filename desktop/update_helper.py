@@ -95,7 +95,7 @@ try {{
   Start-Process -FilePath $exe -WorkingDirectory $directory
 }} catch {{
   Add-Type -AssemblyName System.Windows.Forms
-  [System.Windows.Forms.MessageBox]::Show('DroidBridge update stopped safely. ' + $_.Exception.Message, 'DroidBridge update') | Out-Null
+  [System.Windows.Forms.MessageBox]::Show('PConDistance update stopped safely. ' + $_.Exception.Message, 'PConDistance update') | Out-Null
 }} finally {{
   if ($event) {{ $event.Reset() | Out-Null; $event.Dispose() }}
   if ($locked) {{ $locked.Dispose() }}

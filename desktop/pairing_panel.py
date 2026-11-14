@@ -261,7 +261,7 @@ def show_pairing(parent, data_dir: Path, http_port=8765):
         from desktop.theme import apply_theme
     window = tk.Toplevel(parent)
     apply_theme(window)
-    window.title('DroidBridge — Подключить телефон')
+    window.title('PConDistance — Подключить телефон')
     window.geometry(f'640x{min(820, max(400, window.winfo_screenheight() - 100))}')
     page = build_pairing_page(window, data_dir, http_port)
     page.pack(fill='both', expand=True)
