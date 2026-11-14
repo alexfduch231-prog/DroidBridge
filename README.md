@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="assets/droidbridge.png" alt="PConDistance" width="256" height="256">
+</p>
+
 # PConDistance
 
 Телефон вместо пульта для компьютера. Или наоборот — экран телефона на ПК и управление мышью. Всё работает в одной домашней сети, без аккаунтов и облака.
