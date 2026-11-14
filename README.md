@@ -39,7 +39,7 @@
 
 ## Скриншоты
 
-![Предыдущая версия — Windows](docs/images/windows-connection-1.0.10.png)
+![PConDistance — Windows](docs/images/windows-connection-1.0.11.png)
 
 [Остальные экраны](docs/SCREENSHOTS.md)
 
